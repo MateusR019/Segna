@@ -15,6 +15,7 @@ export default function DashboardPage() {
   const hydrated = useHydrated();
 
   const transactions = useFinancasStore((s) => s.transactions);
+  const budget = useFinancasStore((s) => s.budget);
   const { habits, completions } = useHabitosStore();
   const tokens = useDefiStore((s) => s.tokens);
   const { notes, tags } = useNotasStore();
@@ -83,6 +84,15 @@ export default function DashboardPage() {
             {monthBalance >= 0 ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
             {formatBRL(monthIncome)} entrada · {formatBRL(monthExpenses)} saída
           </p>
+          {budget && (() => {
+            const bPct = Math.min((monthExpenses / budget.limitAmount) * 100, 100);
+            const over = monthExpenses > budget.limitAmount;
+            return (
+              <div className="mt-2 h-1 rounded-full bg-[#2a2a2a] overflow-hidden">
+                <div className="h-full rounded-full" style={{ width: `${bPct}%`, background: over ? "#ef4444" : bPct > 80 ? "#f59e0b" : "#22c55e" }} />
+              </div>
+            );
+          })()}
         </Link>
 
         {/* Habits */}

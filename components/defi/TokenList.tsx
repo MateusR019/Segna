@@ -4,11 +4,11 @@ import { useDefiStore } from "@/store/defiStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Pencil, Trash2, Check, X } from "lucide-react";
+import { Pencil, Trash2, Check, X, TrendingUp, TrendingDown } from "lucide-react";
 import { formatBRL } from "@/lib/format";
 
 export function TokenList() {
-  const { tokens, removeToken, updatePrice, updateQuantity } = useDefiStore();
+  const { tokens, removeToken, updatePrice, updateQuantity, setAlertPrice } = useDefiStore();
   const total = tokens.reduce((acc, t) => acc + t.quantity * t.priceInBRL, 0);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editPrice, setEditPrice] = useState("");
@@ -26,6 +26,11 @@ export function TokenList() {
     if (!isNaN(p) && p > 0) updatePrice(id, p);
     if (!isNaN(q) && q > 0) updateQuantity(id, q);
     setEditingId(null);
+  }
+
+  function calcVariation(token: typeof tokens[0]): number | null {
+    if (!token.priceAtAlert || token.priceAtAlert === 0) return null;
+    return ((token.priceInBRL - token.priceAtAlert) / token.priceAtAlert) * 100;
   }
 
   if (tokens.length === 0) {
@@ -51,6 +56,10 @@ export function TokenList() {
           const pct = total > 0 ? ((value / total) * 100).toFixed(1) : "0";
           const editing = editingId === token.id;
 
+          const variation = calcVariation(token);
+          const hasAlert = variation !== null;
+          const alertPositive = variation !== null && variation >= 0;
+
           return (
             <div
               key={token.id}
@@ -63,7 +72,18 @@ export function TokenList() {
                   style={{ background: token.color }}
                 />
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-white">{token.symbol}</p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-sm font-medium text-white">{token.symbol}</p>
+                    {hasAlert && (
+                      <span
+                        className="flex items-center gap-0.5 text-xs font-medium"
+                        style={{ color: alertPositive ? "#22c55e" : "#ef4444" }}
+                      >
+                        {alertPositive ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
+                        {alertPositive ? "+" : ""}{variation!.toFixed(1)}%
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-[#6b7280] truncate">{token.name}</p>
                 </div>
               </div>
@@ -113,13 +133,22 @@ export function TokenList() {
 
               {!editing && (
                 <div className="flex items-center gap-0.5">
+                  {/* Set alert base price */}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    title={token.priceAtAlert ? `Base: ${formatBRL(token.priceAtAlert)}` : "Definir preço base para alerta"}
+                    className="h-7 w-7 hover:bg-transparent cursor-pointer"
+                    style={{ color: token.priceAtAlert ? "#f59e0b" : "#3a3a3a" }}
+                    onClick={() => setAlertPrice(token.id, token.priceInBRL)}
+                  >
+                    <TrendingUp size={12} />
+                  </Button>
                   <Button
                     variant="ghost"
                     size="icon"
                     className="h-7 w-7 text-[#6b7280] hover:text-white hover:bg-transparent cursor-pointer"
-                    onClick={() =>
-                      startEdit(token.id, token.priceInBRL, token.quantity)
-                    }
+                    onClick={() => startEdit(token.id, token.priceInBRL, token.quantity)}
                   >
                     <Pencil size={12} />
                   </Button>

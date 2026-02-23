@@ -1,11 +1,12 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { Transaction, CategoryGoal, ExpenseCategory } from "@/types";
+import { Transaction, CategoryGoal, MonthlyBudget, ExpenseCategory } from "@/types";
 import { format, addMonths } from "date-fns";
 
 interface FinancasState {
   transactions: Transaction[];
   goals: CategoryGoal[];
+  budget: MonthlyBudget | null;
 
   addTransaction: (t: Omit<Transaction, "id" | "createdAt">) => void;
   removeTransaction: (id: string) => void;
@@ -15,6 +16,9 @@ interface FinancasState {
   removeGoal: (id: string) => void;
   updateGoal: (id: string, limitAmount: number) => void;
 
+  setBudget: (limitAmount: number) => void;
+  clearBudget: () => void;
+
   generateRecurring: () => void;
 }
 
@@ -23,6 +27,7 @@ export const useFinancasStore = create<FinancasState>()(
     (set, get) => ({
       transactions: [],
       goals: [],
+      budget: null,
 
       addTransaction: (t) =>
         set((state) => ({
@@ -72,6 +77,9 @@ export const useFinancasStore = create<FinancasState>()(
             g.id === id ? { ...g, limitAmount } : g
           ),
         })),
+
+      setBudget: (limitAmount) => set({ budget: { limitAmount } }),
+      clearBudget: () => set({ budget: null }),
 
       generateRecurring: () => {
         const { transactions } = get();

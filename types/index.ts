@@ -89,7 +89,25 @@ export interface Note {
   createdAt: string; // ISO timestamp
 }
 
+// ─── Finanças - Orçamento global ─────────────────────────────────────────────
+
+export interface MonthlyBudget {
+  limitAmount: number; // R$ total mensal de despesas
+}
+
+// ─── Hábitos - Meta de frequência ────────────────────────────────────────────
+
+export interface HabitFrequencyGoal {
+  habitId: string;
+  timesPerWeek: number; // ex: 5
+}
+
 // ─── DeFi / Crypto ───────────────────────────────────────────────────────────
+
+export interface PortfolioSnapshot {
+  date: string;       // "YYYY-MM-DD"
+  totalBRL: number;
+}
 
 export interface Token {
   id: string;
@@ -97,6 +115,7 @@ export interface Token {
   name: string;
   quantity: number;
   priceInBRL: number;
+  priceAtAlert?: number; // preço base para calcular variação %
   color: string;
   addedAt: string;
 }

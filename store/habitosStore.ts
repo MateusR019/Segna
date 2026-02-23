@@ -1,14 +1,17 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { subDays, format } from "date-fns";
-import { Habit, CompletionMap } from "@/types";
+import { Habit, CompletionMap, HabitFrequencyGoal } from "@/types";
 
 interface HabitosState {
   habits: Habit[];
   completions: CompletionMap;
+  frequencyGoals: HabitFrequencyGoal[];
   addHabit: (h: Omit<Habit, "id" | "createdAt">) => void;
   removeHabit: (id: string) => void;
   toggleCompletion: (habitId: string, date: string) => void;
+  setFrequencyGoal: (habitId: string, timesPerWeek: number) => void;
+  removeFrequencyGoal: (habitId: string) => void;
 }
 
 export const useHabitosStore = create<HabitosState>()(
@@ -16,6 +19,7 @@ export const useHabitosStore = create<HabitosState>()(
     (set) => ({
       habits: [],
       completions: {},
+      frequencyGoals: [],
 
       addHabit: (h) =>
         set((state) => ({
@@ -48,6 +52,19 @@ export const useHabitosStore = create<HabitosState>()(
             : [...current, habitId];
           return { completions: { ...state.completions, [date]: updated } };
         }),
+
+      setFrequencyGoal: (habitId, timesPerWeek) =>
+        set((state) => ({
+          frequencyGoals: [
+            ...state.frequencyGoals.filter((g) => g.habitId !== habitId),
+            { habitId, timesPerWeek },
+          ],
+        })),
+
+      removeFrequencyGoal: (habitId) =>
+        set((state) => ({
+          frequencyGoals: state.frequencyGoals.filter((g) => g.habitId !== habitId),
+        })),
     }),
     {
       name: "segna-habitos",

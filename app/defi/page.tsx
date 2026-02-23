@@ -5,6 +5,7 @@ import { AddTokenDialog } from "@/components/defi/AddTokenDialog";
 import { TokenList } from "@/components/defi/TokenList";
 import { TokenPieChart } from "@/components/defi/TokenPieChart";
 import { CryptoRefreshButton } from "@/components/defi/CryptoRefreshButton";
+import { PortfolioChart } from "@/components/defi/PortfolioChart";
 import { useHydrated } from "@/hooks/useHydrated";
 
 export default function DefiPage() {
@@ -26,6 +27,7 @@ export default function DefiPage() {
       {hydrated ? (
         <>
           <DefiSummary />
+          <PortfolioChart />
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
             <div className="lg:col-span-3">
               <TokenList />
