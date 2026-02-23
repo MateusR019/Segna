@@ -53,7 +53,7 @@ export default function DashboardPage() {
     return (
       <div className="space-y-5">
         <Skeleton className="h-7 w-48 bg-[#1a1a1a]" />
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[0,1,2,3].map((i) => <Skeleton key={i} className="h-20 bg-[#1a1a1a]" />)}
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -73,16 +73,16 @@ export default function DashboardPage() {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {/* Balance */}
-        <Link href="/financas" className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4 hover:border-[#3a3a3a] transition-colors">
+        <Link href="/financas" className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-3 md:p-4 hover:border-[#3a3a3a] transition-colors">
           <p className="text-xs text-[#6b7280] uppercase tracking-wider mb-1.5">Saldo mês</p>
-          <p className="text-xl font-semibold" style={{ color: monthBalance >= 0 ? "#22c55e" : "#ef4444" }}>
+          <p className="text-lg font-semibold truncate" style={{ color: monthBalance >= 0 ? "#22c55e" : "#ef4444" }}>
             {formatBRL(monthBalance)}
           </p>
-          <p className="text-xs text-[#4a4a4a] mt-1 flex items-center gap-1">
-            {monthBalance >= 0 ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
-            {formatBRL(monthIncome)} entrada · {formatBRL(monthExpenses)} saída
+          <p className="text-xs text-[#4a4a4a] mt-1 flex items-center gap-1 truncate">
+            {monthBalance >= 0 ? <TrendingUp size={10} className="flex-shrink-0" /> : <TrendingDown size={10} className="flex-shrink-0" />}
+            <span className="truncate">{formatBRL(monthIncome)} · {formatBRL(monthExpenses)}</span>
           </p>
           {budget && (() => {
             const bPct = Math.min((monthExpenses / budget.limitAmount) * 100, 100);
@@ -96,25 +96,25 @@ export default function DashboardPage() {
         </Link>
 
         {/* Habits */}
-        <Link href="/habitos" className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4 hover:border-[#3a3a3a] transition-colors">
+        <Link href="/habitos" className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-3 md:p-4 hover:border-[#3a3a3a] transition-colors">
           <p className="text-xs text-[#6b7280] uppercase tracking-wider mb-1.5">Hábitos hoje</p>
-          <p className="text-xl font-semibold text-white">{completedToday}<span className="text-sm text-[#4a4a4a]">/{habitTotal}</span></p>
+          <p className="text-lg font-semibold text-white">{completedToday}<span className="text-sm text-[#4a4a4a]">/{habitTotal}</span></p>
           <div className="mt-2 h-1 bg-[#2a2a2a] rounded-full overflow-hidden">
             <div className="h-full bg-[#22c55e] rounded-full transition-all" style={{ width: `${habitPct}%` }} />
           </div>
         </Link>
 
         {/* DeFi */}
-        <Link href="/defi" className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4 hover:border-[#3a3a3a] transition-colors">
+        <Link href="/defi" className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-3 md:p-4 hover:border-[#3a3a3a] transition-colors">
           <p className="text-xs text-[#6b7280] uppercase tracking-wider mb-1.5">Portfolio</p>
-          <p className="text-xl font-semibold text-white">{formatBRL(portfolioTotal)}</p>
+          <p className="text-lg font-semibold text-white truncate">{formatBRL(portfolioTotal)}</p>
           <p className="text-xs text-[#4a4a4a] mt-1">{tokens.length} {tokens.length === 1 ? "ativo" : "ativos"}</p>
         </Link>
 
         {/* Notes */}
-        <Link href="/notas" className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4 hover:border-[#3a3a3a] transition-colors">
+        <Link href="/notas" className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-3 md:p-4 hover:border-[#3a3a3a] transition-colors">
           <p className="text-xs text-[#6b7280] uppercase tracking-wider mb-1.5">Notas</p>
-          <p className="text-xl font-semibold text-white">{notes.length}</p>
+          <p className="text-lg font-semibold text-white">{notes.length}</p>
           <p className="text-xs text-[#4a4a4a] mt-1">{tags.length} {tags.length === 1 ? "tag" : "tags"}</p>
         </Link>
       </div>

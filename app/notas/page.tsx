@@ -187,7 +187,7 @@ export default function NotasPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar nas notas..."
-              className="pl-8 h-8 text-xs bg-[#1a1a1a] border-[#2a2a2a] placeholder:text-[#4a4a4a]"
+              className="pl-8 h-10 text-sm bg-[#1a1a1a] border-[#2a2a2a] placeholder:text-[#4a4a4a]"
             />
             {search && (
               <button
@@ -332,22 +332,22 @@ export default function NotasPage() {
                   </p>
                 </div>
                 {!isEditing && (
-                  <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                  <div className="flex items-center gap-0.5 flex-shrink-0">
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => startEdit(note.id, note.content)}
-                      className="h-7 w-7 text-[#3a3a3a] hover:text-[#9ca3af] hover:bg-transparent cursor-pointer"
+                      className="h-10 w-10 text-[#3a3a3a] hover:text-[#9ca3af] hover:bg-transparent cursor-pointer"
                     >
-                      <Pencil size={12} />
+                      <Pencil size={14} />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => removeNote(note.id)}
-                      className="h-7 w-7 text-[#3a3a3a] hover:text-[#ef4444] hover:bg-transparent cursor-pointer"
+                      className="h-10 w-10 text-[#3a3a3a] hover:text-[#ef4444] hover:bg-transparent cursor-pointer"
                     >
-                      <Trash2 size={13} />
+                      <Trash2 size={14} />
                     </Button>
                   </div>
                 )}

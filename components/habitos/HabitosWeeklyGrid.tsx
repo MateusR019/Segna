@@ -36,66 +36,53 @@ export function HabitosWeeklyGrid() {
             Nenhum hábito criado ainda
           </p>
         ) : (
-          <div className="overflow-x-auto">
-            <div style={{ minWidth: "400px" }}>
-              {/* Day labels row */}
-              <div
-                className="grid mb-3"
-                style={{
-                  gridTemplateColumns: `140px repeat(7, 1fr)`,
-                }}
-              >
-                <div />
-                {days.map((d) => (
-                  <div
-                    key={d.date}
-                    className="text-center text-xs text-[#6b7280] capitalize"
-                  >
-                    {d.label}
-                  </div>
-                ))}
-              </div>
-
-              {/* Habit rows */}
-              <div className="space-y-2">
-                {habits.map((habit) => (
-                  <div
-                    key={habit.id}
-                    className="grid items-center"
-                    style={{ gridTemplateColumns: `140px repeat(7, 1fr)` }}
-                  >
-                    <span className="text-xs text-[#9ca3af] truncate pr-3">
-                      {habit.name}
-                    </span>
-                    {days.map((day) => {
-                      const done = (
-                        completions[day.date] ?? []
-                      ).includes(habit.id);
-                      return (
-                        <Tooltip key={day.date}>
-                          <TooltipTrigger asChild>
-                            <div className="flex justify-center">
-                              <div
-                                className="w-5 h-5 rounded-sm transition-colors"
-                                style={{
-                                  background: done ? habit.color : "#2a2a2a",
-                                }}
-                              />
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent className="bg-[#1a1a1a] border-[#2a2a2a] text-xs text-white">
-                            {format(parseISO(day.date), "d MMM", {
-                              locale: ptBR,
-                            })}{" "}
-                            — {done ? "completo" : "não realizado"}
-                          </TooltipContent>
-                        </Tooltip>
-                      );
-                    })}
-                  </div>
-                ))}
-              </div>
+          <div className="space-y-2">
+            {/* Day labels row */}
+            <div className="grid" style={{ gridTemplateColumns: "1fr repeat(7, 32px)", gap: "4px" }}>
+              <div />
+              {days.map((d) => (
+                <div
+                  key={d.date}
+                  className="text-center text-[10px] text-[#6b7280] capitalize w-8"
+                >
+                  {d.label.charAt(0).toUpperCase()}
+                </div>
+              ))}
             </div>
+
+            {/* Habit rows */}
+            {habits.map((habit) => (
+              <div
+                key={habit.id}
+                className="grid items-center"
+                style={{ gridTemplateColumns: "1fr repeat(7, 32px)", gap: "4px" }}
+              >
+                <span className="text-xs text-[#9ca3af] truncate pr-2 min-w-0">
+                  {habit.name}
+                </span>
+                {days.map((day) => {
+                  const done = (completions[day.date] ?? []).includes(habit.id);
+                  return (
+                    <Tooltip key={day.date}>
+                      <TooltipTrigger asChild>
+                        <div className="flex justify-center">
+                          <div
+                            className="w-7 h-7 rounded-md transition-colors"
+                            style={{
+                              background: done ? habit.color : "#2a2a2a",
+                            }}
+                          />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-[#1a1a1a] border-[#2a2a2a] text-xs text-white">
+                        {format(parseISO(day.date), "d MMM", { locale: ptBR })}
+                        {" "}— {done ? "completo" : "não realizado"}
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+              </div>
+            ))}
           </div>
         )}
       </CardContent>

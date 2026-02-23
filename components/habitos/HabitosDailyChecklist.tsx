@@ -91,9 +91,9 @@ export function HabitosDailyChecklist() {
                     e.stopPropagation();
                     removeHabit(habit.id);
                   }}
-                  className="h-7 w-7 text-[#6b7280] hover:text-[#ef4444] hover:bg-transparent cursor-pointer"
+                  className="h-10 w-10 text-[#6b7280] hover:text-[#ef4444] hover:bg-transparent cursor-pointer"
                 >
-                  <Trash2 size={12} />
+                  <Trash2 size={14} />
                 </Button>
               </div>
             </CardContent>

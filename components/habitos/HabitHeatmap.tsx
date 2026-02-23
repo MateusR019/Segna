@@ -31,38 +31,40 @@ export function HabitHeatmap() {
           Heatmap — últimos 90 dias
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-5">
         {habits.map((habit) => (
-          <div key={habit.id} className="space-y-1">
-            <div className="flex items-center gap-2 mb-1.5">
-              <div className="w-2 h-2 rounded-full" style={{ background: habit.color }} />
+          <div key={habit.id}>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: habit.color }} />
               <span className="text-xs text-[#9ca3af]">{habit.name}</span>
             </div>
-            <div className="flex gap-1 flex-wrap">
-              {weeks.map((week, wi) => (
-                <div key={wi} className="flex flex-col gap-1">
-                  {week.map((day) => {
-                    const done = (completions[day] ?? []).includes(habit.id);
-                    const label = format(parseISO(day), "d MMM", { locale: ptBR });
-                    return (
-                      <Tooltip key={day}>
-                        <TooltipTrigger asChild>
-                          <div
-                            className="w-3 h-3 rounded-sm cursor-default transition-opacity"
-                            style={{
-                              background: done ? habit.color : "#2a2a2a",
-                              opacity: done ? 1 : 0.5,
-                            }}
-                          />
-                        </TooltipTrigger>
-                        <TooltipContent className="bg-[#1a1a1a] border-[#2a2a2a] text-xs text-white">
-                          {label} — {done ? "✓ feito" : "não feito"}
-                        </TooltipContent>
-                      </Tooltip>
-                    );
-                  })}
-                </div>
-              ))}
+            <div className="overflow-x-auto pb-1">
+              <div className="flex gap-1.5" style={{ width: "max-content" }}>
+                {weeks.map((week, wi) => (
+                  <div key={wi} className="flex flex-col gap-1.5">
+                    {week.map((day) => {
+                      const done = (completions[day] ?? []).includes(habit.id);
+                      const label = format(parseISO(day), "d MMM", { locale: ptBR });
+                      return (
+                        <Tooltip key={day}>
+                          <TooltipTrigger asChild>
+                            <div
+                              className="w-4 h-4 rounded-sm cursor-default transition-opacity"
+                              style={{
+                                background: done ? habit.color : "#2a2a2a",
+                                opacity: done ? 1 : 0.5,
+                              }}
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent className="bg-[#1a1a1a] border-[#2a2a2a] text-xs text-white">
+                            {label} — {done ? "✓ feito" : "não feito"}
+                          </TooltipContent>
+                        </Tooltip>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         ))}

@@ -17,7 +17,7 @@ export function AppSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-56 flex-shrink-0 flex flex-col h-full border-r border-[#2a2a2a]">
+    <aside className="hidden md:flex w-56 flex-shrink-0 flex-col h-full border-r border-[#2a2a2a]">
       <div className="px-5 py-5">
         <span className="text-sm font-semibold tracking-widest uppercase text-white">
           Segna App

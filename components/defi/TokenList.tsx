@@ -106,18 +106,18 @@ export function TokenList() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6 text-[#22c55e] hover:bg-transparent cursor-pointer"
+                    className="h-9 w-9 text-[#22c55e] hover:bg-transparent cursor-pointer"
                     onClick={() => confirmEdit(token.id)}
                   >
-                    <Check size={12} />
+                    <Check size={14} />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6 text-[#6b7280] hover:bg-transparent cursor-pointer"
+                    className="h-9 w-9 text-[#6b7280] hover:bg-transparent cursor-pointer"
                     onClick={() => setEditingId(null)}
                   >
-                    <X size={12} />
+                    <X size={14} />
                   </Button>
                 </div>
               ) : (
@@ -138,27 +138,27 @@ export function TokenList() {
                     variant="ghost"
                     size="icon"
                     title={token.priceAtAlert ? `Base: ${formatBRL(token.priceAtAlert)}` : "Definir preço base para alerta"}
-                    className="h-7 w-7 hover:bg-transparent cursor-pointer"
+                    className="h-9 w-9 hover:bg-transparent cursor-pointer"
                     style={{ color: token.priceAtAlert ? "#f59e0b" : "#3a3a3a" }}
                     onClick={() => setAlertPrice(token.id, token.priceInBRL)}
                   >
-                    <TrendingUp size={12} />
+                    <TrendingUp size={14} />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 text-[#6b7280] hover:text-white hover:bg-transparent cursor-pointer"
+                    className="h-9 w-9 text-[#6b7280] hover:text-white hover:bg-transparent cursor-pointer"
                     onClick={() => startEdit(token.id, token.priceInBRL, token.quantity)}
                   >
-                    <Pencil size={12} />
+                    <Pencil size={14} />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 text-[#6b7280] hover:text-[#ef4444] hover:bg-transparent cursor-pointer"
+                    className="h-9 w-9 text-[#6b7280] hover:text-[#ef4444] hover:bg-transparent cursor-pointer"
                     onClick={() => removeToken(token.id)}
                   >
-                    <Trash2 size={12} />
+                    <Trash2 size={14} />
                   </Button>
                 </div>
               )}

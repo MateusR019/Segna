@@ -3,6 +3,7 @@ import { Geist } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { AppSidebar } from "@/components/layout/AppSidebar";
+import { BottomNav } from "@/components/layout/BottomNav";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 const geist = Geist({ subsets: ["latin"] });
@@ -24,10 +25,11 @@ export default function RootLayout({
           <TooltipProvider>
             <div className="flex h-screen overflow-hidden bg-[#0f0f0f]">
               <AppSidebar />
-              <main className="flex-1 overflow-y-auto px-6 py-5">
+              <main className="flex-1 overflow-y-auto px-4 py-4 md:px-6 md:py-5 pb-20 md:pb-5">
                 {children}
               </main>
             </div>
+            <BottomNav />
           </TooltipProvider>
         </Providers>
       </body>
