@@ -49,10 +49,13 @@ export function CryptoRefreshButton() {
     }
 
     try {
-      const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids.join(",")}&vs_currencies=brl`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Erro na API");
+      // Use internal proxy to avoid CORS issues with CoinGecko free tier
+      const url = `/api/crypto-prices?ids=${ids.join(",")}`;
+      const res = await fetch(url, { cache: "no-store" });
+      if (res.status === 429) throw new Error("rate_limit");
+      if (!res.ok) throw new Error("upstream");
       const data = await res.json();
+      if (data.error) throw new Error(data.error);
 
       let updated = 0;
       tokens.forEach((token) => {
@@ -73,8 +76,13 @@ export function CryptoRefreshButton() {
       if (updated === 0) {
         setError("Nenhum token atualizado (símbolo não reconhecido)");
       }
-    } catch {
-      setError("Falha ao buscar preços. Tente novamente.");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "";
+      if (msg === "rate_limit") {
+        setError("Limite de requisições atingido. Aguarde 1 min.");
+      } else {
+        setError("Falha ao buscar preços. Verifique o console.");
+      }
     } finally {
       setLoading(false);
     }

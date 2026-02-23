@@ -45,7 +45,7 @@ export function AddHabitDialog() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [color, setColor] = useState(PRESET_COLORS[0]);
-  const [tag, setTag] = useState<HabitTag | "">("");
+  const [tag, setTag] = useState<HabitTag | "none">("none");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -54,11 +54,11 @@ export function AddHabitDialog() {
       name: name.trim(),
       color,
       icon: "check",
-      tag: tag || undefined,
+      tag: tag === "none" ? undefined : tag,
     });
     setName("");
     setColor(PRESET_COLORS[0]);
-    setTag("");
+    setTag("none");
     setOpen(false);
   }
 
@@ -95,13 +95,13 @@ export function AddHabitDialog() {
             <Label>Contexto</Label>
             <Select
               value={tag}
-              onValueChange={(v) => setTag(v as HabitTag | "")}
+              onValueChange={(v) => setTag(v as HabitTag | "none")}
             >
               <SelectTrigger className="bg-[#0f0f0f] border-[#2a2a2a] w-full">
                 <SelectValue placeholder="Sem contexto" />
               </SelectTrigger>
               <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a]">
-                <SelectItem value="">Sem contexto</SelectItem>
+                <SelectItem value="none">Sem contexto</SelectItem>
                 {TAGS.map((t) => (
                   <SelectItem key={t.value} value={t.value}>
                     {t.label}

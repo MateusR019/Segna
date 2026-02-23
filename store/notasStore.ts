@@ -12,6 +12,7 @@ interface NotasState {
   notes: Note[];
   tags: NoteTag[];
   addNote: (content: string, tagId?: string) => void;
+  editNote: (id: string, content: string) => void;
   removeNote: (id: string) => void;
   clearAll: () => void;
   addTag: (label: string, color: string) => void;
@@ -34,6 +35,12 @@ export const useNotasStore = create<NotasState>()(
             },
             ...s.notes,
           ],
+        })),
+      editNote: (id, content) =>
+        set((s) => ({
+          notes: s.notes.map((n) =>
+            n.id === id ? { ...n, content: content.trim() } : n
+          ),
         })),
       removeNote: (id) =>
         set((s) => ({ notes: s.notes.filter((n) => n.id !== id) })),

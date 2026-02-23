@@ -1,11 +1,12 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { TrendingUp, CheckSquare, Coins, StickyNote } from "lucide-react";
+import { TrendingUp, CheckSquare, Coins, StickyNote, LayoutDashboard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 
 const navItems = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/financas", label: "Finanças", icon: TrendingUp },
   { href: "/habitos", label: "Hábitos", icon: CheckSquare },
   { href: "/defi", label: "DeFi", icon: Coins },
