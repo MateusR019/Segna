@@ -3,62 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { useDefiStore } from "@/store/defiStore";
-
-// CoinGecko ID mapping — extended
-const SYMBOL_TO_ID: Record<string, string> = {
-  BTC: "bitcoin",
-  ETH: "ethereum",
-  SOL: "solana",
-  BNB: "binancecoin",
-  USDT: "tether",
-  USDC: "usd-coin",
-  ADA: "cardano",
-  DOT: "polkadot",
-  AVAX: "avalanche-2",
-  MATIC: "matic-network",
-  POL: "matic-network",
-  LINK: "chainlink",
-  UNI: "uniswap",
-  ATOM: "cosmos",
-  XRP: "ripple",
-  DOGE: "dogecoin",
-  LTC: "litecoin",
-  NEAR: "near",
-  APT: "aptos",
-  ARB: "arbitrum",
-  OP: "optimism",
-  PEPE: "pepe",
-  SHIB: "shiba-inu",
-  TON: "the-open-network",
-  SUI: "sui",
-  SEI: "sei-network",
-  TIA: "celestia",
-  INJ: "injective-protocol",
-  RENDER: "render-token",
-  FET: "fetch-ai",
-  WLD: "worldcoin-wld",
-  JUP: "jupiter-exchange-solana",
-  BONK: "bonk",
-  WIF: "dogwifcoin",
-  BRETT: "based-brett",
-  FLOKI: "floki",
-  JASMY: "jasmycoin",
-  ALGO: "algorand",
-  VET: "vechain",
-  XLM: "stellar",
-  HBAR: "hedera-hashgraph",
-  ICP: "internet-computer",
-  FIL: "filecoin",
-  SAND: "the-sandbox",
-  MANA: "decentraland",
-  AXS: "axie-infinity",
-  CRV: "curve-dao-token",
-  LDO: "lido-dao",
-  AAVE: "aave",
-  MKR: "maker",
-  SNX: "synthetix-network-token",
-  COMP: "compound-governance-token",
-};
+import { SYMBOL_TO_ID } from "@/lib/cryptoSymbols";
 
 export function CryptoRefreshButton() {
   const { tokens, updatePrice } = useDefiStore();

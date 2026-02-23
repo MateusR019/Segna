@@ -10,18 +10,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
 import { useDefiStore } from "@/store/defiStore";
+import { SYMBOL_TO_ID, isKnownSymbol } from "@/lib/cryptoSymbols";
 
 const TOKEN_COLORS = [
-  "#f59e0b",
-  "#6366f1",
-  "#22c55e",
-  "#ec4899",
-  "#06b6d4",
-  "#8b5cf6",
-  "#ef4444",
-  "#14b8a6",
+  "#f59e0b", "#6366f1", "#22c55e", "#ec4899",
+  "#06b6d4", "#8b5cf6", "#ef4444", "#14b8a6",
 ];
 
 export function AddTokenDialog() {
@@ -30,31 +25,65 @@ export function AddTokenDialog() {
   const [symbol, setSymbol] = useState("");
   const [name, setName] = useState("");
   const [qty, setQty] = useState("");
-  const [price, setPrice] = useState("");
   const [color, setColor] = useState(TOKEN_COLORS[0]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  function handleSubmit(e: React.FormEvent) {
+  const symbolUpper = symbol.toUpperCase();
+  const known = symbolUpper.length > 0 && isKnownSymbol(symbolUpper);
+
+  async function fetchPrice(sym: string): Promise<number | null> {
+    const geckoId = SYMBOL_TO_ID[sym];
+    if (!geckoId) return null;
+    try {
+      const res = await fetch(`/api/crypto-prices?ids=${geckoId}`, { cache: "no-store" });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data[geckoId]?.brl ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError(null);
     const quantity = parseFloat(qty.replace(",", "."));
-    const priceInBRL = parseFloat(price.replace(",", "."));
-    if (isNaN(quantity) || isNaN(priceInBRL) || quantity <= 0 || priceInBRL <= 0)
+    if (isNaN(quantity) || quantity <= 0) {
+      setError("Quantidade inválida");
       return;
+    }
+    if (!isKnownSymbol(symbolUpper)) {
+      setError(`Símbolo "${symbolUpper}" não reconhecido. Verifique e tente novamente.`);
+      return;
+    }
+
+    setLoading(true);
+    const price = await fetchPrice(symbolUpper);
+    setLoading(false);
+
+    if (price === null) {
+      setError("Não foi possível buscar o preço agora. Tente novamente.");
+      return;
+    }
+
     addToken({
-      symbol: symbol.toUpperCase(),
-      name: name || symbol.toUpperCase(),
+      symbol: symbolUpper,
+      name: name.trim() || symbolUpper,
       quantity,
-      priceInBRL,
+      priceInBRL: price,
       color,
     });
+
     setSymbol("");
     setName("");
     setQty("");
-    setPrice("");
+    setError(null);
     setOpen(false);
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setError(null); }}>
       <DialogTrigger asChild>
         <Button
           size="sm"
@@ -74,14 +103,22 @@ export function AddTokenDialog() {
               <Label>Símbolo</Label>
               <Input
                 value={symbol}
-                onChange={(e) => setSymbol(e.target.value)}
-                placeholder="BTC"
+                onChange={(e) => { setSymbol(e.target.value); setError(null); }}
+                placeholder="BTC, ETH, SOL..."
                 className="bg-[#0f0f0f] border-[#2a2a2a] uppercase"
                 required
               />
+              {symbolUpper.length > 1 && (
+                <p className={`text-xs ${known ? "text-[#22c55e]" : "text-[#f59e0b]"}`}>
+                  {known ? "✓ Preço automático" : "⚠ Símbolo não reconhecido"}
+                </p>
+              )}
             </div>
             <div className="space-y-1.5">
-              <Label>Nome</Label>
+              <Label className="flex items-center gap-1">
+                Nome
+                <span className="text-[#4a4a4a] font-normal text-xs">(opcional)</span>
+              </Label>
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -90,28 +127,18 @@ export function AddTokenDialog() {
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label>Quantidade</Label>
-              <Input
-                value={qty}
-                onChange={(e) => setQty(e.target.value)}
-                placeholder="0.01"
-                className="bg-[#0f0f0f] border-[#2a2a2a]"
-                required
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Preço (R$)</Label>
-              <Input
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                placeholder="350000"
-                className="bg-[#0f0f0f] border-[#2a2a2a]"
-                required
-              />
-            </div>
+
+          <div className="space-y-1.5">
+            <Label>Quantidade</Label>
+            <Input
+              value={qty}
+              onChange={(e) => setQty(e.target.value)}
+              placeholder="Ex: 0.01"
+              className="bg-[#0f0f0f] border-[#2a2a2a]"
+              required
+            />
           </div>
+
           <div className="space-y-2">
             <Label>Cor</Label>
             <div className="flex gap-2 flex-wrap">
@@ -121,21 +148,30 @@ export function AddTokenDialog() {
                   type="button"
                   onClick={() => setColor(c)}
                   className={`w-7 h-7 rounded-full transition-all cursor-pointer ${
-                    color === c
-                      ? "ring-2 ring-white ring-offset-2 ring-offset-[#1a1a1a]"
-                      : ""
+                    color === c ? "ring-2 ring-white ring-offset-2 ring-offset-[#1a1a1a]" : ""
                   }`}
                   style={{ background: c }}
                 />
               ))}
             </div>
           </div>
+
+          {error && <p className="text-xs text-[#ef4444]">{error}</p>}
+
           <Button
             type="submit"
-            className="w-full bg-[#22c55e] hover:bg-[#16a34a] text-black font-medium cursor-pointer"
+            disabled={loading || !symbol.trim() || !qty.trim()}
+            className="w-full bg-[#22c55e] hover:bg-[#16a34a] text-black font-medium cursor-pointer disabled:opacity-50"
           >
-            Adicionar
+            {loading
+              ? <><Loader2 size={13} className="mr-1.5 animate-spin" />Buscando preço...</>
+              : "Adicionar"
+            }
           </Button>
+
+          <p className="text-xs text-[#4a4a4a] text-center -mt-1">
+            Preço buscado automaticamente via CoinGecko
+          </p>
         </form>
       </DialogContent>
     </Dialog>
