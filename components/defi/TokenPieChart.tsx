@@ -74,21 +74,29 @@ export function TokenPieChart() {
         </ResponsiveContainer>
 
         {/* Custom legend */}
-        <div className="space-y-2 mt-3">
-          {data.map((d) => (
-            <div key={d.name} className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div
-                  className="w-2 h-2 rounded-full flex-shrink-0"
-                  style={{ background: d.color }}
-                />
-                <span className="text-xs text-[#9ca3af]">{d.name}</span>
+        <div className="space-y-1.5 mt-4 pt-3 border-t border-[#2a2a2a]">
+          {data.map((d) => {
+            const pct = total > 0 ? ((d.value / total) * 100).toFixed(1) : "0";
+            return (
+              <div key={d.name} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-2 h-2 rounded-full flex-shrink-0"
+                    style={{ background: d.color }}
+                  />
+                  <span className="text-xs text-[#9ca3af]">{d.name}</span>
+                  <span className="text-xs text-[#4a4a4a]">{pct}%</span>
+                </div>
+                <span className="text-xs text-white font-medium">
+                  {formatBRL(d.value)}
+                </span>
               </div>
-              <span className="text-xs text-white font-medium">
-                {total > 0 ? ((d.value / total) * 100).toFixed(1) : 0}%
-              </span>
-            </div>
-          ))}
+            );
+          })}
+          <div className="flex items-center justify-between pt-2 border-t border-[#2a2a2a] mt-1">
+            <span className="text-xs text-[#6b7280]">Total</span>
+            <span className="text-xs font-semibold text-white">{formatBRL(total)}</span>
+          </div>
         </div>
       </CardContent>
     </Card>

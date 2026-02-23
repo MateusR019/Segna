@@ -107,21 +107,25 @@ export function ExpensePieChart() {
         </ResponsiveContainer>
 
         {/* Custom legend abaixo do gráfico */}
-        <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 mt-2">
-          {data.map((entry, i) => (
-            <div key={entry.name} className="flex items-center gap-2">
-              <div
-                className="w-2.5 h-2.5 rounded-sm flex-shrink-0"
-                style={{ background: COLORS[i] }}
-              />
-              <span className="text-xs text-[#9ca3af] truncate">
-                {entry.name}
-              </span>
-              <span className="text-xs text-white ml-auto flex-shrink-0">
-                {total > 0 ? ((entry.value / total) * 100).toFixed(0) : 0}%
-              </span>
-            </div>
-          ))}
+        <div className="space-y-1.5 mt-4 pt-3 border-t border-[#2a2a2a]">
+          {data.map((entry, i) => {
+            const pct = total > 0 ? ((entry.value / total) * 100).toFixed(0) : "0";
+            return (
+              <div key={entry.name} className="flex items-center justify-between">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div
+                    className="w-2 h-2 rounded-sm flex-shrink-0"
+                    style={{ background: COLORS[i] }}
+                  />
+                  <span className="text-xs text-[#9ca3af] truncate">{entry.name}</span>
+                  <span className="text-xs text-[#4a4a4a] flex-shrink-0">{pct}%</span>
+                </div>
+                <span className="text-xs text-white font-medium flex-shrink-0 ml-3">
+                  {formatBRL(entry.value)}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </CardContent>
     </Card>

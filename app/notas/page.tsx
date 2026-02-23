@@ -66,7 +66,7 @@ export default function NotasPage() {
   const tagMap = Object.fromEntries(tags.map((t) => [t.id, t]));
 
   return (
-    <div className="space-y-5 max-w-2xl">
+    <div className="space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
