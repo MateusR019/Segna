@@ -38,14 +38,14 @@ export function HabitosWeeklyGrid() {
         ) : (
           <div className="space-y-2">
             {/* Day labels row */}
-            <div className="grid" style={{ gridTemplateColumns: "1fr repeat(7, 32px)", gap: "4px" }}>
-              <div />
+            <div className="flex items-center gap-1">
+              <div className="w-28 flex-shrink-0" />
               {days.map((d) => (
                 <div
                   key={d.date}
-                  className="text-center text-[10px] text-[#6b7280] capitalize w-8"
+                  className="w-8 flex-shrink-0 text-center text-[10px] text-[#6b7280] capitalize"
                 >
-                  {d.label.charAt(0).toUpperCase()}
+                  {d.label.slice(0, 3)}
                 </div>
               ))}
             </div>
@@ -54,10 +54,9 @@ export function HabitosWeeklyGrid() {
             {habits.map((habit) => (
               <div
                 key={habit.id}
-                className="grid items-center"
-                style={{ gridTemplateColumns: "1fr repeat(7, 32px)", gap: "4px" }}
+                className="flex items-center gap-1"
               >
-                <span className="text-xs text-[#9ca3af] truncate pr-2 min-w-0">
+                <span className="w-28 flex-shrink-0 text-xs text-[#9ca3af] pr-2 truncate">
                   {habit.name}
                 </span>
                 {days.map((day) => {
@@ -65,14 +64,12 @@ export function HabitosWeeklyGrid() {
                   return (
                     <Tooltip key={day.date}>
                       <TooltipTrigger asChild>
-                        <div className="flex justify-center">
-                          <div
-                            className="w-7 h-7 rounded-md transition-colors"
-                            style={{
-                              background: done ? habit.color : "#2a2a2a",
-                            }}
-                          />
-                        </div>
+                        <div
+                          className="w-8 h-8 flex-shrink-0 rounded-md transition-colors"
+                          style={{
+                            background: done ? habit.color : "#2a2a2a",
+                          }}
+                        />
                       </TooltipTrigger>
                       <TooltipContent className="bg-[#1a1a1a] border-[#2a2a2a] text-xs text-white">
                         {format(parseISO(day.date), "d MMM", { locale: ptBR })}
