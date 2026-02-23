@@ -76,9 +76,16 @@ export interface WeekDay {
 
 // ─── Notas ───────────────────────────────────────────────────────────────────
 
+export interface NoteTag {
+  id: string;
+  label: string;
+  color: string;
+}
+
 export interface Note {
   id: string;
   content: string;
+  tagId?: string; // optional reference to a NoteTag
   createdAt: string; // ISO timestamp
 }
 
