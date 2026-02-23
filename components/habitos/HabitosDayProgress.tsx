@@ -14,8 +14,8 @@ export function HabitosDayProgress() {
   const todayLabel = format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR });
 
   return (
-    <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-5">
-      <div className="flex items-center justify-between mb-3">
+    <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4">
+      <div className="flex items-center justify-between mb-2.5">
         <p className="text-sm text-[#9ca3af] capitalize">{todayLabel}</p>
         <span className="text-sm font-medium text-white">
           {completedToday}/{total} hábitos

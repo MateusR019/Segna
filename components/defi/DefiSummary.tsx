@@ -11,19 +11,19 @@ export function DefiSummary() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <Card className="bg-[#1a1a1a] border-[#2a2a2a]">
-        <CardContent className="p-5">
-          <p className="text-xs text-[#6b7280] uppercase tracking-wider mb-2">
+        <CardContent className="p-4">
+          <p className="text-xs text-[#6b7280] uppercase tracking-wider mb-1.5">
             Total do Portfolio
           </p>
-          <p className="text-2xl font-semibold text-white">{formatBRL(total)}</p>
+          <p className="text-xl font-semibold text-white">{formatBRL(total)}</p>
         </CardContent>
       </Card>
       <Card className="bg-[#1a1a1a] border-[#2a2a2a]">
-        <CardContent className="p-5">
-          <p className="text-xs text-[#6b7280] uppercase tracking-wider mb-2">
+        <CardContent className="p-4">
+          <p className="text-xs text-[#6b7280] uppercase tracking-wider mb-1.5">
             Ativos
           </p>
-          <p className="text-2xl font-semibold text-white">{count}</p>
+          <p className="text-xl font-semibold text-white">{count}</p>
         </CardContent>
       </Card>
     </div>

@@ -28,11 +28,11 @@ export function FinancasSummary() {
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
       {cards.map(({ label, value, color }) => (
         <Card key={label} className="bg-[#1a1a1a] border-[#2a2a2a] rounded-lg">
-          <CardContent className="p-5">
-            <p className="text-xs text-[#6b7280] uppercase tracking-wider mb-2">
+          <CardContent className="p-4">
+            <p className="text-xs text-[#6b7280] uppercase tracking-wider mb-1.5">
               {label}
             </p>
-            <p className="text-2xl font-semibold" style={{ color }}>
+            <p className="text-xl font-semibold" style={{ color }}>
               {formatBRL(value)}
             </p>
           </CardContent>

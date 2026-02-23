@@ -70,6 +70,11 @@ export function HabitosDailyChecklist() {
                 >
                   {habit.name}
                 </span>
+                {habit.tag && (
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-[#2a2a2a] text-[#6b7280] capitalize">
+                    {habit.tag}
+                  </span>
+                )}
               </div>
 
               <div className="flex items-center gap-2">

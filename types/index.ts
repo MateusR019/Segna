@@ -21,6 +21,7 @@ export interface Transaction {
   amount: number;
   date: string; // "YYYY-MM-DD"
   createdAt: string;
+  recurring?: boolean; // Feature 6: recorrência
 }
 
 export interface CategorySummary {
@@ -35,13 +36,25 @@ export interface MonthlyBalance {
   expenses: number;
 }
 
+// Feature 1: Metas financeiras por categoria
+export interface CategoryGoal {
+  id: string;
+  category: ExpenseCategory;
+  limitAmount: number; // limite mensal em R$
+  createdAt: string;
+}
+
 // ─── Habits ──────────────────────────────────────────────────────────────────
+
+// Feature 7: Tags nos hábitos
+export type HabitTag = "saude" | "trabalho" | "pessoal" | "aprendizado" | "financas";
 
 export interface Habit {
   id: string;
   name: string;
   icon: string;
   color: string;
+  tag?: HabitTag; // Feature 7
   createdAt: string;
 }
 

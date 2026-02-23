@@ -1,12 +1,5 @@
 "use client";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useFinancasStore } from "@/store/financasStore";
 import { formatBRL } from "@/lib/format";
@@ -45,13 +38,10 @@ export function ExpensePieChart() {
       return acc;
     }, {});
 
-  const data = Object.entries(grouped).map(([name, value]) => ({
-    name: CATEGORY_LABELS[name] ?? name,
-    value,
-    color: CATEGORY_COLORS[name] ?? "#6b7280",
-  }));
+  const entries = Object.entries(grouped);
+  const total = entries.reduce((sum, [, v]) => sum + v, 0);
 
-  if (data.length === 0) {
+  if (entries.length === 0) {
     return (
       <Card className="bg-[#1a1a1a] border-[#2a2a2a]">
         <CardHeader>
@@ -66,6 +56,13 @@ export function ExpensePieChart() {
     );
   }
 
+  const COLORS = entries.map(([key]) => CATEGORY_COLORS[key] ?? "#6b7280");
+
+  const data = entries.map(([key, value]) => ({
+    name: CATEGORY_LABELS[key] ?? key,
+    value,
+  }));
+
   return (
     <Card className="bg-[#1a1a1a] border-[#2a2a2a]">
       <CardHeader>
@@ -74,19 +71,23 @@ export function ExpensePieChart() {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={260}>
+        <ResponsiveContainer width="100%" height={220}>
           <PieChart>
             <Pie
               data={data}
               cx="50%"
               cy="50%"
-              innerRadius={60}
-              outerRadius={100}
+              innerRadius={55}
+              outerRadius={90}
               paddingAngle={2}
               dataKey="value"
             >
-              {data.map((entry, i) => (
-                <Cell key={`cell-${i}`} fill={entry.color} stroke="transparent" />
+              {data.map((_, i) => (
+                <Cell
+                  key={`cell-${i}`}
+                  fill={COLORS[i]}
+                  stroke="transparent"
+                />
               ))}
             </Pie>
             <Tooltip
@@ -95,18 +96,33 @@ export function ExpensePieChart() {
                 border: "1px solid #2a2a2a",
                 borderRadius: "6px",
                 color: "#f5f5f5",
+                fontSize: "12px",
               }}
-              formatter={(value: number | undefined) => [formatBRL(value ?? 0), ""]}
-            />
-            <Legend
-              formatter={(value) => (
-                <span style={{ color: "#9ca3af", fontSize: "12px" }}>
-                  {value}
-                </span>
-              )}
+              formatter={(value: number | undefined) => [
+                formatBRL(value ?? 0),
+                "",
+              ]}
             />
           </PieChart>
         </ResponsiveContainer>
+
+        {/* Custom legend abaixo do gráfico */}
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 mt-2">
+          {data.map((entry, i) => (
+            <div key={entry.name} className="flex items-center gap-2">
+              <div
+                className="w-2.5 h-2.5 rounded-sm flex-shrink-0"
+                style={{ background: COLORS[i] }}
+              />
+              <span className="text-xs text-[#9ca3af] truncate">
+                {entry.name}
+              </span>
+              <span className="text-xs text-white ml-auto flex-shrink-0">
+                {total > 0 ? ((entry.value / total) * 100).toFixed(0) : 0}%
+              </span>
+            </div>
+          ))}
+        </div>
       </CardContent>
     </Card>
   );

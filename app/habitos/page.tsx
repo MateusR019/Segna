@@ -10,7 +10,7 @@ export default function HabitosPage() {
   const hydrated = useHydrated();
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold text-white">Hábitos</h1>

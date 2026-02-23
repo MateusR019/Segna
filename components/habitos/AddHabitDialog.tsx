@@ -10,8 +10,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import { useHabitosStore } from "@/store/habitosStore";
+import { HabitTag } from "@/types";
 
 const PRESET_COLORS = [
   "#22c55e",
@@ -24,18 +32,33 @@ const PRESET_COLORS = [
   "#f97316",
 ];
 
+const TAGS: { value: HabitTag; label: string; color: string }[] = [
+  { value: "saude", label: "Saúde", color: "#22c55e" },
+  { value: "trabalho", label: "Trabalho", color: "#6366f1" },
+  { value: "pessoal", label: "Pessoal", color: "#f59e0b" },
+  { value: "aprendizado", label: "Aprendizado", color: "#06b6d4" },
+  { value: "financas", label: "Finanças", color: "#14b8a6" },
+];
+
 export function AddHabitDialog() {
   const addHabit = useHabitosStore((s) => s.addHabit);
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [color, setColor] = useState(PRESET_COLORS[0]);
+  const [tag, setTag] = useState<HabitTag | "">("");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) return;
-    addHabit({ name: name.trim(), color, icon: "check" });
+    addHabit({
+      name: name.trim(),
+      color,
+      icon: "check",
+      tag: tag || undefined,
+    });
     setName("");
     setColor(PRESET_COLORS[0]);
+    setTag("");
     setOpen(false);
   }
 
@@ -66,6 +89,28 @@ export function AddHabitDialog() {
               required
             />
           </div>
+
+          {/* Tag */}
+          <div className="space-y-1.5">
+            <Label>Contexto</Label>
+            <Select
+              value={tag}
+              onValueChange={(v) => setTag(v as HabitTag | "")}
+            >
+              <SelectTrigger className="bg-[#0f0f0f] border-[#2a2a2a] w-full">
+                <SelectValue placeholder="Sem contexto" />
+              </SelectTrigger>
+              <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a]">
+                <SelectItem value="">Sem contexto</SelectItem>
+                {TAGS.map((t) => (
+                  <SelectItem key={t.value} value={t.value}>
+                    {t.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="space-y-2">
             <Label>Cor</Label>
             <div className="flex gap-2 flex-wrap">
@@ -84,6 +129,7 @@ export function AddHabitDialog() {
               ))}
             </div>
           </div>
+
           <Button
             type="submit"
             className="w-full bg-[#22c55e] hover:bg-[#16a34a] text-black font-medium cursor-pointer"

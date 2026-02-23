@@ -41,15 +41,17 @@ export function AddTransactionDialog() {
   const [description, setDesc] = useState("");
   const [category, setCategory] = useState<ExpenseCategory>("other");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [recurring, setRecurring] = useState(false);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const parsedAmount = parseFloat(amount.replace(",", "."));
     if (isNaN(parsedAmount) || parsedAmount <= 0) return;
-    addTransaction({ type, category, description, amount: parsedAmount, date });
+    addTransaction({ type, category, description, amount: parsedAmount, date, recurring });
     setAmount("");
     setDesc("");
     setCategory("other");
+    setRecurring(false);
     setOpen(false);
   }
 
@@ -142,6 +144,20 @@ export function AddTransactionDialog() {
               required
             />
           </div>
+
+          {/* Recorrência */}
+          <button
+            type="button"
+            onClick={() => setRecurring((r) => !r)}
+            className={`w-full py-2 rounded-md text-sm border transition-colors cursor-pointer flex items-center justify-center gap-2 ${
+              recurring
+                ? "bg-[#1f2937] border-[#6366f1] text-[#818cf8]"
+                : "bg-transparent border-[#2a2a2a] text-[#9ca3af] hover:border-[#3a3a3a]"
+            }`}
+          >
+            <span>{recurring ? "✓" : "○"}</span>
+            Lançar automaticamente todo mês
+          </button>
 
           <Button
             type="submit"
