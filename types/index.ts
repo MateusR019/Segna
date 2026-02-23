@@ -74,6 +74,14 @@ export interface WeekDay {
   completionRate: number;
 }
 
+// ─── Notas ───────────────────────────────────────────────────────────────────
+
+export interface Note {
+  id: string;
+  content: string;
+  createdAt: string; // ISO timestamp
+}
+
 // ─── DeFi / Crypto ───────────────────────────────────────────────────────────
 
 export interface Token {

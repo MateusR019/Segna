@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { TrendingUp, CheckSquare, Coins } from "lucide-react";
+import { TrendingUp, CheckSquare, Coins, StickyNote } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 
@@ -9,6 +9,7 @@ const navItems = [
   { href: "/financas", label: "Finanças", icon: TrendingUp },
   { href: "/habitos", label: "Hábitos", icon: CheckSquare },
   { href: "/defi", label: "DeFi", icon: Coins },
+  { href: "/notas", label: "Notas", icon: StickyNote },
 ] as const;
 
 export function AppSidebar() {
