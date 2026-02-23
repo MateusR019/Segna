@@ -10,6 +10,7 @@ import { MonthlyLineChart } from "@/components/financas/MonthlyLineChart";
 import { CategoryGoals } from "@/components/financas/CategoryGoals";
 import { MonthlyReport } from "@/components/financas/MonthlyReport";
 import { MonthlyBudget } from "@/components/financas/MonthlyBudget";
+import { SavingsGoalWidget } from "@/components/financas/SavingsGoalWidget";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useFinancasStore } from "@/store/financasStore";
 
@@ -35,7 +36,10 @@ export default function FinancasPage() {
       {hydrated ? (
         <>
           <FinancasSummary />
-          <MonthlyBudget />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <MonthlyBudget />
+            <SavingsGoalWidget />
+          </div>
         </>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

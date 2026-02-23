@@ -5,7 +5,7 @@ import { useHydrated } from "@/hooks/useHydrated";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Trash2, Eraser, Plus, Tag, X, Search, Check, Pencil } from "lucide-react";
+import { Trash2, Eraser, Plus, Tag, X, Search, Check, Pencil, Pin, List, AlignLeft } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -14,25 +14,99 @@ const TAG_COLORS = [
   "#06b6d4", "#8b5cf6", "#f97316", "#ef4444",
 ];
 
+// Simple markdown renderer: **bold**, _italic_, `code`, blank line = paragraph break
+function renderMarkdown(text: string) {
+  const lines = text.split("\n");
+  return lines.map((line, i) => {
+    // Replace inline markdown
+    const parts: React.ReactNode[] = [];
+    let remaining = line;
+    let key = 0;
+
+    // Process **bold**, _italic_, `code`
+    const pattern = /(\*\*(.+?)\*\*|_(.+?)_|`(.+?)`)/g;
+    let last = 0;
+    let match;
+    while ((match = pattern.exec(remaining)) !== null) {
+      if (match.index > last) parts.push(remaining.slice(last, match.index));
+      if (match[0].startsWith("**")) parts.push(<strong key={key++} className="font-semibold text-white">{match[2]}</strong>);
+      else if (match[0].startsWith("_")) parts.push(<em key={key++} className="italic">{match[3]}</em>);
+      else if (match[0].startsWith("`")) parts.push(<code key={key++} className="text-xs bg-[#2a2a2a] text-[#a78bfa] px-1 py-0.5 rounded font-mono">{match[4]}</code>);
+      last = match.index + match[0].length;
+    }
+    if (last < remaining.length) parts.push(remaining.slice(last));
+
+    return (
+      <span key={i}>
+        {parts.length > 0 ? parts : line}
+        {i < lines.length - 1 && <br />}
+      </span>
+    );
+  });
+}
+
+// Checklist renderer: lines starting with "[ ]" or "[x]"
+function ChecklistView({
+  content,
+  onToggle,
+}: {
+  content: string;
+  onToggle: (newContent: string) => void;
+}) {
+  const lines = content.split("\n");
+  return (
+    <div className="space-y-1.5">
+      {lines.map((line, i) => {
+        const isDone = line.startsWith("[x] ") || line.startsWith("[X] ");
+        const isTodo = line.startsWith("[ ] ");
+        const isCheckLine = isDone || isTodo;
+        const text = isCheckLine ? line.slice(4) : line;
+
+        if (!isCheckLine) {
+          return <p key={i} className="text-xs text-[#6b7280] leading-relaxed">{line}</p>;
+        }
+
+        return (
+          <button
+            key={i}
+            onClick={() => {
+              const newLines = [...lines];
+              newLines[i] = isDone ? `[ ] ${text}` : `[x] ${text}`;
+              onToggle(newLines.join("\n"));
+            }}
+            className="flex items-start gap-2 w-full text-left cursor-pointer"
+          >
+            <div className={`w-4 h-4 rounded border flex-shrink-0 mt-0.5 flex items-center justify-center transition-colors ${isDone ? "bg-[#22c55e] border-[#22c55e]" : "border-[#3a3a3a]"}`}>
+              {isDone && <Check size={10} className="text-black" />}
+            </div>
+            <span className={`text-sm leading-relaxed ${isDone ? "line-through text-[#4a4a4a]" : "text-white"}`}>
+              {text}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function NotasPage() {
   const hydrated = useHydrated();
-  const { notes, tags, addNote, editNote, removeNote, clearAll, addTag, removeTag } =
+  const { notes, tags, addNote, editNote, removeNote, clearAll, addTag, removeTag, togglePin, setNoteMode } =
     useNotasStore();
 
   const [draft, setDraft] = useState("");
+  const [newMode, setNewMode] = useState<"text" | "checklist">("text");
   const [selectedTagId, setSelectedTagId] = useState<string>("");
   const [filterTagId, setFilterTagId] = useState<string>("");
   const [search, setSearch] = useState("");
   const [showAddTag, setShowAddTag] = useState(false);
   const [newTagLabel, setNewTagLabel] = useState("");
   const [newTagColor, setNewTagColor] = useState(TAG_COLORS[0]);
-  // inline edit state
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const editRef = useRef<HTMLTextAreaElement>(null);
 
-  // Auto-resize new note textarea
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
@@ -40,7 +114,6 @@ export default function NotasPage() {
     el.style.height = `${el.scrollHeight}px`;
   }, [draft]);
 
-  // Auto-resize edit textarea
   useEffect(() => {
     const el = editRef.current;
     if (!el) return;
@@ -49,15 +122,12 @@ export default function NotasPage() {
   }, [editDraft]);
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-      e.preventDefault();
-      submit();
-    }
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); submit(); }
   }
 
   function submit() {
     if (!draft.trim()) return;
-    addNote(draft, selectedTagId || undefined);
+    addNote(draft, selectedTagId || undefined, newMode);
     setDraft("");
     setSelectedTagId("");
     textareaRef.current?.focus();
@@ -75,10 +145,7 @@ export default function NotasPage() {
     setEditingId(null);
   }
 
-  function cancelEdit() {
-    setEditingId(null);
-    setEditDraft("");
-  }
+  function cancelEdit() { setEditingId(null); setEditDraft(""); }
 
   function handleAddTag(e: React.FormEvent) {
     e.preventDefault();
@@ -91,11 +158,16 @@ export default function NotasPage() {
 
   const tagMap = Object.fromEntries(tags.map((t) => [t.id, t]));
 
-  const visibleNotes = notes.filter((n) => {
+  // Pinned first, then rest
+  const filtered = notes.filter((n) => {
     const matchTag = !filterTagId || n.tagId === filterTagId;
     const matchSearch = !search.trim() || n.content.toLowerCase().includes(search.toLowerCase());
     return matchTag && matchSearch;
   });
+  const visibleNotes = [
+    ...filtered.filter((n) => n.pinned),
+    ...filtered.filter((n) => !n.pinned),
+  ];
 
   return (
     <div className="space-y-5">
@@ -106,12 +178,7 @@ export default function NotasPage() {
           <p className="text-sm text-[#6b7280]">Anote e vá embora</p>
         </div>
         {hydrated && notes.length > 0 && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={clearAll}
-            className="text-xs text-[#6b7280] hover:text-[#ef4444] hover:bg-transparent cursor-pointer"
-          >
+          <Button variant="ghost" size="sm" onClick={clearAll} className="text-xs text-[#6b7280] hover:text-[#ef4444] hover:bg-transparent cursor-pointer">
             <Eraser size={13} className="mr-1.5" />
             Limpar tudo
           </Button>
@@ -125,21 +192,35 @@ export default function NotasPage() {
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="O que está na sua cabeça? (Ctrl+Enter para salvar)"
+          placeholder={
+            newMode === "checklist"
+              ? "[ ] item 1\n[ ] item 2\n[x] feito"
+              : "O que está na sua cabeça? (Ctrl+Enter para salvar)"
+          }
           rows={3}
           className="w-full bg-transparent text-sm text-white placeholder-[#4a4a4a] resize-none outline-none leading-relaxed"
         />
 
-        {/* Tag selector */}
+        {/* Mode + Tag selector */}
         {hydrated && (
           <div className="flex flex-wrap gap-1.5 border-t border-[#2a2a2a] pt-3">
+            {/* Mode toggle */}
+            <button
+              type="button"
+              onClick={() => setNewMode(newMode === "text" ? "checklist" : "text")}
+              className={`flex items-center gap-1 px-2 py-0.5 rounded text-xs transition-colors cursor-pointer ${
+                newMode === "checklist" ? "bg-[#6366f1]/20 text-[#a78bfa]" : "text-[#4a4a4a] hover:text-[#6b7280]"
+              }`}
+            >
+              {newMode === "checklist" ? <List size={10} /> : <AlignLeft size={10} />}
+              {newMode === "checklist" ? "checklist" : "texto"}
+            </button>
+
             <button
               type="button"
               onClick={() => setSelectedTagId("")}
               className={`flex items-center gap-1 px-2 py-0.5 rounded text-xs transition-colors cursor-pointer ${
-                selectedTagId === ""
-                  ? "bg-[#2a2a2a] text-white"
-                  : "text-[#4a4a4a] hover:text-[#6b7280]"
+                selectedTagId === "" ? "bg-[#2a2a2a] text-white" : "text-[#4a4a4a] hover:text-[#6b7280]"
               }`}
             >
               <Tag size={10} />
@@ -164,23 +245,18 @@ export default function NotasPage() {
 
         <div className="flex items-center justify-between">
           <span className="text-xs text-[#4a4a4a]">
-            {draft.length > 0 ? `${draft.length} caracteres` : "Ctrl+Enter para salvar"}
+            {draft.length > 0 ? `${draft.length} chars` : "Ctrl+Enter para salvar"}
           </span>
-          <Button
-            size="sm"
-            onClick={submit}
-            disabled={!draft.trim()}
-            className="bg-[#22c55e] hover:bg-[#16a34a] text-black font-medium text-xs cursor-pointer disabled:opacity-30"
-          >
+          <Button size="sm" onClick={submit} disabled={!draft.trim()}
+            className="bg-[#22c55e] hover:bg-[#16a34a] text-black font-medium text-xs cursor-pointer disabled:opacity-30">
             Salvar
           </Button>
         </div>
       </div>
 
-      {/* Tag filter bar + search */}
+      {/* Filter bar + search */}
       {hydrated && (
         <div className="space-y-2.5">
-          {/* Search */}
           <div className="relative">
             <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#4a4a4a]" />
             <Input
@@ -190,23 +266,17 @@ export default function NotasPage() {
               className="pl-8 h-10 text-sm bg-[#1a1a1a] border-[#2a2a2a] placeholder:text-[#4a4a4a]"
             />
             {search && (
-              <button
-                onClick={() => setSearch("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#4a4a4a] hover:text-[#9ca3af] cursor-pointer"
-              >
+              <button onClick={() => setSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#4a4a4a] hover:text-[#9ca3af] cursor-pointer">
                 <X size={12} />
               </button>
             )}
           </div>
 
-          {/* Filter bar */}
           <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => setFilterTagId("")}
               className={`px-2.5 py-1 rounded text-xs transition-colors cursor-pointer ${
-                filterTagId === ""
-                  ? "bg-[#2a2a2a] text-white"
-                  : "text-[#6b7280] hover:text-white hover:bg-[#1f1f1f]"
+                filterTagId === "" ? "bg-[#2a2a2a] text-white" : "text-[#6b7280] hover:text-white hover:bg-[#1f1f1f]"
               }`}
             >
               Todas ({notes.length})
@@ -244,19 +314,10 @@ export default function NotasPage() {
               </button>
             ) : (
               <form onSubmit={handleAddTag} className="flex items-center gap-1.5">
-                <Input
-                  value={newTagLabel}
-                  onChange={(e) => setNewTagLabel(e.target.value)}
-                  placeholder="Nome da tag"
-                  autoFocus
-                  className="h-6 text-xs bg-[#0f0f0f] border-[#2a2a2a] w-28 px-2"
-                />
+                <Input value={newTagLabel} onChange={(e) => setNewTagLabel(e.target.value)} placeholder="Nome da tag" autoFocus className="h-6 text-xs bg-[#0f0f0f] border-[#2a2a2a] w-28 px-2" />
                 <div className="flex gap-1">
                   {TAG_COLORS.map((c) => (
-                    <button
-                      key={c}
-                      type="button"
-                      onClick={() => setNewTagColor(c)}
+                    <button key={c} type="button" onClick={() => setNewTagColor(c)}
                       className={`w-4 h-4 rounded-full cursor-pointer transition-all ${newTagColor === c ? "ring-1 ring-white ring-offset-1 ring-offset-[#1a1a1a]" : ""}`}
                       style={{ background: c }}
                     />
@@ -287,21 +348,38 @@ export default function NotasPage() {
           {visibleNotes.map((note) => {
             const tag = note.tagId ? tagMap[note.tagId] : undefined;
             const isEditing = editingId === note.id;
+            const isChecklist = note.mode === "checklist";
+
             return (
               <div
                 key={note.id}
-                className="group flex items-start justify-between gap-3 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg px-4 py-3 hover:border-[#3a3a3a] transition-colors"
+                className={`flex items-start justify-between gap-3 bg-[#1a1a1a] border rounded-lg px-4 py-3 transition-colors ${
+                  note.pinned ? "border-[#6366f1]/40" : "border-[#2a2a2a] hover:border-[#3a3a3a]"
+                }`}
               >
                 <div className="flex-1 min-w-0 space-y-1.5">
-                  {tag && (
-                    <span
-                      className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded"
-                      style={{ background: tag.color + "22", color: tag.color }}
-                    >
-                      <span className="w-1 h-1 rounded-full" style={{ background: tag.color }} />
-                      {tag.label}
-                    </span>
-                  )}
+                  {/* Tag + mode badges */}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {note.pinned && (
+                      <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded bg-[#6366f1]/15 text-[#a78bfa]">
+                        <Pin size={9} /> fixada
+                      </span>
+                    )}
+                    {isChecklist && (
+                      <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded bg-[#2a2a2a] text-[#6b7280]">
+                        <List size={9} /> lista
+                      </span>
+                    )}
+                    {tag && (
+                      <span className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded"
+                        style={{ background: tag.color + "22", color: tag.color }}>
+                        <span className="w-1 h-1 rounded-full" style={{ background: tag.color }} />
+                        {tag.label}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Content */}
                   {isEditing ? (
                     <div className="space-y-2">
                       <textarea
@@ -319,35 +397,56 @@ export default function NotasPage() {
                         <button onClick={confirmEdit} className="flex items-center gap-1 text-xs text-[#22c55e] hover:text-[#16a34a] cursor-pointer">
                           <Check size={11} /> Salvar
                         </button>
-                        <button onClick={cancelEdit} className="text-xs text-[#4a4a4a] hover:text-[#6b7280] cursor-pointer">
-                          Cancelar
-                        </button>
+                        <button onClick={cancelEdit} className="text-xs text-[#4a4a4a] hover:text-[#6b7280] cursor-pointer">Cancelar</button>
                       </div>
                     </div>
+                  ) : isChecklist ? (
+                    <ChecklistView
+                      content={note.content}
+                      onToggle={(newContent) => editNote(note.id, newContent)}
+                    />
                   ) : (
-                    <p className="text-sm text-white whitespace-pre-wrap break-words leading-relaxed">{note.content}</p>
+                    <p className="text-sm text-white whitespace-pre-wrap break-words leading-relaxed">
+                      {renderMarkdown(note.content)}
+                    </p>
                   )}
+
                   <p className="text-xs text-[#4a4a4a]">
                     {formatDistanceToNow(new Date(note.createdAt), { addSuffix: true, locale: ptBR })}
                   </p>
                 </div>
+
+                {/* Actions */}
                 {!isEditing && (
-                  <div className="flex items-center gap-0.5 flex-shrink-0">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => startEdit(note.id, note.content)}
-                      className="h-10 w-10 text-[#3a3a3a] hover:text-[#9ca3af] hover:bg-transparent cursor-pointer"
+                  <div className="flex flex-col items-center gap-0.5 flex-shrink-0">
+                    {/* Pin */}
+                    <Button variant="ghost" size="icon"
+                      onClick={() => togglePin(note.id)}
+                      className="h-9 w-9 hover:bg-transparent cursor-pointer"
+                      style={{ color: note.pinned ? "#a78bfa" : "#3a3a3a" }}
+                      title={note.pinned ? "Desafixar" : "Fixar nota"}
                     >
-                      <Pencil size={14} />
+                      <Pin size={13} />
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeNote(note.id)}
-                      className="h-10 w-10 text-[#3a3a3a] hover:text-[#ef4444] hover:bg-transparent cursor-pointer"
+                    {/* Mode toggle */}
+                    <Button variant="ghost" size="icon"
+                      onClick={() => setNoteMode(note.id, isChecklist ? "text" : "checklist")}
+                      className="h-9 w-9 text-[#3a3a3a] hover:text-[#9ca3af] hover:bg-transparent cursor-pointer"
+                      title={isChecklist ? "Modo texto" : "Modo lista"}
                     >
-                      <Trash2 size={14} />
+                      {isChecklist ? <AlignLeft size={13} /> : <List size={13} />}
+                    </Button>
+                    {/* Edit */}
+                    <Button variant="ghost" size="icon"
+                      onClick={() => startEdit(note.id, note.content)}
+                      className="h-9 w-9 text-[#3a3a3a] hover:text-[#9ca3af] hover:bg-transparent cursor-pointer">
+                      <Pencil size={13} />
+                    </Button>
+                    {/* Delete */}
+                    <Button variant="ghost" size="icon"
+                      onClick={() => removeNote(note.id)}
+                      className="h-9 w-9 text-[#3a3a3a] hover:text-[#ef4444] hover:bg-transparent cursor-pointer">
+                      <Trash2 size={13} />
                     </Button>
                   </div>
                 )}

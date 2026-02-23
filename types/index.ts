@@ -21,7 +21,7 @@ export interface Transaction {
   amount: number;
   date: string; // "YYYY-MM-DD"
   createdAt: string;
-  recurring?: boolean; // Feature 6: recorrência
+  recurring?: boolean;
 }
 
 export interface CategorySummary {
@@ -36,17 +36,21 @@ export interface MonthlyBalance {
   expenses: number;
 }
 
-// Feature 1: Metas financeiras por categoria
+// Metas financeiras por categoria
 export interface CategoryGoal {
   id: string;
   category: ExpenseCategory;
-  limitAmount: number; // limite mensal em R$
+  limitAmount: number;
   createdAt: string;
+}
+
+// Feature 2: Meta de economia mensal
+export interface SavingsGoal {
+  targetAmount: number;
 }
 
 // ─── Habits ──────────────────────────────────────────────────────────────────
 
-// Feature 7: Tags nos hábitos
 export type HabitTag = "saude" | "trabalho" | "pessoal" | "aprendizado" | "financas";
 
 export interface Habit {
@@ -54,7 +58,8 @@ export interface Habit {
   name: string;
   icon: string;
   color: string;
-  tag?: HabitTag; // Feature 7
+  tag?: HabitTag;
+  order?: number; // Feature 8: drag-and-drop order
   createdAt: string;
 }
 
@@ -74,6 +79,18 @@ export interface WeekDay {
   completionRate: number;
 }
 
+export interface HabitFrequencyGoal {
+  habitId: string;
+  timesPerWeek: number;
+}
+
+// Feature 5: Nota opcional por hábito (por data)
+export interface HabitNote {
+  habitId: string;
+  date: string; // "YYYY-MM-DD"
+  text: string;
+}
+
 // ─── Notas ───────────────────────────────────────────────────────────────────
 
 export interface NoteTag {
@@ -85,27 +102,22 @@ export interface NoteTag {
 export interface Note {
   id: string;
   content: string;
-  tagId?: string; // optional reference to a NoteTag
-  createdAt: string; // ISO timestamp
+  tagId?: string;
+  createdAt: string;
+  pinned?: boolean;             // Feature 14: fixar nota
+  mode?: "text" | "checklist"; // Feature 15: modo checklist
 }
 
 // ─── Finanças - Orçamento global ─────────────────────────────────────────────
 
 export interface MonthlyBudget {
-  limitAmount: number; // R$ total mensal de despesas
-}
-
-// ─── Hábitos - Meta de frequência ────────────────────────────────────────────
-
-export interface HabitFrequencyGoal {
-  habitId: string;
-  timesPerWeek: number; // ex: 5
+  limitAmount: number;
 }
 
 // ─── DeFi / Crypto ───────────────────────────────────────────────────────────
 
 export interface PortfolioSnapshot {
-  date: string;       // "YYYY-MM-DD"
+  date: string;
   totalBRL: number;
 }
 
@@ -115,9 +127,18 @@ export interface Token {
   name: string;
   quantity: number;
   priceInBRL: number;
-  priceAtAlert?: number; // preço base para calcular variação %
+  priceAtAlert?: number;
+  avgCostBRL?: number; // Feature 9: custo médio
   color: string;
   addedAt: string;
+}
+
+// Feature 11: histórico de preços manuais
+export interface PriceEntry {
+  id: string;
+  tokenId: string;
+  date: string; // "YYYY-MM-DD"
+  priceBRL: number;
 }
 
 export interface TokenWithValue extends Token {

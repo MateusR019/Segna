@@ -1,17 +1,22 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { Token, PortfolioSnapshot } from "@/types";
+import { Token, PortfolioSnapshot, PriceEntry } from "@/types";
 import { format } from "date-fns";
 
 interface DefiState {
   tokens: Token[];
   snapshots: PortfolioSnapshot[];
+  priceHistory: PriceEntry[];
+
   addToken: (t: Omit<Token, "id" | "addedAt">) => void;
   removeToken: (id: string) => void;
   updatePrice: (id: string, newPrice: number) => void;
   updateQuantity: (id: string, newQuantity: number) => void;
   setAlertPrice: (id: string, price: number) => void;
+  setAvgCost: (id: string, avgCost: number) => void;
   saveSnapshot: () => void;
+  addPriceEntry: (tokenId: string, date: string, priceBRL: number) => void;
+  removePriceEntry: (id: string) => void;
 }
 
 export const useDefiStore = create<DefiState>()(
@@ -19,6 +24,7 @@ export const useDefiStore = create<DefiState>()(
     (set, get) => ({
       tokens: [],
       snapshots: [],
+      priceHistory: [],
 
       addToken: (t) =>
         set((state) => ({
@@ -29,7 +35,10 @@ export const useDefiStore = create<DefiState>()(
         })),
 
       removeToken: (id) =>
-        set((state) => ({ tokens: state.tokens.filter((t) => t.id !== id) })),
+        set((state) => ({
+          tokens: state.tokens.filter((t) => t.id !== id),
+          priceHistory: state.priceHistory.filter((e) => e.tokenId !== id),
+        })),
 
       updatePrice: (id, newPrice) =>
         set((state) => ({
@@ -52,6 +61,13 @@ export const useDefiStore = create<DefiState>()(
           ),
         })),
 
+      setAvgCost: (id, avgCost) =>
+        set((state) => ({
+          tokens: state.tokens.map((t) =>
+            t.id === id ? { ...t, avgCostBRL: avgCost } : t
+          ),
+        })),
+
       saveSnapshot: () => {
         const { tokens, snapshots } = get();
         const today = format(new Date(), "yyyy-MM-dd");
@@ -69,6 +85,21 @@ export const useDefiStore = create<DefiState>()(
           }));
         }
       },
+
+      addPriceEntry: (tokenId, date, priceBRL) =>
+        set((state) => ({
+          priceHistory: [
+            ...state.priceHistory.filter(
+              (e) => !(e.tokenId === tokenId && e.date === date)
+            ),
+            { id: crypto.randomUUID(), tokenId, date, priceBRL },
+          ].sort((a, b) => a.date.localeCompare(b.date)),
+        })),
+
+      removePriceEntry: (id) =>
+        set((state) => ({
+          priceHistory: state.priceHistory.filter((e) => e.id !== id),
+        })),
     }),
     {
       name: "segna-defi",

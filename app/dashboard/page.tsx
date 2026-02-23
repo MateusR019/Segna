@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { TrendingUp, TrendingDown, CheckSquare, Coins, StickyNote, ArrowRight, Flame } from "lucide-react";
+import { WeatherWidget } from "@/components/dashboard/WeatherWidget";
 
 export default function DashboardPage() {
   const hydrated = useHydrated();
@@ -67,9 +68,12 @@ export default function DashboardPage() {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div>
-        <h1 className="text-xl font-semibold text-white">Dashboard</h1>
-        <p className="text-sm text-[#6b7280] capitalize">{todayLabel}</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-semibold text-white">Dashboard</h1>
+          <p className="text-sm text-[#6b7280] capitalize">{todayLabel}</p>
+        </div>
+        <WeatherWidget />
       </div>
 
       {/* Summary cards */}

@@ -11,12 +11,14 @@ const DEFAULT_TAGS: NoteTag[] = [
 interface NotasState {
   notes: Note[];
   tags: NoteTag[];
-  addNote: (content: string, tagId?: string) => void;
+  addNote: (content: string, tagId?: string, mode?: "text" | "checklist") => void;
   editNote: (id: string, content: string) => void;
   removeNote: (id: string) => void;
   clearAll: () => void;
   addTag: (label: string, color: string) => void;
   removeTag: (id: string) => void;
+  togglePin: (id: string) => void;
+  setNoteMode: (id: string, mode: "text" | "checklist") => void;
 }
 
 export const useNotasStore = create<NotasState>()(
@@ -24,7 +26,8 @@ export const useNotasStore = create<NotasState>()(
     (set) => ({
       notes: [],
       tags: DEFAULT_TAGS,
-      addNote: (content, tagId) =>
+
+      addNote: (content, tagId, mode) =>
         set((s) => ({
           notes: [
             {
@@ -32,19 +35,24 @@ export const useNotasStore = create<NotasState>()(
               content: content.trim(),
               tagId: tagId || undefined,
               createdAt: new Date().toISOString(),
+              mode: mode ?? "text",
             },
             ...s.notes,
           ],
         })),
+
       editNote: (id, content) =>
         set((s) => ({
           notes: s.notes.map((n) =>
             n.id === id ? { ...n, content: content.trim() } : n
           ),
         })),
+
       removeNote: (id) =>
         set((s) => ({ notes: s.notes.filter((n) => n.id !== id) })),
+
       clearAll: () => set({ notes: [] }),
+
       addTag: (label, color) =>
         set((s) => ({
           tags: [
@@ -52,12 +60,26 @@ export const useNotasStore = create<NotasState>()(
             { id: crypto.randomUUID(), label: label.trim(), color },
           ],
         })),
+
       removeTag: (id) =>
         set((s) => ({
           tags: s.tags.filter((t) => t.id !== id),
-          // detach notes that used this tag
           notes: s.notes.map((n) =>
             n.tagId === id ? { ...n, tagId: undefined } : n
+          ),
+        })),
+
+      togglePin: (id) =>
+        set((s) => ({
+          notes: s.notes.map((n) =>
+            n.id === id ? { ...n, pinned: !n.pinned } : n
+          ),
+        })),
+
+      setNoteMode: (id, mode) =>
+        set((s) => ({
+          notes: s.notes.map((n) =>
+            n.id === id ? { ...n, mode } : n
           ),
         })),
     }),
