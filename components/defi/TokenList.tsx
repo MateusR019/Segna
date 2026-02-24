@@ -56,7 +56,7 @@ export function TokenList() {
         <CardTitle className="text-sm font-medium text-[#9ca3af]">Tokens</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2 p-4 pt-0">
-        {tokens.map((token) => {
+        {tokens.map((token, idx) => {
           const value = token.quantity * token.priceInBRL;
           const pct = total > 0 ? ((value / total) * 100).toFixed(1) : "0";
           const editing = editingId === token.id;
@@ -67,7 +67,8 @@ export function TokenList() {
           return (
             <div
               key={token.id}
-              className="p-3 bg-[#141414] rounded-xl border border-[#2a2a2a] space-y-2 hover:border-[#3a3a3a] transition-colors"
+              className="list-item p-3 bg-[#141414] rounded-xl border border-[#2a2a2a] space-y-2 hover:border-[#3a3a3a] transition-colors"
+              style={{ animationDelay: `${Math.min(idx * 40, 300)}ms` }}
             >
               {/* Main row */}
               <div className="flex items-center justify-between">

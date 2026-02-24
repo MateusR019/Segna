@@ -228,7 +228,7 @@ export default function NotasPage() {
       </div>
 
       {/* Input box */}
-      <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4 space-y-3">
+      <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4 space-y-3 max-w-2xl">
         <textarea
           ref={textareaRef}
           value={draft}
@@ -282,7 +282,7 @@ export default function NotasPage() {
 
       {/* Filter bar + search */}
       {hydrated && (
-        <div className="space-y-2.5">
+        <div className="space-y-2.5 max-w-2xl">
           <div className="relative">
             <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#4a4a4a]" />
             <Input
@@ -379,10 +379,10 @@ export default function NotasPage() {
             return (
               <div
                 key={note.id}
-                className={`flex items-start justify-between gap-3 rounded-xl px-4 py-3 transition-colors border ${
+                className={`flex items-start justify-between gap-3 rounded-xl px-4 py-3 transition-colors border card-hover ${
                   note.pinned
                     ? "bg-[#1a1a1f] border-[#6366f1]/50 shadow-[0_0_0_1px_rgba(99,102,241,0.08)]"
-                    : "bg-[#1a1a1a] border-[#2a2a2a] hover:border-[#3a3a3a] hover:bg-[#1d1d1d]"
+                    : "bg-[#1a1a1a] border-[#2a2a2a]"
                 }`}
               >
                 <div className="flex-1 min-w-0 space-y-1.5">

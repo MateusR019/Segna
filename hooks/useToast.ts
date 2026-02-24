@@ -6,12 +6,14 @@ export interface Toast {
   id: string;
   message: string;
   type: ToastType;
+  exiting?: boolean;
 }
 
 interface ToastState {
   toasts: Toast[];
   show: (message: string, type?: ToastType) => void;
   dismiss: (id: string) => void;
+  startExit: (id: string) => void;
 }
 
 export const useToastStore = create<ToastState>((set) => ({
@@ -19,12 +21,32 @@ export const useToastStore = create<ToastState>((set) => ({
   show: (message, type = "success") => {
     const id = crypto.randomUUID();
     set((s) => ({ toasts: [...s.toasts, { id, message, type }] }));
-    // Auto-dismiss after 3s
+    // Start exit animation at 2.8s, remove at 3s
+    setTimeout(() => {
+      set((s) => ({
+        toasts: s.toasts.map((t) => t.id === id ? { ...t, exiting: true } : t),
+      }));
+    }, 2800);
     setTimeout(() => {
       set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) }));
     }, 3000);
   },
-  dismiss: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
+  startExit: (id) => {
+    set((s) => ({
+      toasts: s.toasts.map((t) => t.id === id ? { ...t, exiting: true } : t),
+    }));
+    setTimeout(() => {
+      set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) }));
+    }, 200);
+  },
+  dismiss: (id) => {
+    set((s) => ({
+      toasts: s.toasts.map((t) => t.id === id ? { ...t, exiting: true } : t),
+    }));
+    setTimeout(() => {
+      set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) }));
+    }, 200);
+  },
 }));
 
 /** Convenience hook */

@@ -9,6 +9,16 @@ import { formatBRL } from "@/lib/format";
 import { ArrowDownLeft, ArrowUpRight, Scale } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
+
+function AnimatedBRL({ value, color }: { value: number; color: string }) {
+  const animated = useAnimatedNumber(value);
+  return (
+    <p className="text-xl font-semibold num-animate" style={{ color }}>
+      {formatBRL(animated)}
+    </p>
+  );
+}
 
 export function FinancasSummary() {
   const transactions = useFinancasStore((s) => s.transactions);
@@ -30,7 +40,7 @@ export function FinancasSummary() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
       {cards.map(({ label, sublabel, value, color, icon: Icon }) => (
-        <div key={label} className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-4">
+        <div key={label} className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-4 card-hover">
           <div className="flex items-center justify-between mb-3">
             <div>
               <p className="text-xs text-[#6b7280] font-medium capitalize">{sublabel}</p>
@@ -43,9 +53,7 @@ export function FinancasSummary() {
               <Icon size={14} style={{ color }} />
             </div>
           </div>
-          <p className="text-xl font-semibold" style={{ color }}>
-            {formatBRL(value)}
-          </p>
+          <AnimatedBRL value={value} color={color} />
         </div>
       ))}
     </div>

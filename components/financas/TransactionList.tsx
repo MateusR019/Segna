@@ -100,16 +100,18 @@ export function TransactionList() {
 
   return (
     <div className="space-y-2">
-      {sorted.map((t) => {
+      {sorted.map((t, idx) => {
         const isIncome = t.type === "income";
         const isEditing = editingId === t.id;
         const categories = isIncome ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+        const delay = `${Math.min(idx * 30, 300)}ms`;
 
         if (isEditing) {
           return (
             <div
               key={t.id}
-              className="bg-[#1a1a1a] border border-[#6366f1]/40 rounded-xl px-4 py-3 space-y-3"
+              className="list-item bg-[#1a1a1a] border border-[#6366f1]/40 rounded-xl px-4 py-3 space-y-3"
+              style={{ animationDelay: delay }}
             >
               {/* Row 1: description + amount */}
               <div className="flex items-center gap-2">
@@ -183,7 +185,7 @@ export function TransactionList() {
         }
 
         return (
-          <div key={t.id} className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl flex items-center gap-3 px-4 py-3 hover:border-[#3a3a3a] transition-colors group">
+          <div key={t.id} className="list-item bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl flex items-center gap-3 px-4 py-3 hover:border-[#3a3a3a] transition-colors group" style={{ animationDelay: delay }}>
             {/* Type icon */}
             <div
               className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"

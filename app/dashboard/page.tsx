@@ -88,7 +88,7 @@ export default function DashboardPage() {
       {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {/* Balance */}
-        <Link href="/financas" className="group bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-3 md:p-4 hover:border-[#3a3a3a] transition-all hover:bg-[#1d1d1d]">
+        <Link href="/financas" className="group bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-3 md:p-4 card-hover">
           <div className="flex items-center justify-between mb-2">
             <div className="w-7 h-7 rounded-lg bg-[#22c55e]/10 flex items-center justify-center">
               <Wallet size={13} className="text-[#22c55e]" />
@@ -104,14 +104,14 @@ export default function DashboardPage() {
             const over = monthExpenses > budget.limitAmount;
             return (
               <div className="mt-2 h-1 rounded-full bg-[#2a2a2a] overflow-hidden">
-                <div className="h-full rounded-full transition-all" style={{ width: `${bPct}%`, background: over ? "#ef4444" : bPct > 80 ? "#f59e0b" : "#22c55e" }} />
+                <div className="h-full rounded-full bar-animated" style={{ width: `${bPct}%`, background: over ? "#ef4444" : bPct > 80 ? "#f59e0b" : "#22c55e" }} />
               </div>
             );
           })()}
         </Link>
 
         {/* Habits */}
-        <Link href="/habitos" className="group bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-3 md:p-4 hover:border-[#3a3a3a] transition-all hover:bg-[#1d1d1d]">
+        <Link href="/habitos" className="group bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-3 md:p-4 card-hover">
           <div className="flex items-center justify-between mb-2">
             <div className="w-7 h-7 rounded-lg bg-[#6366f1]/10 flex items-center justify-center">
               <CheckSquare size={13} className="text-[#a78bfa]" />
@@ -123,12 +123,12 @@ export default function DashboardPage() {
           </p>
           <p className="text-[11px] text-[#4a4a4a] mt-0.5">Hábitos hoje</p>
           <div className="mt-2 h-1 bg-[#2a2a2a] rounded-full overflow-hidden">
-            <div className="h-full rounded-full transition-all" style={{ width: `${habitPct}%`, background: habitPct === 100 ? "#22c55e" : "#6366f1" }} />
+            <div className="h-full rounded-full bar-animated" style={{ width: `${habitPct}%`, background: habitPct === 100 ? "#22c55e" : "#6366f1" }} />
           </div>
         </Link>
 
         {/* DeFi */}
-        <Link href="/defi" className="group bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-3 md:p-4 hover:border-[#3a3a3a] transition-all hover:bg-[#1d1d1d]">
+        <Link href="/defi" className="group bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-3 md:p-4 card-hover">
           <div className="flex items-center justify-between mb-2">
             <div className="w-7 h-7 rounded-lg bg-[#f59e0b]/10 flex items-center justify-center">
               <Coins size={13} className="text-[#f59e0b]" />
@@ -140,7 +140,7 @@ export default function DashboardPage() {
         </Link>
 
         {/* Notes */}
-        <Link href="/notas" className="group bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-3 md:p-4 hover:border-[#3a3a3a] transition-all hover:bg-[#1d1d1d]">
+        <Link href="/notas" className="group bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-3 md:p-4 card-hover">
           <div className="flex items-center justify-between mb-2">
             <div className="w-7 h-7 rounded-lg bg-[#06b6d4]/10 flex items-center justify-center">
               <StickyNote size={13} className="text-[#06b6d4]" />

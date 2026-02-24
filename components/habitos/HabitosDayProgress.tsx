@@ -23,7 +23,7 @@ export function HabitosDayProgress() {
       </div>
       <Progress
         value={pct}
-        className="h-1.5 bg-[#2a2a2a] [&>div]:bg-[#22c55e]"
+        className="h-1.5 bg-[#2a2a2a] [&>div]:bg-[#22c55e] [&>div]:bar-animated"
       />
       <p className="text-xs text-[#6b7280] mt-2">{pct}% completo hoje</p>
     </div>

@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { TrendingUp, CheckSquare, Coins, StickyNote, LayoutDashboard } from "lucide-react";
+import { TrendingUp, CheckSquare, Coins, StickyNote, LayoutDashboard, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -19,7 +19,7 @@ export function AppSidebar() {
     <aside className="hidden md:flex w-56 flex-shrink-0 flex-col h-full border-r border-[#1f1f1f]">
       {/* Logo area */}
       <div className="px-5 py-5 flex items-center gap-3">
-        <div className="w-7 h-7 rounded-lg bg-[#6366f1] flex items-center justify-center flex-shrink-0">
+        <div className="w-7 h-7 rounded-lg bg-[#6366f1] flex items-center justify-center flex-shrink-0 logo-pulse">
           <span className="text-white text-xs font-bold">S</span>
         </div>
         <div>
@@ -37,14 +37,15 @@ export function AppSidebar() {
               key={href}
               href={href}
               className={cn(
-                "relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all",
+                "relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-150",
+                "btn-press",
                 active
                   ? "bg-[#1a1a1a] text-white font-medium"
                   : "text-[#6b7280] hover:text-white hover:bg-[#161616]"
               )}
             >
               {active && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-full bg-[#6366f1]" />
+                <span className="nav-pill absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-full bg-[#6366f1]" />
               )}
               <Icon
                 size={15}
@@ -60,8 +61,29 @@ export function AppSidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="px-5 py-4 border-t border-[#1f1f1f]">
-        <p className="text-[10px] text-[#3a3a3a]">v1.0.0 · Mateus Segna</p>
+      <div className="px-3 py-3 border-t border-[#1f1f1f] space-y-1">
+        <Link
+          href="/ajuda"
+          className={cn(
+            "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-150 btn-press",
+            pathname.startsWith("/ajuda")
+              ? "bg-[#1a1a1a] text-white font-medium"
+              : "text-[#6b7280] hover:text-white hover:bg-[#161616]"
+          )}
+        >
+          {pathname.startsWith("/ajuda") && (
+            <span className="nav-pill absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-full bg-[#6366f1]" />
+          )}
+          <HelpCircle
+            size={15}
+            className={cn(
+              "flex-shrink-0",
+              pathname.startsWith("/ajuda") ? "text-[#a78bfa]" : "text-[#4a4a4a]"
+            )}
+          />
+          Como funciona?
+        </Link>
+        <p className="text-[10px] text-[#3a3a3a] px-3">v1.0.0 · Mateus Segna</p>
       </div>
     </aside>
   );

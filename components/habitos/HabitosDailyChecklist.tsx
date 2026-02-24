@@ -21,6 +21,8 @@ export function HabitosDailyChecklist() {
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   // Delete confirmation
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  // Bounce animation trigger — stores id of last toggled habit
+  const [bouncingId, setBouncingId] = useState<string | null>(null);
 
   const sorted = [...habits].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
@@ -56,7 +58,7 @@ export function HabitosDailyChecklist() {
 
   return (
     <div className="space-y-2">
-      {sorted.map((habit) => {
+      {sorted.map((habit, idx) => {
         const done = completedIds.includes(habit.id);
         const streak = calcStreak(habit.id, completions);
         const isDragTarget = dragOverId === habit.id;
@@ -69,14 +71,21 @@ export function HabitosDailyChecklist() {
             onDragOver={(e) => onDragOver(e, habit.id)}
             onDrop={(e) => onDrop(e, habit.id)}
             onDragEnd={onDragEnd}
-            onClick={() => { const done = completedIds.includes(habit.id); toggleCompletion(habit.id, todayKey); success(done ? "Hábito desmarcado" : `${habit.name} ✓`); }}
-            className={`relative bg-[#1a1a1a] border rounded-xl overflow-hidden transition-all cursor-pointer select-none ${
+            onClick={() => {
+              const done = completedIds.includes(habit.id);
+              toggleCompletion(habit.id, todayKey);
+              success(done ? "Hábito desmarcado" : `${habit.name} ✓`);
+              setBouncingId(habit.id);
+              setTimeout(() => setBouncingId(null), 320);
+            }}
+            className={`list-item relative bg-[#1a1a1a] border rounded-xl overflow-hidden transition-all cursor-pointer select-none ${
               done
                 ? "border-[#22c55e]/25 bg-[#22c55e]/5"
                 : isDragTarget
                 ? "border-[#6366f1]/60"
                 : "border-[#2a2a2a] hover:border-[#3a3a3a] hover:bg-[#1d1d1d]"
             }`}
+            style={{ animationDelay: `${Math.min(idx * 35, 280)}ms` }}
           >
             {/* Habit color left accent bar */}
             <div
@@ -97,7 +106,7 @@ export function HabitosDailyChecklist() {
               <div
                 className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 ${
                   done ? "border-[#22c55e] bg-[#22c55e]" : "border-[#3a3a3a]"
-                }`}
+                } ${bouncingId === habit.id ? "check-bounce" : ""}`}
               >
                 {done && (
                   <svg viewBox="0 0 12 12" width="10" height="10" fill="none">

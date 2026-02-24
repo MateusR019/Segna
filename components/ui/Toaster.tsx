@@ -24,13 +24,21 @@ export function Toaster() {
       {toasts.map((t) => (
         <div
           key={t.id}
-          className={`pointer-events-auto flex items-center gap-2.5 bg-[#1a1a1a] border ${BORDER[t.type]} rounded-xl px-4 py-2.5 shadow-xl shadow-black/40 animate-in slide-in-from-right-4 fade-in duration-200 min-w-[200px] max-w-xs`}
+          className={[
+            "pointer-events-auto flex items-center gap-2.5",
+            "bg-[#1a1a1a] border rounded-xl px-4 py-2.5 shadow-xl shadow-black/40",
+            "min-w-[200px] max-w-xs",
+            BORDER[t.type],
+            t.exiting
+              ? "toast-exit"
+              : "animate-in slide-in-from-right-4 fade-in duration-200",
+          ].join(" ")}
         >
           {ICONS[t.type]}
           <span className="text-sm text-white flex-1">{t.message}</span>
           <button
             onClick={() => dismiss(t.id)}
-            className="text-[#4a4a4a] hover:text-[#9ca3af] transition-colors cursor-pointer flex-shrink-0"
+            className="text-[#4a4a4a] hover:text-[#9ca3af] transition-colors cursor-pointer flex-shrink-0 btn-press"
           >
             <X size={12} />
           </button>

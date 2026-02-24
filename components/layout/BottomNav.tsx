@@ -24,17 +24,21 @@ export function BottomNav() {
             key={href}
             href={href}
             className={cn(
-              "relative flex-1 flex flex-col items-center justify-center gap-1 py-3 min-h-[60px] transition-all",
+              "relative flex-1 flex flex-col items-center justify-center gap-1 py-3 min-h-[60px] transition-colors btn-press",
               active ? "text-white" : "text-[#4a4a4a]"
             )}
           >
             {active && (
               <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[2px] rounded-full bg-[#6366f1]" />
             )}
-            <div className={cn(
-              "flex items-center justify-center w-8 h-8 rounded-lg transition-all",
-              active ? "bg-[#6366f1]/15" : ""
-            )}>
+            {/* key={pathname} forces re-mount → re-triggers the bounce animation */}
+            <div
+              key={active ? pathname : href}
+              className={cn(
+                "flex items-center justify-center w-8 h-8 rounded-lg transition-all",
+                active ? "bg-[#6366f1]/15 nav-icon-active" : ""
+              )}
+            >
               <Icon
                 size={18}
                 className={active ? "text-[#a78bfa]" : "text-[#4a4a4a]"}
