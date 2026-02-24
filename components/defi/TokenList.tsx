@@ -37,16 +37,17 @@ export function TokenList() {
 
   if (tokens.length === 0) {
     return (
-      <Card className="bg-[#1a1a1a] border-[#2a2a2a]">
-        <CardContent className="flex items-center justify-center h-48 text-[#6b7280] text-sm">
-          Nenhum token adicionado
+      <Card className="bg-[#1a1a1a] border-[#2a2a2a] rounded-xl">
+        <CardContent className="flex flex-col items-center justify-center h-48 gap-2">
+          <p className="text-sm text-[#4a4a4a]">Nenhum token adicionado</p>
+          <p className="text-xs text-[#3a3a3a]">Use "Adicionar Token" para rastrear seu portfolio.</p>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card className="bg-[#1a1a1a] border-[#2a2a2a]">
+    <Card className="bg-[#1a1a1a] border-[#2a2a2a] rounded-xl">
       <CardHeader>
         <CardTitle className="text-sm font-medium text-[#9ca3af]">Tokens</CardTitle>
       </CardHeader>
@@ -62,13 +63,18 @@ export function TokenList() {
           return (
             <div
               key={token.id}
-              className="p-3 bg-[#0f0f0f] rounded-md border border-[#2a2a2a] space-y-2"
+              className="p-3 bg-[#141414] rounded-xl border border-[#2a2a2a] space-y-2 hover:border-[#3a3a3a] transition-colors"
             >
               {/* Main row */}
               <div className="flex items-center justify-between">
                 {/* Symbol */}
                 <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                  <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: token.color }} />
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-bold text-white"
+                    style={{ background: token.color + "30", color: token.color }}
+                  >
+                    {token.symbol.slice(0, 2).toUpperCase()}
+                  </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <p className="text-sm font-medium text-white">{token.symbol}</p>

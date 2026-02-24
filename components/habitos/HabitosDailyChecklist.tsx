@@ -43,8 +43,9 @@ export function HabitosDailyChecklist() {
 
   if (habits.length === 0) {
     return (
-      <div className="text-center py-12 text-[#6b7280] text-sm">
-        Nenhum hábito criado ainda. Crie seu primeiro hábito!
+      <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-8 text-center space-y-2">
+        <p className="text-sm text-[#4a4a4a]">Nenhum hábito criado ainda</p>
+        <p className="text-xs text-[#3a3a3a]">Clique em "Novo hábito" para começar a rastrear.</p>
       </div>
     );
   }
@@ -57,19 +58,29 @@ export function HabitosDailyChecklist() {
         const isDragTarget = dragOverId === habit.id;
 
         return (
-          <Card
+          <div
             key={habit.id}
             draggable
             onDragStart={() => onDragStart(habit.id)}
             onDragOver={(e) => onDragOver(e, habit.id)}
             onDrop={(e) => onDrop(e, habit.id)}
             onDragEnd={onDragEnd}
-            className={`bg-[#1a1a1a] border transition-colors cursor-pointer select-none ${
-              done ? "border-[#22c55e]/30" : isDragTarget ? "border-[#6366f1]/60" : "border-[#2a2a2a] hover:border-[#3a3a3a]"
-            }`}
             onClick={() => toggleCompletion(habit.id, todayKey)}
+            className={`relative bg-[#1a1a1a] border rounded-xl overflow-hidden transition-all cursor-pointer select-none ${
+              done
+                ? "border-[#22c55e]/25 bg-[#22c55e]/5"
+                : isDragTarget
+                ? "border-[#6366f1]/60"
+                : "border-[#2a2a2a] hover:border-[#3a3a3a] hover:bg-[#1d1d1d]"
+            }`}
           >
-            <CardContent className="flex items-center justify-between p-3 gap-2">
+            {/* Habit color left accent bar */}
+            <div
+              className="absolute left-0 top-0 bottom-0 w-0.5 rounded-l-xl"
+              style={{ background: done ? "#22c55e" : habit.color }}
+            />
+
+            <div className="flex items-center justify-between px-3 py-3 gap-2 pl-4">
               {/* Drag handle */}
               <div
                 className="flex-shrink-0 text-[#2a2a2a] hover:text-[#4a4a4a] cursor-grab active:cursor-grabbing"
@@ -94,12 +105,11 @@ export function HabitosDailyChecklist() {
               {/* Name + note */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: habit.color }} />
-                  <span className={`text-sm ${done ? "text-[#6b7280] line-through" : "text-white"}`}>
+                  <span className={`text-sm font-medium ${done ? "text-[#6b7280] line-through" : "text-white"}`}>
                     {habit.name}
                   </span>
                   {habit.tag && (
-                    <span className="text-xs px-1.5 py-0.5 rounded bg-[#2a2a2a] text-[#6b7280] capitalize">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-[#2a2a2a] text-[#6b7280] capitalize">
                       {habit.tag}
                     </span>
                   )}
@@ -110,10 +120,10 @@ export function HabitosDailyChecklist() {
               </div>
 
               {/* Streak + best + delete */}
-              <div className="flex items-center gap-1.5 flex-shrink-0">
+              <div className="flex items-center gap-2 flex-shrink-0">
                 {streak > 0 && (
                   <div className="flex flex-col items-center gap-0.5">
-                    <div className="flex items-center gap-0.5 text-xs text-[#f59e0b]">
+                    <div className="flex items-center gap-0.5 text-xs text-[#f59e0b] font-semibold">
                       <Flame size={12} />
                       <span>{streak}</span>
                     </div>
@@ -124,13 +134,13 @@ export function HabitosDailyChecklist() {
                   variant="ghost"
                   size="icon"
                   onClick={(e) => { e.stopPropagation(); removeHabit(habit.id); }}
-                  className="h-10 w-10 text-[#6b7280] hover:text-[#ef4444] hover:bg-transparent cursor-pointer"
+                  className="h-8 w-8 text-[#3a3a3a] hover:text-[#ef4444] hover:bg-transparent cursor-pointer"
                 >
-                  <Trash2 size={14} />
+                  <Trash2 size={13} />
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         );
       })}
     </div>

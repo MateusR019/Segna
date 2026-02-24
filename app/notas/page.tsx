@@ -353,8 +353,10 @@ export default function NotasPage() {
             return (
               <div
                 key={note.id}
-                className={`flex items-start justify-between gap-3 bg-[#1a1a1a] border rounded-lg px-4 py-3 transition-colors ${
-                  note.pinned ? "border-[#6366f1]/40" : "border-[#2a2a2a] hover:border-[#3a3a3a]"
+                className={`flex items-start justify-between gap-3 rounded-xl px-4 py-3 transition-colors border ${
+                  note.pinned
+                    ? "bg-[#1a1a1f] border-[#6366f1]/50 shadow-[0_0_0_1px_rgba(99,102,241,0.08)]"
+                    : "bg-[#1a1a1a] border-[#2a2a2a] hover:border-[#3a3a3a] hover:bg-[#1d1d1d]"
                 }`}
               >
                 <div className="flex-1 min-w-0 space-y-1.5">

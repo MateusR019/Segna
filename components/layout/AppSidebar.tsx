@@ -3,7 +3,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { TrendingUp, CheckSquare, Coins, StickyNote, LayoutDashboard } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Separator } from "@/components/ui/separator";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -17,17 +16,20 @@ export function AppSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden md:flex w-56 flex-shrink-0 flex-col h-full border-r border-[#2a2a2a]">
-      <div className="px-5 py-5">
-        <span className="text-sm font-semibold tracking-widest uppercase text-white">
-          Segna App
-        </span>
-        <p className="text-xs text-[#6b7280] mt-0.5">Mateus Segna</p>
+    <aside className="hidden md:flex w-56 flex-shrink-0 flex-col h-full border-r border-[#1f1f1f]">
+      {/* Logo area */}
+      <div className="px-5 py-5 flex items-center gap-3">
+        <div className="w-7 h-7 rounded-lg bg-[#6366f1] flex items-center justify-center flex-shrink-0">
+          <span className="text-white text-xs font-bold">S</span>
+        </div>
+        <div>
+          <span className="text-sm font-semibold text-white tracking-tight">Segna</span>
+          <p className="text-[10px] text-[#4a4a4a] leading-none mt-0.5">Personal OS</p>
+        </div>
       </div>
 
-      <Separator className="bg-[#2a2a2a]" />
-
-      <nav className="flex-1 px-3 py-4 space-y-0.5">
+      {/* Nav */}
+      <nav className="flex-1 px-3 py-2 space-y-0.5">
         {navItems.map(({ href, label, icon: Icon }) => {
           const active = pathname.startsWith(href);
           return (
@@ -35,21 +37,31 @@ export function AppSidebar() {
               key={href}
               href={href}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors",
+                "relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all",
                 active
-                  ? "bg-[#1f1f1f] text-white font-medium"
-                  : "text-[#9ca3af] hover:text-white hover:bg-[#1f1f1f]"
+                  ? "bg-[#1a1a1a] text-white font-medium"
+                  : "text-[#6b7280] hover:text-white hover:bg-[#161616]"
               )}
             >
-              <Icon size={15} />
+              {active && (
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-full bg-[#6366f1]" />
+              )}
+              <Icon
+                size={15}
+                className={cn(
+                  "transition-colors flex-shrink-0",
+                  active ? "text-[#a78bfa]" : "text-[#4a4a4a] group-hover:text-white"
+                )}
+              />
               {label}
             </Link>
           );
         })}
       </nav>
 
-      <div className="px-5 py-4 border-t border-[#2a2a2a]">
-        <p className="text-xs text-[#4a4a4a]">v1.0.0</p>
+      {/* Footer */}
+      <div className="px-5 py-4 border-t border-[#1f1f1f]">
+        <p className="text-[10px] text-[#3a3a3a]">v1.0.0 · Mateus Segna</p>
       </div>
     </aside>
   );

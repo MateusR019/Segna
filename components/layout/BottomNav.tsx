@@ -16,7 +16,7 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0f0f0f] border-t border-[#2a2a2a] flex items-stretch">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0a0a0a]/95 backdrop-blur-md border-t border-[#1f1f1f] flex items-stretch">
       {navItems.map(({ href, label, icon: Icon }) => {
         const active = pathname.startsWith(href);
         return (
@@ -24,15 +24,29 @@ export function BottomNav() {
             key={href}
             href={href}
             className={cn(
-              "flex-1 flex flex-col items-center justify-center gap-0.5 py-2 min-h-[56px] transition-colors",
-              active ? "text-white" : "text-[#6b7280]"
+              "relative flex-1 flex flex-col items-center justify-center gap-1 py-3 min-h-[60px] transition-all",
+              active ? "text-white" : "text-[#4a4a4a]"
             )}
           >
-            <Icon size={20} strokeWidth={active ? 2.5 : 1.75} />
-            <span className="text-[10px] leading-none font-medium">{label}</span>
             {active && (
-              <span className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-white" />
+              <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[2px] rounded-full bg-[#6366f1]" />
             )}
+            <div className={cn(
+              "flex items-center justify-center w-8 h-8 rounded-lg transition-all",
+              active ? "bg-[#6366f1]/15" : ""
+            )}>
+              <Icon
+                size={18}
+                className={active ? "text-[#a78bfa]" : "text-[#4a4a4a]"}
+                strokeWidth={active ? 2.5 : 1.75}
+              />
+            </div>
+            <span className={cn(
+              "text-[10px] leading-none font-medium transition-colors",
+              active ? "text-[#a78bfa]" : "text-[#4a4a4a]"
+            )}>
+              {label}
+            </span>
           </Link>
         );
       })}
