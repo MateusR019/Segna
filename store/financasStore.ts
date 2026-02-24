@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { Transaction, CategoryGoal, MonthlyBudget, SavingsGoal, ExpenseCategory } from "@/types";
+import { Transaction, CategoryGoal, MonthlyBudget, SavingsGoal, ExpenseCategory, AnyCategory } from "@/types";
 import { format, addMonths } from "date-fns";
 
 interface FinancasState {
@@ -151,7 +151,7 @@ export function calcTotalExpenses(transactions: Transaction[]): number {
 
 export function calcCategorySpendThisMonth(
   transactions: Transaction[],
-  category: ExpenseCategory
+  category: AnyCategory
 ): number {
   const thisMonth = format(new Date(), "yyyy-MM");
   return transactions

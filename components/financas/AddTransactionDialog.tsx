@@ -19,9 +19,9 @@ import {
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import { useFinancasStore } from "@/store/financasStore";
-import { ExpenseCategory, TransactionType } from "@/types";
+import { AnyCategory, ExpenseCategory, IncomeCategory, TransactionType } from "@/types";
 
-const CATEGORIES: { value: ExpenseCategory; label: string }[] = [
+const EXPENSE_CATEGORIES: { value: ExpenseCategory; label: string }[] = [
   { value: "housing", label: "Moradia" },
   { value: "food", label: "Alimentação" },
   { value: "transport", label: "Transporte" },
@@ -33,15 +33,31 @@ const CATEGORIES: { value: ExpenseCategory; label: string }[] = [
   { value: "other", label: "Outros" },
 ];
 
+const INCOME_CATEGORIES: { value: IncomeCategory; label: string }[] = [
+  { value: "salary", label: "Salário" },
+  { value: "freelance", label: "Bico / Freelance" },
+  { value: "investment_return", label: "Rendimento" },
+  { value: "gift", label: "Presente / Doação" },
+  { value: "other_income", label: "Outra receita" },
+];
+
 export function AddTransactionDialog() {
   const addTransaction = useFinancasStore((s) => s.addTransaction);
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<TransactionType>("expense");
   const [amount, setAmount] = useState("");
   const [description, setDesc] = useState("");
-  const [category, setCategory] = useState<ExpenseCategory>("other");
+  const [category, setCategory] = useState<AnyCategory>("other");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [recurring, setRecurring] = useState(false);
+
+  const categories = type === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+
+  function handleTypeChange(t: TransactionType) {
+    setType(t);
+    // Reset category to default for the new type
+    setCategory(t === "income" ? "salary" : "other");
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -76,7 +92,7 @@ export function AddTransactionDialog() {
               <button
                 key={t}
                 type="button"
-                onClick={() => setType(t)}
+                onClick={() => handleTypeChange(t)}
                 className={`flex-1 py-2 rounded-md text-sm font-medium border transition-colors cursor-pointer
                   ${
                     type === t
@@ -118,13 +134,13 @@ export function AddTransactionDialog() {
             <Label>Categoria</Label>
             <Select
               value={category}
-              onValueChange={(v) => setCategory(v as ExpenseCategory)}
+              onValueChange={(v) => setCategory(v as AnyCategory)}
             >
               <SelectTrigger className="bg-[#0f0f0f] border-[#2a2a2a] w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a]">
-                {CATEGORIES.map((c) => (
+                {categories.map((c) => (
                   <SelectItem key={c.value} value={c.value}>
                     {c.label}
                   </SelectItem>

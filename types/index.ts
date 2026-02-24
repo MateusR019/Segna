@@ -13,10 +13,19 @@ export type ExpenseCategory =
   | "investments"
   | "other";
 
+export type IncomeCategory =
+  | "salary"
+  | "freelance"
+  | "investment_return"
+  | "gift"
+  | "other_income";
+
+export type AnyCategory = ExpenseCategory | IncomeCategory;
+
 export interface Transaction {
   id: string;
   type: TransactionType;
-  category: ExpenseCategory;
+  category: AnyCategory;
   description: string;
   amount: number;
   date: string; // "YYYY-MM-DD"

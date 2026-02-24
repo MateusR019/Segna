@@ -9,6 +9,7 @@ import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 const CATEGORY_LABELS: Record<string, string> = {
+  // Despesas
   housing: "Moradia",
   food: "Alimentação",
   transport: "Transporte",
@@ -18,6 +19,12 @@ const CATEGORY_LABELS: Record<string, string> = {
   shopping: "Compras",
   investments: "Investimentos",
   other: "Outros",
+  // Receitas
+  salary: "Salário",
+  freelance: "Bico / Freelance",
+  investment_return: "Rendimento",
+  gift: "Presente / Doação",
+  other_income: "Outra receita",
 };
 
 export function TransactionList() {
