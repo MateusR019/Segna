@@ -1,16 +1,42 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/Toaster";
 
 const geist = Geist({ subsets: ["latin"] });
 
+export const viewport: Viewport = {
+  themeColor: "#0f0f0f",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+};
+
 export const metadata: Metadata = {
-  title: "Segna App",
-  description: "Dashboard pessoal de Mateus Segna",
+  title: "Segna",
+  description: "Dashboard pessoal de finanças, hábitos, notas e cripto",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Segna",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  icons: {
+    icon: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
 };
 
 export default function RootLayout({
@@ -30,6 +56,7 @@ export default function RootLayout({
               </main>
             </div>
             <BottomNav />
+            <Toaster />
           </TooltipProvider>
         </Providers>
       </body>

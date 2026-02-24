@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useDefiStore } from "@/store/defiStore";
+import { useToast } from "@/hooks/useToast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,10 +12,12 @@ import { PriceHistoryPanel } from "./PriceHistoryPanel";
 
 export function TokenList() {
   const { tokens, removeToken, updatePrice, updateQuantity, setAlertPrice } = useDefiStore();
+  const { success } = useToast();
   const total = tokens.reduce((acc, t) => acc + t.quantity * t.priceInBRL, 0);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editPrice, setEditPrice] = useState("");
   const [editQty, setEditQty] = useState("");
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   function startEdit(id: string, price: number, qty: number) {
     setEditingId(id);
@@ -28,6 +31,7 @@ export function TokenList() {
     if (!isNaN(p) && p > 0) updatePrice(id, p);
     if (!isNaN(q) && q > 0) updateQuantity(id, q);
     setEditingId(null);
+    success("Token atualizado!");
   }
 
   function calcVariation(token: typeof tokens[0]): number | null {
@@ -129,16 +133,38 @@ export function TokenList() {
                       title={token.priceAtAlert ? `Base: ${formatBRL(token.priceAtAlert)}` : "Definir preço base"}
                       className="h-9 w-9 hover:bg-transparent cursor-pointer"
                       style={{ color: token.priceAtAlert ? "#f59e0b" : "#3a3a3a" }}
-                      onClick={() => setAlertPrice(token.id, token.priceInBRL)}
+                      onClick={() => { setAlertPrice(token.id, token.priceInBRL); success("Preço base definido!"); }}
                     >
                       <TrendingUp size={14} />
                     </Button>
                     <Button variant="ghost" size="icon" className="h-9 w-9 text-[#6b7280] hover:text-white hover:bg-transparent cursor-pointer" onClick={() => startEdit(token.id, token.priceInBRL, token.quantity)}>
                       <Pencil size={14} />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-9 w-9 text-[#6b7280] hover:text-[#ef4444] hover:bg-transparent cursor-pointer" onClick={() => removeToken(token.id)}>
-                      <Trash2 size={14} />
-                    </Button>
+                    {/* Delete com confirmação */}
+                    {confirmDeleteId === token.id ? (
+                      <>
+                        <span className="text-xs text-[#ef4444] mx-1">Excluir?</span>
+                        <Button variant="ghost" size="icon"
+                          className="h-9 w-9 text-[#ef4444] hover:text-[#dc2626] hover:bg-transparent cursor-pointer"
+                          onClick={() => { removeToken(token.id); setConfirmDeleteId(null); success("Token removido"); }}
+                        >
+                          <Check size={14} />
+                        </Button>
+                        <Button variant="ghost" size="icon"
+                          className="h-9 w-9 text-[#4a4a4a] hover:text-[#9ca3af] hover:bg-transparent cursor-pointer"
+                          onClick={() => setConfirmDeleteId(null)}
+                        >
+                          <X size={14} />
+                        </Button>
+                      </>
+                    ) : (
+                      <Button variant="ghost" size="icon"
+                        className="h-9 w-9 text-[#6b7280] hover:text-[#ef4444] hover:bg-transparent cursor-pointer"
+                        onClick={() => setConfirmDeleteId(token.id)}
+                      >
+                        <Trash2 size={14} />
+                      </Button>
+                    )}
                   </div>
                 )}
               </div>

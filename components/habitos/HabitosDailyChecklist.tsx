@@ -3,20 +3,24 @@ import { useState, useRef } from "react";
 import { useHabitosStore, calcStreak } from "@/store/habitosStore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Flame, Trash2, GripVertical } from "lucide-react";
+import { Flame, Trash2, GripVertical, AlertTriangle, Check, X } from "lucide-react";
 import { format } from "date-fns";
+import { useToast } from "@/hooks/useToast";
 import { HabitNoteInline } from "./HabitNoteInline";
 import { HabitBestStreakBadge } from "./HabitBestStreakBadge";
 
 export function HabitosDailyChecklist() {
   const { habits, completions, toggleCompletion, removeHabit, reorderHabits } =
     useHabitosStore();
+  const { success } = useToast();
   const todayKey = format(new Date(), "yyyy-MM-dd");
   const completedIds = completions[todayKey] ?? [];
 
   // Drag-and-drop state
   const dragId = useRef<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
+  // Delete confirmation
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const sorted = [...habits].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
@@ -65,7 +69,7 @@ export function HabitosDailyChecklist() {
             onDragOver={(e) => onDragOver(e, habit.id)}
             onDrop={(e) => onDrop(e, habit.id)}
             onDragEnd={onDragEnd}
-            onClick={() => toggleCompletion(habit.id, todayKey)}
+            onClick={() => { const done = completedIds.includes(habit.id); toggleCompletion(habit.id, todayKey); success(done ? "Hábito desmarcado" : `${habit.name} ✓`); }}
             className={`relative bg-[#1a1a1a] border rounded-xl overflow-hidden transition-all cursor-pointer select-none ${
               done
                 ? "border-[#22c55e]/25 bg-[#22c55e]/5"
@@ -121,7 +125,7 @@ export function HabitosDailyChecklist() {
 
               {/* Streak + best + delete */}
               <div className="flex items-center gap-2 flex-shrink-0">
-                {streak > 0 && (
+                {streak > 0 && confirmDeleteId !== habit.id && (
                   <div className="flex flex-col items-center gap-0.5">
                     <div className="flex items-center gap-0.5 text-xs text-[#f59e0b] font-semibold">
                       <Flame size={12} />
@@ -130,14 +134,39 @@ export function HabitosDailyChecklist() {
                     <HabitBestStreakBadge habitId={habit.id} completions={completions} currentStreak={streak} />
                   </div>
                 )}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={(e) => { e.stopPropagation(); removeHabit(habit.id); }}
-                  className="h-8 w-8 text-[#3a3a3a] hover:text-[#ef4444] hover:bg-transparent cursor-pointer"
-                >
-                  <Trash2 size={13} />
-                </Button>
+                {confirmDeleteId === habit.id ? (
+                  <div
+                    className="flex items-center gap-1"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <span className="text-xs text-[#ef4444] mr-1">Excluir?</span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => { e.stopPropagation(); removeHabit(habit.id); success("Hábito removido"); }}
+                      className="h-7 w-7 text-[#ef4444] hover:text-[#dc2626] hover:bg-transparent cursor-pointer"
+                    >
+                      <Check size={13} />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(null); }}
+                      className="h-7 w-7 text-[#4a4a4a] hover:text-[#9ca3af] hover:bg-transparent cursor-pointer"
+                    >
+                      <X size={13} />
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(habit.id); }}
+                    className="h-8 w-8 text-[#3a3a3a] hover:text-[#ef4444] hover:bg-transparent cursor-pointer"
+                  >
+                    <Trash2 size={13} />
+                  </Button>
+                )}
               </div>
             </div>
           </div>

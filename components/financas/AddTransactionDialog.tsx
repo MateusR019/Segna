@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import { useFinancasStore } from "@/store/financasStore";
+import { useToast } from "@/hooks/useToast";
 import { AnyCategory, ExpenseCategory, IncomeCategory, TransactionType } from "@/types";
 
 const EXPENSE_CATEGORIES: { value: ExpenseCategory; label: string }[] = [
@@ -43,6 +44,7 @@ const INCOME_CATEGORIES: { value: IncomeCategory; label: string }[] = [
 
 export function AddTransactionDialog() {
   const addTransaction = useFinancasStore((s) => s.addTransaction);
+  const { success, error: toastError } = useToast();
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<TransactionType>("expense");
   const [amount, setAmount] = useState("");
@@ -62,13 +64,17 @@ export function AddTransactionDialog() {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const parsedAmount = parseFloat(amount.replace(",", "."));
-    if (isNaN(parsedAmount) || parsedAmount <= 0) return;
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      toastError("Informe um valor válido maior que zero.");
+      return;
+    }
     addTransaction({ type, category, description, amount: parsedAmount, date, recurring });
     setAmount("");
     setDesc("");
     setCategory("other");
     setRecurring(false);
     setOpen(false);
+    success(type === "income" ? "Receita adicionada!" : "Despesa adicionada!");
   }
 
   return (

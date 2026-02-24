@@ -14,7 +14,8 @@ function getLast7Days() {
     const d = subDays(new Date(), 6 - i);
     return {
       date: format(d, "yyyy-MM-dd"),
-      label: format(d, "EEE", { locale: ptBR }),
+      // single uppercase letter: S T Q Q S S D
+      label: format(d, "EEEEE", { locale: ptBR }).toUpperCase(),
     };
   });
 }
@@ -36,60 +37,63 @@ export function HabitosWeeklyGrid() {
             Nenhum hábito criado ainda
           </p>
         ) : (
-          /* overflow-x-auto: scroll horizontal no mobile */
-          <div className="overflow-x-auto -mx-1">
-            <div className="space-y-2 min-w-max px-1">
-              {/* Day labels row */}
-              <div className="flex items-center gap-1.5">
-                <div className="w-24 flex-shrink-0" />
-                {days.map((d) => {
-                  const isToday = d.date === format(new Date(), "yyyy-MM-dd");
+          <div className="space-y-1.5">
+            {/* Day labels row */}
+            <div className="flex items-center gap-1">
+              <div className="flex-1 min-w-0" />
+              {days.map((d) => {
+                const isToday = d.date === format(new Date(), "yyyy-MM-dd");
+                return (
+                  <div
+                    key={d.date}
+                    className={`w-7 flex-shrink-0 text-center text-[10px] font-semibold ${
+                      isToday ? "text-[#a78bfa]" : "text-[#4a4a4a]"
+                    }`}
+                  >
+                    {d.label}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Habit rows */}
+            {habits.map((habit) => (
+              <div key={habit.id} className="flex items-center gap-1">
+                {/* Habit name — truncates to fill remaining space */}
+                <div className="flex-1 min-w-0 flex items-center gap-1.5 pr-1">
+                  <div
+                    className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                    style={{ background: habit.color }}
+                  />
+                  <span className="text-xs text-[#9ca3af] truncate">{habit.name}</span>
+                </div>
+
+                {/* Day squares */}
+                {days.map((day) => {
+                  const done = (completions[day.date] ?? []).includes(habit.id);
+                  const isToday = day.date === format(new Date(), "yyyy-MM-dd");
                   return (
-                    <div
-                      key={d.date}
-                      className={`w-9 flex-shrink-0 text-center text-[10px] capitalize font-medium ${
-                        isToday ? "text-[#a78bfa]" : "text-[#4a4a4a]"
-                      }`}
-                    >
-                      {d.label.slice(0, 3)}
-                    </div>
+                    <Tooltip key={day.date}>
+                      <TooltipTrigger asChild>
+                        <div
+                          className={`w-7 h-7 flex-shrink-0 rounded-md transition-all ${
+                            isToday ? "ring-1 ring-[#3a3a3a]" : ""
+                          }`}
+                          style={{
+                            background: done ? habit.color : "#1f1f1f",
+                            opacity: done ? 1 : 0.6,
+                          }}
+                        />
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-[#1a1a1a] border-[#2a2a2a] text-xs text-white">
+                        {format(parseISO(day.date), "EEE, d MMM", { locale: ptBR })}
+                        {" — "}{done ? "✓ completo" : "não realizado"}
+                      </TooltipContent>
+                    </Tooltip>
                   );
                 })}
               </div>
-
-              {/* Habit rows */}
-              {habits.map((habit) => (
-                <div key={habit.id} className="flex items-center gap-1.5">
-                  <div className="w-24 flex-shrink-0 flex items-center gap-1.5 pr-1">
-                    <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: habit.color }} />
-                    <span className="text-xs text-[#9ca3af] truncate">{habit.name}</span>
-                  </div>
-                  {days.map((day) => {
-                    const done = (completions[day.date] ?? []).includes(habit.id);
-                    const isToday = day.date === format(new Date(), "yyyy-MM-dd");
-                    return (
-                      <Tooltip key={day.date}>
-                        <TooltipTrigger asChild>
-                          <div
-                            className={`w-9 h-9 flex-shrink-0 rounded-lg transition-all ${
-                              isToday ? "ring-1 ring-[#3a3a3a]" : ""
-                            }`}
-                            style={{
-                              background: done ? habit.color : "#1f1f1f",
-                              opacity: done ? 1 : 0.7,
-                            }}
-                          />
-                        </TooltipTrigger>
-                        <TooltipContent className="bg-[#1a1a1a] border-[#2a2a2a] text-xs text-white">
-                          {format(parseISO(day.date), "EEE, d MMM", { locale: ptBR })}
-                          {" — "}{done ? "✓ completo" : "não realizado"}
-                        </TooltipContent>
-                      </Tooltip>
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
+            ))}
           </div>
         )}
       </CardContent>

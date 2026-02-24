@@ -12,12 +12,21 @@ import { ptBR } from "date-fns/locale";
 import { TrendingUp, TrendingDown, CheckSquare, Coins, StickyNote, ArrowRight, Flame, Wallet } from "lucide-react";
 import { WeatherWidget } from "@/components/dashboard/WeatherWidget";
 
+/** Strip checklist markdown syntax ([ ] / [x]) from note preview */
+function stripChecklist(text: string): string {
+  return text
+    .split("\n")
+    .map((line) => line.replace(/^\[[ xX]\]\s*/, ""))
+    .join("\n")
+    .trim();
+}
+
 export default function DashboardPage() {
   const hydrated = useHydrated();
 
   const transactions = useFinancasStore((s) => s.transactions);
   const budget = useFinancasStore((s) => s.budget);
-  const { habits, completions } = useHabitosStore();
+  const { habits, completions, toggleCompletion } = useHabitosStore();
   const tokens = useDefiStore((s) => s.tokens);
   const { notes, tags } = useNotasStore();
 
@@ -168,9 +177,13 @@ export default function DashboardPage() {
                 const done = (completions[todayKey] ?? []).includes(habit.id);
                 const streak = calcStreak(habit.id, completions);
                 return (
-                  <div key={habit.id} className="flex items-center justify-between py-1.5 border-b border-[#1f1f1f] last:border-0">
+                  <button
+                    key={habit.id}
+                    onClick={() => toggleCompletion(habit.id, todayKey)}
+                    className={`w-full flex items-center justify-between py-1.5 border-b border-[#1f1f1f] last:border-0 cursor-pointer group text-left transition-opacity hover:opacity-80`}
+                  >
                     <div className="flex items-center gap-2.5">
-                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${done ? "bg-[#22c55e] border-[#22c55e]" : "border-[#2a2a2a]"}`}>
+                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${done ? "bg-[#22c55e] border-[#22c55e]" : "border-[#2a2a2a] group-hover:border-[#4a4a4a]"}`}>
                         {done && <svg viewBox="0 0 12 12" width="8" height="8" fill="none"><path d="M2 6l3 3 5-5" stroke="black" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                       </div>
                       <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: habit.color }} />
@@ -181,7 +194,7 @@ export default function DashboardPage() {
                         <Flame size={10} />{streak}
                       </span>
                     )}
-                  </div>
+                  </button>
                 );
               })}
               {habits.length > 5 && (
@@ -219,7 +232,7 @@ export default function DashboardPage() {
                         {tag.label}
                       </span>
                     )}
-                    <p className="text-xs text-[#d1d5db] line-clamp-2 leading-relaxed">{note.content}</p>
+                    <p className="text-xs text-[#d1d5db] line-clamp-2 leading-relaxed">{stripChecklist(note.content)}</p>
                   </div>
                 );
               })}

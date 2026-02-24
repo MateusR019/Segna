@@ -42,11 +42,18 @@ export const useNotasStore = create<NotasState>()(
         })),
 
       editNote: (id, content) =>
-        set((s) => ({
-          notes: s.notes.map((n) =>
-            n.id === id ? { ...n, content: content.trim() } : n
-          ),
-        })),
+        set((s) => {
+          const trimmed = content.trim();
+          // Auto-detect mode on edit too
+          const newMode: "text" | "checklist" = /^\[[ xX]\] /.test(trimmed)
+            ? "checklist"
+            : "text";
+          return {
+            notes: s.notes.map((n) =>
+              n.id === id ? { ...n, content: trimmed, mode: newMode } : n
+            ),
+          };
+        }),
 
       removeNote: (id) =>
         set((s) => ({ notes: s.notes.filter((n) => n.id !== id) })),

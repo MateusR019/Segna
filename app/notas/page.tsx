@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNotasStore } from "@/store/notasStore";
 import { useHydrated } from "@/hooks/useHydrated";
+import { useToast } from "@/hooks/useToast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,35 +15,71 @@ const TAG_COLORS = [
   "#06b6d4", "#8b5cf6", "#f97316", "#ef4444",
 ];
 
-// Simple markdown renderer: **bold**, _italic_, `code`, blank line = paragraph break
-function renderMarkdown(text: string) {
+/** Parse inline markdown tokens: **bold**, _italic_, `code` */
+function parseInline(line: string, baseKey: number): React.ReactNode[] {
+  const parts: React.ReactNode[] = [];
+  const pattern = /(\*\*(.+?)\*\*|_(.+?)_|`(.+?)`)/g;
+  let last = 0;
+  let key = baseKey;
+  let match;
+  while ((match = pattern.exec(line)) !== null) {
+    if (match.index > last) parts.push(line.slice(last, match.index));
+    if (match[0].startsWith("**"))
+      parts.push(<strong key={key++} className="font-semibold text-white">{match[2]}</strong>);
+    else if (match[0].startsWith("_"))
+      parts.push(<em key={key++} className="italic text-[#d1d5db]">{match[3]}</em>);
+    else if (match[0].startsWith("`"))
+      parts.push(<code key={key++} className="text-xs bg-[#2a2a2a] text-[#a78bfa] px-1 py-0.5 rounded font-mono">{match[4]}</code>);
+    last = match.index + match[0].length;
+  }
+  if (last < line.length) parts.push(line.slice(last));
+  return parts;
+}
+
+/** Render markdown as React nodes: headings, bold, italic, code, blank-line paragraphs */
+function renderMarkdown(text: string): React.ReactNode[] {
   const lines = text.split("\n");
-  return lines.map((line, i) => {
-    // Replace inline markdown
-    const parts: React.ReactNode[] = [];
-    let remaining = line;
-    let key = 0;
+  const nodes: React.ReactNode[] = [];
+  let key = 0;
 
-    // Process **bold**, _italic_, `code`
-    const pattern = /(\*\*(.+?)\*\*|_(.+?)_|`(.+?)`)/g;
-    let last = 0;
-    let match;
-    while ((match = pattern.exec(remaining)) !== null) {
-      if (match.index > last) parts.push(remaining.slice(last, match.index));
-      if (match[0].startsWith("**")) parts.push(<strong key={key++} className="font-semibold text-white">{match[2]}</strong>);
-      else if (match[0].startsWith("_")) parts.push(<em key={key++} className="italic">{match[3]}</em>);
-      else if (match[0].startsWith("`")) parts.push(<code key={key++} className="text-xs bg-[#2a2a2a] text-[#a78bfa] px-1 py-0.5 rounded font-mono">{match[4]}</code>);
-      last = match.index + match[0].length;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Blank line — small spacer
+    if (line.trim() === "") {
+      nodes.push(<span key={key++} className="block h-2" />);
+      continue;
     }
-    if (last < remaining.length) parts.push(remaining.slice(last));
 
-    return (
-      <span key={i}>
-        {parts.length > 0 ? parts : line}
-        {i < lines.length - 1 && <br />}
+    // Heading ## / #
+    if (line.startsWith("## ")) {
+      nodes.push(
+        <span key={key++} className="block text-base font-semibold text-white mt-1 mb-0.5">
+          {parseInline(line.slice(3), key)}
+        </span>
+      );
+      continue;
+    }
+    if (line.startsWith("# ")) {
+      nodes.push(
+        <span key={key++} className="block text-lg font-bold text-white mt-1 mb-0.5">
+          {parseInline(line.slice(2), key)}
+        </span>
+      );
+      continue;
+    }
+
+    // Regular line with inline tokens
+    const inline = parseInline(line, key);
+    key += 100;
+    nodes.push(
+      <span key={key++} className="block leading-relaxed">
+        {inline.length > 0 ? inline : line}
       </span>
     );
-  });
+  }
+
+  return nodes;
 }
 
 // Checklist renderer: lines starting with "[ ]" or "[x]"
@@ -93,6 +130,7 @@ export default function NotasPage() {
   const hydrated = useHydrated();
   const { notes, tags, addNote, editNote, removeNote, clearAll, addTag, removeTag, togglePin } =
     useNotasStore();
+  const { success, error: toastError } = useToast();
 
   const [draft, setDraft] = useState("");
   const [selectedTagId, setSelectedTagId] = useState<string>("");
@@ -103,6 +141,7 @@ export default function NotasPage() {
   const [newTagColor, setNewTagColor] = useState(TAG_COLORS[0]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState("");
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const editRef = useRef<HTMLTextAreaElement>(null);
 
@@ -132,6 +171,7 @@ export default function NotasPage() {
     setDraft("");
     setSelectedTagId("");
     textareaRef.current?.focus();
+    success("Nota salva!");
   }
 
   function startEdit(id: string, content: string) {
@@ -144,6 +184,7 @@ export default function NotasPage() {
     if (!editingId || !editDraft.trim()) return;
     editNote(editingId, editDraft);
     setEditingId(null);
+    success("Nota atualizada!");
   }
 
   function cancelEdit() { setEditingId(null); setEditDraft(""); }
@@ -388,9 +429,9 @@ export default function NotasPage() {
                       onToggle={(newContent) => editNote(note.id, newContent)}
                     />
                   ) : (
-                    <p className="text-sm text-white whitespace-pre-wrap break-words leading-relaxed">
+                    <div className="text-sm text-[#e5e5e5] break-words leading-relaxed">
                       {renderMarkdown(note.content)}
-                    </p>
+                    </div>
                   )}
 
                   <p className="text-xs text-[#4a4a4a]">
@@ -403,7 +444,7 @@ export default function NotasPage() {
                   <div className="flex flex-col items-center gap-0.5 flex-shrink-0">
                     {/* Pin */}
                     <Button variant="ghost" size="icon"
-                      onClick={() => togglePin(note.id)}
+                      onClick={() => { togglePin(note.id); success(note.pinned ? "Nota desafixada" : "Nota fixada!"); }}
                       className="h-9 w-9 hover:bg-transparent cursor-pointer"
                       style={{ color: note.pinned ? "#a78bfa" : "#3a3a3a" }}
                       title={note.pinned ? "Desafixar" : "Fixar nota"}
@@ -416,12 +457,27 @@ export default function NotasPage() {
                       className="h-9 w-9 text-[#3a3a3a] hover:text-[#9ca3af] hover:bg-transparent cursor-pointer">
                       <Pencil size={13} />
                     </Button>
-                    {/* Delete */}
-                    <Button variant="ghost" size="icon"
-                      onClick={() => removeNote(note.id)}
-                      className="h-9 w-9 text-[#3a3a3a] hover:text-[#ef4444] hover:bg-transparent cursor-pointer">
-                      <Trash2 size={13} />
-                    </Button>
+                    {/* Delete — confirmação */}
+                    {confirmDeleteId === note.id ? (
+                      <div className="flex flex-col items-center gap-0.5">
+                        <Button variant="ghost" size="icon"
+                          onClick={() => { removeNote(note.id); setConfirmDeleteId(null); success("Nota excluída"); }}
+                          className="h-8 w-8 text-[#ef4444] hover:text-[#dc2626] hover:bg-transparent cursor-pointer">
+                          <Check size={13} />
+                        </Button>
+                        <Button variant="ghost" size="icon"
+                          onClick={() => setConfirmDeleteId(null)}
+                          className="h-8 w-8 text-[#4a4a4a] hover:text-[#9ca3af] hover:bg-transparent cursor-pointer">
+                          <X size={13} />
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button variant="ghost" size="icon"
+                        onClick={() => setConfirmDeleteId(note.id)}
+                        className="h-9 w-9 text-[#3a3a3a] hover:text-[#ef4444] hover:bg-transparent cursor-pointer">
+                        <Trash2 size={13} />
+                      </Button>
+                    )}
                   </div>
                 )}
               </div>
