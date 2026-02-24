@@ -18,15 +18,16 @@ export default function DefiPage() {
           <h1 className="text-xl font-semibold text-white">DeFi / Crypto</h1>
           <p className="text-sm text-[#6b7280]">Portfolio em BRL</p>
         </div>
-        <div className="flex items-center gap-2">
-          <CryptoRefreshButton />
-          <AddTokenDialog />
-        </div>
+        <AddTokenDialog />
       </div>
 
       {hydrated ? (
         <>
           <DefiSummary />
+          {/* Refresh — abaixo do resumo, alinhado à direita */}
+          <div className="flex justify-end -mt-2">
+            <CryptoRefreshButton />
+          </div>
           <PortfolioChart />
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
             <div className="lg:col-span-3">

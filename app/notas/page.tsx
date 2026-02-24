@@ -5,7 +5,7 @@ import { useHydrated } from "@/hooks/useHydrated";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Trash2, Eraser, Plus, Tag, X, Search, Check, Pencil, Pin, List, AlignLeft } from "lucide-react";
+import { Trash2, Eraser, Plus, Tag, X, Search, Check, Pencil, Pin } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -91,11 +91,10 @@ function ChecklistView({
 
 export default function NotasPage() {
   const hydrated = useHydrated();
-  const { notes, tags, addNote, editNote, removeNote, clearAll, addTag, removeTag, togglePin, setNoteMode } =
+  const { notes, tags, addNote, editNote, removeNote, clearAll, addTag, removeTag, togglePin } =
     useNotasStore();
 
   const [draft, setDraft] = useState("");
-  const [newMode, setNewMode] = useState<"text" | "checklist">("text");
   const [selectedTagId, setSelectedTagId] = useState<string>("");
   const [filterTagId, setFilterTagId] = useState<string>("");
   const [search, setSearch] = useState("");
@@ -127,7 +126,9 @@ export default function NotasPage() {
 
   function submit() {
     if (!draft.trim()) return;
-    addNote(draft, selectedTagId || undefined, newMode);
+    // Auto-detect checklist mode: note starts with "[ ]" or "[x]"
+    const isChecklistContent = /^\[[ xX]\] /.test(draft.trim());
+    addNote(draft, selectedTagId || undefined, isChecklistContent ? "checklist" : "text");
     setDraft("");
     setSelectedTagId("");
     textareaRef.current?.focus();
@@ -192,30 +193,14 @@ export default function NotasPage() {
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={
-            newMode === "checklist"
-              ? "[ ] item 1\n[ ] item 2\n[x] feito"
-              : "O que está na sua cabeça? (Ctrl+Enter para salvar)"
-          }
+          placeholder="O que está na sua cabeça? (Ctrl+Enter para salvar)"
           rows={3}
           className="w-full bg-transparent text-sm text-white placeholder-[#4a4a4a] resize-none outline-none leading-relaxed"
         />
 
-        {/* Mode + Tag selector */}
+        {/* Tag selector */}
         {hydrated && (
           <div className="flex flex-wrap gap-1.5 border-t border-[#2a2a2a] pt-3">
-            {/* Mode toggle */}
-            <button
-              type="button"
-              onClick={() => setNewMode(newMode === "text" ? "checklist" : "text")}
-              className={`flex items-center gap-1 px-2 py-0.5 rounded text-xs transition-colors cursor-pointer ${
-                newMode === "checklist" ? "bg-[#6366f1]/20 text-[#a78bfa]" : "text-[#4a4a4a] hover:text-[#6b7280]"
-              }`}
-            >
-              {newMode === "checklist" ? <List size={10} /> : <AlignLeft size={10} />}
-              {newMode === "checklist" ? "checklist" : "texto"}
-            </button>
-
             <button
               type="button"
               onClick={() => setSelectedTagId("")}
@@ -367,11 +352,6 @@ export default function NotasPage() {
                         <Pin size={9} /> fixada
                       </span>
                     )}
-                    {isChecklist && (
-                      <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded bg-[#2a2a2a] text-[#6b7280]">
-                        <List size={9} /> lista
-                      </span>
-                    )}
                     {tag && (
                       <span className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded"
                         style={{ background: tag.color + "22", color: tag.color }}>
@@ -429,14 +409,6 @@ export default function NotasPage() {
                       title={note.pinned ? "Desafixar" : "Fixar nota"}
                     >
                       <Pin size={13} />
-                    </Button>
-                    {/* Mode toggle */}
-                    <Button variant="ghost" size="icon"
-                      onClick={() => setNoteMode(note.id, isChecklist ? "text" : "checklist")}
-                      className="h-9 w-9 text-[#3a3a3a] hover:text-[#9ca3af] hover:bg-transparent cursor-pointer"
-                      title={isChecklist ? "Modo texto" : "Modo lista"}
-                    >
-                      {isChecklist ? <AlignLeft size={13} /> : <List size={13} />}
                     </Button>
                     {/* Edit */}
                     <Button variant="ghost" size="icon"
