@@ -10,6 +10,7 @@ import { ExchangeRateWidget } from "@/components/defi/ExchangeRateWidget";
 import { AddPoolDialog } from "@/components/defi/AddPoolDialog";
 import { PoolList } from "@/components/defi/PoolList";
 import { PoolSummary } from "@/components/defi/PoolSummary";
+import { WalletSyncButton } from "@/components/defi/WalletSyncButton";
 import { useHydrated } from "@/hooks/useHydrated";
 import { Droplets } from "lucide-react";
 
@@ -52,7 +53,10 @@ export default function DefiPage() {
                   Pools de Liquidez
                 </span>
               </div>
-              <AddPoolDialog />
+              <div className="flex items-center gap-2">
+                <WalletSyncButton />
+                <AddPoolDialog />
+              </div>
             </div>
             <PoolSummary />
             <PoolList />

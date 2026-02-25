@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { TrendingUp, CheckSquare, Coins, StickyNote, LayoutDashboard, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -19,12 +20,22 @@ export function AppSidebar() {
     <aside className="hidden md:flex w-56 flex-shrink-0 flex-col h-full border-r border-[#1f1f1f]">
       {/* Logo area */}
       <div className="px-5 py-5 flex items-center gap-3">
-        <div className="w-7 h-7 rounded-lg bg-[#6366f1] flex items-center justify-center flex-shrink-0 logo-pulse">
-          <span className="text-white text-xs font-bold">S</span>
-        </div>
+        <Image
+          src="/icon-192.png"
+          alt="Segna"
+          width={28}
+          height={28}
+          className="rounded-lg flex-shrink-0 logo-pulse"
+        />
         <div>
-          <span className="text-sm font-semibold text-white tracking-tight">Segna</span>
-          <p className="text-[10px] text-[#4a4a4a] leading-none mt-0.5">Personal OS</p>
+          <Image
+            src="/logo.png"
+            alt="Segna"
+            width={72}
+            height={18}
+            className="object-contain"
+          />
+          <p className="text-[10px] text-[#4a4a4a] leading-none mt-1">Personal OS</p>
         </div>
       </div>
 
