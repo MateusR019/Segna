@@ -12,6 +12,8 @@ import { MonthlyReport } from "@/components/financas/MonthlyReport";
 import { MonthlyBudget } from "@/components/financas/MonthlyBudget";
 import { SavingsGoalWidget } from "@/components/financas/SavingsGoalWidget";
 import { ImportExportButton } from "@/components/financas/ImportExportButton";
+import { SpendingCalendar } from "@/components/financas/SpendingCalendar";
+import { RecurringManager } from "@/components/financas/RecurringManager";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useFinancasStore } from "@/store/financasStore";
 
@@ -61,6 +63,12 @@ export default function FinancasPage() {
           <TabsTrigger value="transactions" className="text-xs cursor-pointer">
             Transações
           </TabsTrigger>
+          <TabsTrigger value="calendar" className="text-xs cursor-pointer">
+            Calendário
+          </TabsTrigger>
+          <TabsTrigger value="recurring" className="text-xs cursor-pointer">
+            Fixos
+          </TabsTrigger>
           <TabsTrigger value="metas" className="text-xs cursor-pointer">
             Metas
           </TabsTrigger>
@@ -89,6 +97,22 @@ export default function FinancasPage() {
         <TabsContent value="transactions" className="mt-4">
           {hydrated ? (
             <TransactionList />
+          ) : (
+            <Skeleton className="h-64 bg-[#1a1a1a]" />
+          )}
+        </TabsContent>
+
+        <TabsContent value="calendar" className="mt-4">
+          {hydrated ? (
+            <SpendingCalendar />
+          ) : (
+            <Skeleton className="h-96 bg-[#1a1a1a]" />
+          )}
+        </TabsContent>
+
+        <TabsContent value="recurring" className="mt-4">
+          {hydrated ? (
+            <RecurringManager />
           ) : (
             <Skeleton className="h-64 bg-[#1a1a1a]" />
           )}

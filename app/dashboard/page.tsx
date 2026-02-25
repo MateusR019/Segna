@@ -11,7 +11,7 @@ import { format, getDaysInMonth, subDays, startOfWeek, endOfWeek } from "date-fn
 import { ptBR } from "date-fns/locale";
 import {
   TrendingUp, TrendingDown, CheckSquare, Coins, StickyNote,
-  ArrowRight, Flame, Wallet, CalendarDays, Target,
+  ArrowRight, Flame, Wallet, CalendarDays, Target, BarChart3,
 } from "lucide-react";
 import { WeatherWidget } from "@/components/dashboard/WeatherWidget";
 import { BudgetAlertBanner } from "@/components/BudgetAlertBanner";
@@ -94,6 +94,15 @@ export default function DashboardPage() {
     (acc, t) => acc + t.quantity * t.priceInBRL,
     0
   );
+  const pools = useDefiStore((s) => s.pools);
+  const exchangeRate = useDefiStore((s) => s.exchangeRate);
+  const poolsBRL = pools
+    .filter((p) => p.status === "active")
+    .reduce((acc, p) => acc + p.currentValueUSD * (exchangeRate?.usdToBRL ?? 0), 0);
+
+  // ── Net Worth (patrimônio total acumulado) ────────────────────
+  const totalFinancialBalance = calcBalance(transactions);
+  const netWorth = totalFinancialBalance + portfolioTotal + poolsBRL;
 
   // ── Notes ────────────────────────────────────────────────────
   const recentNotes = notes.slice(0, 3);
@@ -140,6 +149,47 @@ export default function DashboardPage() {
 
       {/* Budget Alert */}
       <BudgetAlertBanner />
+
+      {/* Net Worth */}
+      <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-md bg-[#6366f1]/10 flex items-center justify-center">
+              <BarChart3 size={12} className="text-[#a78bfa]" />
+            </div>
+            <span className="text-xs text-[#6b7280] font-medium">Patrimônio total acumulado</span>
+          </div>
+          <Link href="/financas" className="text-[10px] text-[#4a4a4a] hover:text-[#9ca3af] transition-colors flex items-center gap-1">
+            Detalhes <ArrowRight size={9} />
+          </Link>
+        </div>
+        <p
+          className="text-2xl font-bold tracking-tight"
+          style={{ color: netWorth >= 0 ? "#ffffff" : "#ef4444" }}
+        >
+          {formatBRL(netWorth)}
+        </p>
+        <div className="flex items-center gap-4 mt-2.5 text-xs">
+          <div>
+            <p className="text-[10px] text-[#4a4a4a]">Saldo financeiro</p>
+            <p className="font-medium" style={{ color: totalFinancialBalance >= 0 ? "#22c55e" : "#ef4444" }}>
+              {formatBRL(totalFinancialBalance)}
+            </p>
+          </div>
+          {portfolioTotal > 0 && (
+            <div>
+              <p className="text-[10px] text-[#4a4a4a]">Crypto</p>
+              <p className="font-medium text-[#f59e0b]">{formatBRL(portfolioTotal)}</p>
+            </div>
+          )}
+          {poolsBRL > 0 && (
+            <div>
+              <p className="text-[10px] text-[#4a4a4a]">DeFi Pools</p>
+              <p className="font-medium text-[#06b6d4]">{formatBRL(poolsBRL)}</p>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
