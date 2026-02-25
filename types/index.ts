@@ -107,15 +107,14 @@ export interface HabitNote {
 }
 
 // Habit detail page templates
-export type HabitTemplate = "default" | "workout" | "reading";
+export type HabitTemplate = "default" | "weekly" | "notes";
 
-// Book entry for the reading tracker
-export interface Book {
+// Free-form annotation for a habit
+export interface HabitAnnotation {
   id: string;
-  title: string;
-  author?: string;
-  status: "reading" | "completed" | "want";
-  completedAt?: string; // ISO string, set automatically when status → "completed"
+  title?: string;
+  content: string;
+  createdAt: string; // ISO string
 }
 
 // ─── Notas ───────────────────────────────────────────────────────────────────

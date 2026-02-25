@@ -8,7 +8,7 @@ import { ArrowLeft, Flame, Trophy } from "lucide-react";
 import { TemplatePills } from "@/components/habitos/detail/TemplatePills";
 import { HabitDetailDefault } from "@/components/habitos/detail/HabitDetailDefault";
 import { WorkoutSchedule } from "@/components/habitos/detail/WorkoutSchedule";
-import { BookTracker } from "@/components/habitos/detail/BookTracker";
+import { HabitAnnotations } from "@/components/habitos/detail/HabitAnnotations";
 import { HabitTemplate } from "@/types";
 
 export default function HabitoDetailPage() {
@@ -108,11 +108,11 @@ export default function HabitoDetailPage() {
       {template === "default" && (
         <HabitDetailDefault habitId={id} habit={habit} />
       )}
-      {template === "workout" && (
+      {template === "weekly" && (
         <WorkoutSchedule habitId={id} weekDays={habit.weekDays} color={habit.color} />
       )}
-      {template === "reading" && (
-        <BookTracker habitId={id} />
+      {template === "notes" && (
+        <HabitAnnotations habitId={id} habitColor={habit.color} />
       )}
     </div>
   );

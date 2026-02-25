@@ -2,9 +2,9 @@
 import { HabitTemplate } from "@/types";
 
 const OPTIONS: { value: HabitTemplate; label: string; emoji: string }[] = [
-  { value: "default", label: "Geral",   emoji: "📊" },
-  { value: "workout", label: "Treino",  emoji: "💪" },
-  { value: "reading", label: "Leitura", emoji: "📖" },
+  { value: "default", label: "Geral",         emoji: "📊" },
+  { value: "weekly",  label: "Plano Semanal", emoji: "📅" },
+  { value: "notes",   label: "Anotações",     emoji: "📝" },
 ];
 
 interface Props {

@@ -21,13 +21,13 @@ import { Plus } from "lucide-react";
 import { useHabitosStore } from "@/store/habitosStore";
 import { HabitTag, HabitTemplate, WeekDayIndex } from "@/types";
 
-const WORKOUT_KEYWORDS = ["treino", "academia", "musculação", "musculacao", "gym", "exercício", "exercicio", "fitness", "crossfit"];
-const READING_KEYWORDS = ["leitura", "livro", "ler", "reading", "book", "livros"];
+const WEEKLY_KEYWORDS = ["treino", "academia", "musculação", "musculacao", "gym", "exercício", "exercicio", "fitness", "crossfit", "dieta", "estudo", "estud"];
+const NOTES_KEYWORDS = ["leitura", "livro", "ler", "reading", "book", "livros", "anotaç", "notas", "diário", "diario", "journal"];
 
 function detectTemplate(name: string): HabitTemplate | undefined {
   const lower = name.toLowerCase();
-  if (WORKOUT_KEYWORDS.some((k) => lower.includes(k))) return "workout";
-  if (READING_KEYWORDS.some((k) => lower.includes(k))) return "reading";
+  if (WEEKLY_KEYWORDS.some((k) => lower.includes(k))) return "weekly";
+  if (NOTES_KEYWORDS.some((k) => lower.includes(k))) return "notes";
   return undefined;
 }
 
@@ -121,7 +121,7 @@ export function AddHabitDialog() {
               <p className="text-[11px] text-[#6b7280] mt-1">
                 Modelo detectado:{" "}
                 <span className="text-[#a78bfa] font-medium">
-                  {detectedTemplate === "workout" ? "💪 Treino" : "📖 Leitura"}
+                  {detectedTemplate === "weekly" ? "📅 Plano Semanal" : "📝 Anotações"}
                 </span>
                 {" "}— você poderá configurar na página do hábito
               </p>
