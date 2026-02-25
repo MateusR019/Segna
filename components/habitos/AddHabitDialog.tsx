@@ -19,7 +19,17 @@ import {
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import { useHabitosStore } from "@/store/habitosStore";
-import { HabitTag, WeekDayIndex } from "@/types";
+import { HabitTag, HabitTemplate, WeekDayIndex } from "@/types";
+
+const WORKOUT_KEYWORDS = ["treino", "academia", "musculação", "musculacao", "gym", "exercício", "exercicio", "fitness", "crossfit"];
+const READING_KEYWORDS = ["leitura", "livro", "ler", "reading", "book", "livros"];
+
+function detectTemplate(name: string): HabitTemplate | undefined {
+  const lower = name.toLowerCase();
+  if (WORKOUT_KEYWORDS.some((k) => lower.includes(k))) return "workout";
+  if (READING_KEYWORDS.some((k) => lower.includes(k))) return "reading";
+  return undefined;
+}
 
 const PRESET_COLORS = [
   "#22c55e", "#ef4444", "#f59e0b", "#6366f1",
@@ -51,6 +61,7 @@ export function AddHabitDialog() {
   const [color, setColor] = useState(PRESET_COLORS[0]);
   const [tag, setTag] = useState<HabitTag | "none">("none");
   const [weekDays, setWeekDays] = useState<WeekDayIndex[]>([]);
+  const [detectedTemplate, setDetectedTemplate] = useState<HabitTemplate | undefined>(undefined);
 
   function toggleDay(idx: WeekDayIndex) {
     setWeekDays((prev) =>
@@ -67,11 +78,13 @@ export function AddHabitDialog() {
       icon: "check",
       tag: tag === "none" ? undefined : tag,
       weekDays: weekDays.length > 0 ? weekDays : undefined,
+      template: detectedTemplate,
     });
     setName("");
     setColor(PRESET_COLORS[0]);
     setTag("none");
     setWeekDays([]);
+    setDetectedTemplate(undefined);
     setOpen(false);
   }
 
@@ -96,11 +109,23 @@ export function AddHabitDialog() {
             <Input
               id="habit-name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+                setDetectedTemplate(detectTemplate(e.target.value));
+              }}
               placeholder="Ex: Treino, Leitura, Meditação..."
               className="bg-[#0f0f0f] border-[#2a2a2a]"
               required
             />
+            {detectedTemplate && (
+              <p className="text-[11px] text-[#6b7280] mt-1">
+                Modelo detectado:{" "}
+                <span className="text-[#a78bfa] font-medium">
+                  {detectedTemplate === "workout" ? "💪 Treino" : "📖 Leitura"}
+                </span>
+                {" "}— você poderá configurar na página do hábito
+              </p>
+            )}
           </div>
 
           {/* Dias da semana */}

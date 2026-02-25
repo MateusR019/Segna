@@ -8,6 +8,7 @@ import { format } from "date-fns";
 import { useToast } from "@/hooks/useToast";
 import { HabitNoteInline } from "./HabitNoteInline";
 import { HabitBestStreakBadge } from "./HabitBestStreakBadge";
+import Link from "next/link";
 
 export function HabitosDailyChecklist() {
   const { habits, completions, toggleCompletion, removeHabit, reorderHabits } =
@@ -122,9 +123,15 @@ export function HabitosDailyChecklist() {
               {/* Name + note */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className={`text-sm font-medium ${done ? "text-[#6b7280] line-through" : "text-white"}`}>
+                  <Link
+                    href={`/habitos/${habit.id}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className={`text-sm font-medium transition-colors hover:underline underline-offset-2 ${
+                      done ? "text-[#6b7280] line-through" : "text-white hover:text-[#a78bfa]"
+                    }`}
+                  >
                     {habit.name}
-                  </span>
+                  </Link>
                   {habit.tag && (
                     <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-[#2a2a2a] text-[#6b7280] capitalize">
                       {habit.tag}

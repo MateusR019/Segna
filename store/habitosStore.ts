@@ -1,13 +1,15 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { subDays, format } from "date-fns";
-import { Habit, CompletionMap, HabitFrequencyGoal, HabitNote } from "@/types";
+import { Habit, CompletionMap, HabitFrequencyGoal, HabitNote, HabitTemplate, Book, WeekDayIndex } from "@/types";
 
 interface HabitosState {
   habits: Habit[];
   completions: CompletionMap;
   frequencyGoals: HabitFrequencyGoal[];
   habitNotes: HabitNote[];
+  workoutSchedule: Record<string, Partial<Record<WeekDayIndex, string>>>;
+  books: Record<string, Book[]>;
 
   addHabit: (h: Omit<Habit, "id" | "createdAt">) => void;
   removeHabit: (id: string) => void;
@@ -17,6 +19,12 @@ interface HabitosState {
   removeFrequencyGoal: (habitId: string) => void;
   setHabitNote: (habitId: string, date: string, text: string) => void;
   removeHabitNote: (habitId: string, date: string) => void;
+  // Habit detail actions
+  setTemplate: (habitId: string, template: HabitTemplate) => void;
+  setWorkoutDay: (habitId: string, day: WeekDayIndex, text: string) => void;
+  addBook: (habitId: string, book: Omit<Book, "id">) => void;
+  updateBook: (habitId: string, bookId: string, updates: Partial<Omit<Book, "id">>) => void;
+  removeBook: (habitId: string, bookId: string) => void;
 }
 
 export const useHabitosStore = create<HabitosState>()(
@@ -26,6 +34,8 @@ export const useHabitosStore = create<HabitosState>()(
       completions: {},
       frequencyGoals: [],
       habitNotes: [],
+      workoutSchedule: {},
+      books: {},
 
       addHabit: (h) =>
         set((state) => ({
@@ -41,16 +51,22 @@ export const useHabitosStore = create<HabitosState>()(
         })),
 
       removeHabit: (id) =>
-        set((state) => ({
-          habits: state.habits.filter((h) => h.id !== id),
-          completions: Object.fromEntries(
-            Object.entries(state.completions).map(([date, ids]) => [
-              date,
-              ids.filter((hId) => hId !== id),
-            ])
-          ),
-          habitNotes: state.habitNotes.filter((n) => n.habitId !== id),
-        })),
+        set((state) => {
+          const { [id]: _ws, ...restWs } = state.workoutSchedule;
+          const { [id]: _bk, ...restBk } = state.books;
+          return {
+            habits: state.habits.filter((h) => h.id !== id),
+            completions: Object.fromEntries(
+              Object.entries(state.completions).map(([date, ids]) => [
+                date,
+                ids.filter((hId) => hId !== id),
+              ])
+            ),
+            habitNotes: state.habitNotes.filter((n) => n.habitId !== id),
+            workoutSchedule: restWs,
+            books: restBk,
+          };
+        }),
 
       reorderHabits: (orderedIds) =>
         set((state) => ({
@@ -99,6 +115,66 @@ export const useHabitosStore = create<HabitosState>()(
           habitNotes: state.habitNotes.filter(
             (n) => !(n.habitId === habitId && n.date === date)
           ),
+        })),
+
+      setTemplate: (habitId, template) =>
+        set((state) => ({
+          habits: state.habits.map((h) =>
+            h.id === habitId ? { ...h, template } : h
+          ),
+        })),
+
+      setWorkoutDay: (habitId, day, text) =>
+        set((state) => {
+          const existing = state.workoutSchedule[habitId] ?? {};
+          const updated = text.trim()
+            ? { ...existing, [day]: text.trim() }
+            : Object.fromEntries(
+                Object.entries(existing).filter(([k]) => k !== String(day))
+              );
+          return {
+            workoutSchedule: { ...state.workoutSchedule, [habitId]: updated },
+          };
+        }),
+
+      addBook: (habitId, book) =>
+        set((state) => ({
+          books: {
+            ...state.books,
+            [habitId]: [
+              ...(state.books[habitId] ?? []),
+              { ...book, id: crypto.randomUUID() },
+            ],
+          },
+        })),
+
+      updateBook: (habitId, bookId, updates) =>
+        set((state) => ({
+          books: {
+            ...state.books,
+            [habitId]: (state.books[habitId] ?? []).map((b) =>
+              b.id === bookId
+                ? {
+                    ...b,
+                    ...updates,
+                    completedAt:
+                      updates.status === "completed" && b.status !== "completed"
+                        ? new Date().toISOString()
+                        : updates.status && updates.status !== "completed"
+                        ? undefined
+                        : b.completedAt,
+                  }
+                : b
+            ),
+          },
+        })),
+
+      removeBook: (habitId, bookId) =>
+        set((state) => ({
+          books: {
+            ...state.books,
+            [habitId]: (state.books[habitId] ?? []).filter((b) => b.id !== bookId),
+          },
         })),
     }),
     {

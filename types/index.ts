@@ -75,6 +75,7 @@ export interface Habit {
   weekDays?: WeekDayIndex[]; // undefined = todos os dias
   order?: number;
   createdAt: string;
+  template?: HabitTemplate; // undefined = "default"
 }
 
 // Key: "YYYY-MM-DD", Value: array of completed habit IDs
@@ -103,6 +104,18 @@ export interface HabitNote {
   habitId: string;
   date: string; // "YYYY-MM-DD"
   text: string;
+}
+
+// Habit detail page templates
+export type HabitTemplate = "default" | "workout" | "reading";
+
+// Book entry for the reading tracker
+export interface Book {
+  id: string;
+  title: string;
+  author?: string;
+  status: "reading" | "completed" | "want";
+  completedAt?: string; // ISO string, set automatically when status → "completed"
 }
 
 // ─── Notas ───────────────────────────────────────────────────────────────────
