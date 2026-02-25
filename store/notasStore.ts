@@ -11,7 +11,7 @@ const DEFAULT_TAGS: NoteTag[] = [
 interface NotasState {
   notes: Note[];
   tags: NoteTag[];
-  addNote: (content: string, tagId?: string, mode?: "text" | "checklist") => void;
+  addNote: (content: string, tagId?: string, mode?: "text" | "checklist", image?: string) => void;
   editNote: (id: string, content: string) => void;
   removeNote: (id: string) => void;
   clearAll: () => void;
@@ -27,12 +27,13 @@ export const useNotasStore = create<NotasState>()(
       notes: [],
       tags: DEFAULT_TAGS,
 
-      addNote: (content, tagId, mode) =>
+      addNote: (content, tagId, mode, image) =>
         set((s) => ({
           notes: [
             {
               id: crypto.randomUUID(),
               content: content.trim(),
+              image: image || undefined,
               tagId: tagId || undefined,
               createdAt: new Date().toISOString(),
               mode: mode ?? "text",

@@ -6,6 +6,8 @@ import { AppSidebar } from "@/components/layout/AppSidebar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/Toaster";
+import { CommandPalette } from "@/components/CommandPalette";
+import { Onboarding } from "@/components/Onboarding";
 
 const geist = Geist({ subsets: ["latin"] });
 
@@ -57,6 +59,8 @@ export default function RootLayout({
             </div>
             <BottomNav />
             <Toaster />
+            <CommandPalette />
+            <Onboarding />
           </TooltipProvider>
         </Providers>
       </body>

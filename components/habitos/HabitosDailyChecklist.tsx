@@ -24,7 +24,11 @@ export function HabitosDailyChecklist() {
   // Bounce animation trigger — stores id of last toggled habit
   const [bouncingId, setBouncingId] = useState<string | null>(null);
 
-  const sorted = [...habits].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  // Filtra hábitos por dia da semana configurado
+  const todayWeekDay = new Date().getDay() as 0|1|2|3|4|5|6;
+  const sorted = [...habits]
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    .filter((h) => !h.weekDays || h.weekDays.length === 0 || h.weekDays.includes(todayWeekDay));
 
   function onDragStart(id: string) { dragId.current = id; }
   function onDragOver(e: React.DragEvent, id: string) {

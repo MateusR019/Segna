@@ -1,19 +1,22 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { Token, PortfolioSnapshot, PriceEntry } from "@/types";
+import { Token, PortfolioSnapshot, PriceEntry, ExchangeRate } from "@/types";
 import { format } from "date-fns";
 
 interface DefiState {
   tokens: Token[];
   snapshots: PortfolioSnapshot[];
   priceHistory: PriceEntry[];
+  exchangeRate: ExchangeRate | null;
 
   addToken: (t: Omit<Token, "id" | "addedAt">) => void;
   removeToken: (id: string) => void;
   updatePrice: (id: string, newPrice: number) => void;
+  updatePriceUSD: (id: string, priceUSD: number) => void;
   updateQuantity: (id: string, newQuantity: number) => void;
   setAlertPrice: (id: string, price: number) => void;
   setAvgCost: (id: string, avgCost: number) => void;
+  setExchangeRate: (usdToBRL: number) => void;
   saveSnapshot: () => void;
   addPriceEntry: (tokenId: string, date: string, priceBRL: number) => void;
   removePriceEntry: (id: string) => void;
@@ -25,6 +28,7 @@ export const useDefiStore = create<DefiState>()(
       tokens: [],
       snapshots: [],
       priceHistory: [],
+      exchangeRate: null,
 
       addToken: (t) =>
         set((state) => ({
@@ -47,6 +51,18 @@ export const useDefiStore = create<DefiState>()(
           ),
         })),
 
+      updatePriceUSD: (id, priceUSD) =>
+        set((state) => {
+          const rate = state.exchangeRate?.usdToBRL ?? 0;
+          return {
+            tokens: state.tokens.map((t) =>
+              t.id === id
+                ? { ...t, priceInUSD: priceUSD, priceInBRL: rate > 0 ? priceUSD * rate : t.priceInBRL }
+                : t
+            ),
+          };
+        }),
+
       updateQuantity: (id, newQuantity) =>
         set((state) => ({
           tokens: state.tokens.map((t) =>
@@ -67,6 +83,9 @@ export const useDefiStore = create<DefiState>()(
             t.id === id ? { ...t, avgCostBRL: avgCost } : t
           ),
         })),
+
+      setExchangeRate: (usdToBRL) =>
+        set({ exchangeRate: { usdToBRL, updatedAt: new Date().toISOString() } }),
 
       saveSnapshot: () => {
         const { tokens, snapshots } = get();

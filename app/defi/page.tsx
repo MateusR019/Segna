@@ -6,6 +6,7 @@ import { TokenList } from "@/components/defi/TokenList";
 import { TokenPieChart } from "@/components/defi/TokenPieChart";
 import { CryptoRefreshButton } from "@/components/defi/CryptoRefreshButton";
 import { PortfolioChart } from "@/components/defi/PortfolioChart";
+import { ExchangeRateWidget } from "@/components/defi/ExchangeRateWidget";
 import { useHydrated } from "@/hooks/useHydrated";
 
 export default function DefiPage() {
@@ -16,7 +17,7 @@ export default function DefiPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold text-white">DeFi / Crypto</h1>
-          <p className="text-sm text-[#6b7280]">Portfolio em BRL</p>
+          <ExchangeRateWidget />
         </div>
         <AddTokenDialog />
       </div>

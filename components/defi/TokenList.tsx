@@ -5,30 +5,43 @@ import { useToast } from "@/hooks/useToast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Pencil, Trash2, Check, X, TrendingUp, TrendingDown } from "lucide-react";
+import { Pencil, Trash2, Check, X, TrendingUp, TrendingDown, DollarSign } from "lucide-react";
 import { formatBRL } from "@/lib/format";
 import { TokenAvgCost } from "./TokenAvgCost";
 import { PriceHistoryPanel } from "./PriceHistoryPanel";
 
 export function TokenList() {
-  const { tokens, removeToken, updatePrice, updateQuantity, setAlertPrice } = useDefiStore();
+  const { tokens, removeToken, updatePrice, updatePriceUSD, updateQuantity, setAlertPrice, exchangeRate } = useDefiStore();
   const { success } = useToast();
   const total = tokens.reduce((acc, t) => acc + t.quantity * t.priceInBRL, 0);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editPrice, setEditPrice] = useState("");
+  const [editCurrency, setEditCurrency] = useState<"BRL" | "USD">("BRL");
   const [editQty, setEditQty] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  function startEdit(id: string, price: number, qty: number) {
+  function startEdit(id: string, price: number, qty: number, priceUSD?: number) {
     setEditingId(id);
-    setEditPrice(price.toString());
+    if (priceUSD && exchangeRate) {
+      setEditPrice(priceUSD.toString());
+      setEditCurrency("USD");
+    } else {
+      setEditPrice(price.toString());
+      setEditCurrency("BRL");
+    }
     setEditQty(qty.toString());
   }
 
   function confirmEdit(id: string) {
     const p = parseFloat(editPrice.replace(",", "."));
     const q = parseFloat(editQty.replace(",", "."));
-    if (!isNaN(p) && p > 0) updatePrice(id, p);
+    if (!isNaN(p) && p > 0) {
+      if (editCurrency === "USD") {
+        updatePriceUSD(id, p);
+      } else {
+        updatePrice(id, p);
+      }
+    }
     if (!isNaN(q) && q > 0) updateQuantity(id, q);
     setEditingId(null);
     success("Token atualizado!");
@@ -99,19 +112,28 @@ export function TokenList() {
 
                 {/* Edit / display */}
                 {editing ? (
-                  <div className="flex items-center gap-1.5 mx-2">
+                  <div className="flex items-center gap-1.5 mx-2 flex-wrap justify-end">
                     <Input
                       value={editQty}
                       onChange={(e) => setEditQty(e.target.value)}
                       className="h-7 w-16 text-xs bg-[#1a1a1a] border-[#2a2a2a] px-2"
                       placeholder="Qtd"
                     />
-                    <Input
-                      value={editPrice}
-                      onChange={(e) => setEditPrice(e.target.value)}
-                      className="h-7 w-24 text-xs bg-[#1a1a1a] border-[#2a2a2a] px-2"
-                      placeholder="Preço"
-                    />
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setEditCurrency(editCurrency === "BRL" ? "USD" : "BRL")}
+                        className="text-xs px-1.5 py-1 rounded bg-[#2a2a2a] text-[#9ca3af] hover:text-white cursor-pointer transition-colors"
+                      >
+                        {editCurrency}
+                      </button>
+                      <Input
+                        value={editPrice}
+                        onChange={(e) => setEditPrice(e.target.value)}
+                        className="h-7 w-24 text-xs bg-[#1a1a1a] border-[#2a2a2a] px-2"
+                        placeholder={editCurrency === "USD" ? "Preço $" : "Preço R$"}
+                      />
+                    </div>
                     <Button variant="ghost" size="icon" className="h-9 w-9 text-[#22c55e] hover:bg-transparent cursor-pointer" onClick={() => confirmEdit(token.id)}>
                       <Check size={14} />
                     </Button>
@@ -122,6 +144,9 @@ export function TokenList() {
                 ) : (
                   <div className="text-right mx-2">
                     <p className="text-sm text-white font-medium">{formatBRL(value)}</p>
+                    {token.priceInUSD && exchangeRate && (
+                      <p className="text-xs text-[#4a4a4a]">${(token.priceInUSD * token.quantity).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                    )}
                     <p className="text-xs text-[#6b7280]">{token.quantity} · {pct}%</p>
                   </div>
                 )}
@@ -138,7 +163,7 @@ export function TokenList() {
                     >
                       <TrendingUp size={14} />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-9 w-9 text-[#6b7280] hover:text-white hover:bg-transparent cursor-pointer" onClick={() => startEdit(token.id, token.priceInBRL, token.quantity)}>
+                    <Button variant="ghost" size="icon" className="h-9 w-9 text-[#6b7280] hover:text-white hover:bg-transparent cursor-pointer" onClick={() => startEdit(token.id, token.priceInBRL, token.quantity, token.priceInUSD)}>
                       <Pencil size={14} />
                     </Button>
                     {/* Delete com confirmação */}

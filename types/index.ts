@@ -62,13 +62,18 @@ export interface SavingsGoal {
 
 export type HabitTag = "saude" | "trabalho" | "pessoal" | "aprendizado" | "financas";
 
+// 0=Dom, 1=Seg, 2=Ter, 3=Qua, 4=Qui, 5=Sex, 6=Sab
+// undefined/empty = todos os dias
+export type WeekDayIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
 export interface Habit {
   id: string;
   name: string;
   icon: string;
   color: string;
   tag?: HabitTag;
-  order?: number; // Feature 8: drag-and-drop order
+  weekDays?: WeekDayIndex[]; // undefined = todos os dias
+  order?: number;
   createdAt: string;
 }
 
@@ -111,6 +116,7 @@ export interface NoteTag {
 export interface Note {
   id: string;
   content: string;
+  image?: string;               // base64 data URL de imagem colada/arrastada
   tagId?: string;
   createdAt: string;
   pinned?: boolean;             // Feature 14: fixar nota
@@ -136,10 +142,17 @@ export interface Token {
   name: string;
   quantity: number;
   priceInBRL: number;
+  priceInUSD?: number; // preço em dólar
   priceAtAlert?: number;
-  avgCostBRL?: number; // Feature 9: custo médio
+  avgCostBRL?: number;
   color: string;
   addedAt: string;
+}
+
+// Taxa de câmbio BRL/USD armazenada no defiStore
+export interface ExchangeRate {
+  usdToBRL: number;
+  updatedAt: string;
 }
 
 // Feature 11: histórico de preços manuais

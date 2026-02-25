@@ -11,6 +11,8 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { TrendingUp, TrendingDown, CheckSquare, Coins, StickyNote, ArrowRight, Flame, Wallet } from "lucide-react";
 import { WeatherWidget } from "@/components/dashboard/WeatherWidget";
+import { BudgetAlertBanner } from "@/components/BudgetAlertBanner";
+import { ExportDataButton } from "@/components/ExportDataButton";
 
 /** Strip checklist markdown syntax ([ ] / [x]) from note preview */
 function stripChecklist(text: string): string {
@@ -82,8 +84,14 @@ export default function DashboardPage() {
           <h1 className="text-xl font-semibold text-white">Dashboard</h1>
           <p className="text-sm text-[#6b7280] capitalize">{todayLabel}</p>
         </div>
-        <WeatherWidget />
+        <div className="flex items-center gap-2">
+          <ExportDataButton />
+          <WeatherWidget />
+        </div>
       </div>
+
+      {/* Budget Alert */}
+      <BudgetAlertBanner />
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

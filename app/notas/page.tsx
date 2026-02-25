@@ -133,6 +133,7 @@ export default function NotasPage() {
   const { success, error: toastError } = useToast();
 
   const [draft, setDraft] = useState("");
+  const [draftImage, setDraftImage] = useState<string | null>(null);
   const [selectedTagId, setSelectedTagId] = useState<string>("");
   const [filterTagId, setFilterTagId] = useState<string>("");
   const [search, setSearch] = useState("");
@@ -163,12 +164,42 @@ export default function NotasPage() {
     if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); submit(); }
   }
 
+  function readImageFile(file: File): Promise<string> {
+    return new Promise((res) => {
+      const reader = new FileReader();
+      reader.onload = (e) => res(e.target?.result as string);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function handlePaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
+    const items = Array.from(e.clipboardData.items);
+    const imgItem = items.find((i) => i.type.startsWith("image/"));
+    if (imgItem) {
+      e.preventDefault();
+      const file = imgItem.getAsFile();
+      if (file) {
+        const dataUrl = await readImageFile(file);
+        setDraftImage(dataUrl);
+      }
+    }
+  }
+
+  async function handleDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    const file = Array.from(e.dataTransfer.files).find((f) => f.type.startsWith("image/"));
+    if (file) {
+      const dataUrl = await readImageFile(file);
+      setDraftImage(dataUrl);
+    }
+  }
+
   function submit() {
-    if (!draft.trim()) return;
-    // Auto-detect checklist mode: note starts with "[ ]" or "[x]"
+    if (!draft.trim() && !draftImage) return;
     const isChecklistContent = /^\[[ xX]\] /.test(draft.trim());
-    addNote(draft, selectedTagId || undefined, isChecklistContent ? "checklist" : "text");
+    addNote(draft, selectedTagId || undefined, isChecklistContent ? "checklist" : "text", draftImage ?? undefined);
     setDraft("");
+    setDraftImage(null);
     setSelectedTagId("");
     textareaRef.current?.focus();
     success("Nota salva!");
@@ -228,16 +259,35 @@ export default function NotasPage() {
       </div>
 
       {/* Input box */}
-      <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4 space-y-3 max-w-2xl">
+      <div
+        className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4 space-y-3 max-w-2xl"
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={handleDrop}
+      >
         <textarea
           ref={textareaRef}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="O que está na sua cabeça? (Ctrl+Enter para salvar)"
+          onPaste={handlePaste}
+          placeholder="O que está na sua cabeça? (Ctrl+Enter para salvar, cole imagens)"
           rows={3}
           className="w-full bg-transparent text-sm text-white placeholder-[#4a4a4a] resize-none outline-none leading-relaxed"
         />
+        {/* Image preview */}
+        {draftImage && (
+          <div className="relative inline-block">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={draftImage} alt="preview" className="max-h-40 rounded-lg border border-[#2a2a2a] object-contain" />
+            <button
+              type="button"
+              onClick={() => setDraftImage(null)}
+              className="absolute top-1 right-1 bg-[#0f0f0f]/80 rounded-full p-0.5 text-[#9ca3af] hover:text-white cursor-pointer"
+            >
+              <X size={12} />
+            </button>
+          </div>
+        )}
 
         {/* Tag selector */}
         {hydrated && (
@@ -432,6 +482,17 @@ export default function NotasPage() {
                     <div className="text-sm text-[#e5e5e5] break-words leading-relaxed">
                       {renderMarkdown(note.content)}
                     </div>
+                  )}
+
+                  {/* Image attachment */}
+                  {note.image && !isEditing && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={note.image}
+                      alt="imagem"
+                      className="max-h-48 rounded-lg border border-[#2a2a2a] object-contain cursor-pointer"
+                      onClick={() => window.open(note.image)}
+                    />
                   )}
 
                   <p className="text-xs text-[#4a4a4a]">
