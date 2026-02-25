@@ -7,7 +7,11 @@ import { TokenPieChart } from "@/components/defi/TokenPieChart";
 import { CryptoRefreshButton } from "@/components/defi/CryptoRefreshButton";
 import { PortfolioChart } from "@/components/defi/PortfolioChart";
 import { ExchangeRateWidget } from "@/components/defi/ExchangeRateWidget";
+import { AddPoolDialog } from "@/components/defi/AddPoolDialog";
+import { PoolList } from "@/components/defi/PoolList";
+import { PoolSummary } from "@/components/defi/PoolSummary";
 import { useHydrated } from "@/hooks/useHydrated";
+import { Droplets } from "lucide-react";
 
 export default function DefiPage() {
   const hydrated = useHydrated();
@@ -37,6 +41,21 @@ export default function DefiPage() {
             <div className="lg:col-span-2">
               <TokenPieChart />
             </div>
+          </div>
+
+          {/* ── Pools de Liquidez ── */}
+          <div className="pt-2 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Droplets size={15} className="text-[#06b6d4]" />
+                <span className="text-base font-semibold text-white">
+                  Pools de Liquidez
+                </span>
+              </div>
+              <AddPoolDialog />
+            </div>
+            <PoolSummary />
+            <PoolList />
           </div>
         </>
       ) : (

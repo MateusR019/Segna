@@ -182,3 +182,22 @@ export interface TokenWithValue extends Token {
   totalValue: number;
   percentage: number;
 }
+
+// ─── DeFi - Pools de Liquidez ─────────────────────────────────────────────────
+
+export type PoolStatus = "active" | "closed";
+
+export interface LiquidityPool {
+  id: string;
+  protocol: string;           // "Uniswap V3", "PancakeSwap", etc.
+  tokenA: string;             // "ETH"
+  tokenB: string;             // "USDC"
+  network: string;            // "Ethereum", "BSC", "Polygon", etc.
+  depositedBRL: number;       // valor no momento do depósito
+  currentValueBRL: number;    // valor atual da posição (atualização manual)
+  feesEarnedBRL?: number;     // fees/rendimentos acumulados em BRL
+  apy?: number;               // APY estimado em % (ex: 12.5)
+  color: string;
+  addedAt: string;            // ISO string
+  status: PoolStatus;
+}

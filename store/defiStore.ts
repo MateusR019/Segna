@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { Token, PortfolioSnapshot, PriceEntry, ExchangeRate } from "@/types";
+import { Token, PortfolioSnapshot, PriceEntry, ExchangeRate, LiquidityPool } from "@/types";
 import { format } from "date-fns";
 
 interface DefiState {
@@ -8,6 +8,7 @@ interface DefiState {
   snapshots: PortfolioSnapshot[];
   priceHistory: PriceEntry[];
   exchangeRate: ExchangeRate | null;
+  pools: LiquidityPool[];
 
   addToken: (t: Omit<Token, "id" | "addedAt">) => void;
   removeToken: (id: string) => void;
@@ -20,6 +21,10 @@ interface DefiState {
   saveSnapshot: () => void;
   addPriceEntry: (tokenId: string, date: string, priceBRL: number) => void;
   removePriceEntry: (id: string) => void;
+
+  addPool: (pool: Omit<LiquidityPool, "id" | "addedAt">) => void;
+  removePool: (id: string) => void;
+  updatePool: (id: string, updates: Partial<LiquidityPool>) => void;
 }
 
 export const useDefiStore = create<DefiState>()(
@@ -29,6 +34,7 @@ export const useDefiStore = create<DefiState>()(
       snapshots: [],
       priceHistory: [],
       exchangeRate: null,
+      pools: [],
 
       addToken: (t) =>
         set((state) => ({
@@ -118,6 +124,24 @@ export const useDefiStore = create<DefiState>()(
       removePriceEntry: (id) =>
         set((state) => ({
           priceHistory: state.priceHistory.filter((e) => e.id !== id),
+        })),
+
+      addPool: (pool) =>
+        set((state) => ({
+          pools: [
+            ...state.pools,
+            { ...pool, id: crypto.randomUUID(), addedAt: new Date().toISOString() },
+          ],
+        })),
+
+      removePool: (id) =>
+        set((state) => ({
+          pools: state.pools.filter((p) => p.id !== id),
+        })),
+
+      updatePool: (id, updates) =>
+        set((state) => ({
+          pools: state.pools.map((p) => (p.id === id ? { ...p, ...updates } : p)),
         })),
     }),
     {
