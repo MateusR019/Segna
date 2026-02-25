@@ -5,29 +5,34 @@ import { useToast } from "@/hooks/useToast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Pencil, Trash2, Check, X, TrendingUp, TrendingDown, DollarSign } from "lucide-react";
-import { formatBRL } from "@/lib/format";
+import { Pencil, Trash2, Check, X, TrendingUp, TrendingDown } from "lucide-react";
+import { formatUSD } from "@/lib/format";
 import { TokenAvgCost } from "./TokenAvgCost";
 import { PriceHistoryPanel } from "./PriceHistoryPanel";
 
 export function TokenList() {
   const { tokens, removeToken, updatePrice, updatePriceUSD, updateQuantity, setAlertPrice, exchangeRate } = useDefiStore();
   const { success } = useToast();
-  const total = tokens.reduce((acc, t) => acc + t.quantity * t.priceInBRL, 0);
+
+  const total = tokens.reduce((acc, t) => {
+    if (t.priceInUSD) return acc + t.quantity * t.priceInUSD;
+    if (exchangeRate?.usdToBRL) return acc + (t.quantity * t.priceInBRL) / exchangeRate.usdToBRL;
+    return acc;
+  }, 0);
+
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editPrice, setEditPrice] = useState("");
-  const [editCurrency, setEditCurrency] = useState<"BRL" | "USD">("BRL");
   const [editQty, setEditQty] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  function startEdit(id: string, price: number, qty: number, priceUSD?: number) {
+  function startEdit(id: string, priceInBRL: number, qty: number, priceInUSD?: number) {
     setEditingId(id);
-    if (priceUSD && exchangeRate) {
-      setEditPrice(priceUSD.toString());
-      setEditCurrency("USD");
+    if (priceInUSD) {
+      setEditPrice(priceInUSD.toFixed(6));
+    } else if (exchangeRate?.usdToBRL) {
+      setEditPrice((priceInBRL / exchangeRate.usdToBRL).toFixed(6));
     } else {
-      setEditPrice(price.toString());
-      setEditCurrency("BRL");
+      setEditPrice("");
     }
     setEditQty(qty.toString());
   }
@@ -36,10 +41,10 @@ export function TokenList() {
     const p = parseFloat(editPrice.replace(",", "."));
     const q = parseFloat(editQty.replace(",", "."));
     if (!isNaN(p) && p > 0) {
-      if (editCurrency === "USD") {
-        updatePriceUSD(id, p);
-      } else {
-        updatePrice(id, p);
+      updatePriceUSD(id, p);
+      // Mantém BRL sincronizado para o dashboard
+      if (exchangeRate?.usdToBRL) {
+        updatePrice(id, p * exchangeRate.usdToBRL);
       }
     }
     if (!isNaN(q) && q > 0) updateQuantity(id, q);
@@ -57,7 +62,7 @@ export function TokenList() {
       <Card className="bg-[#1a1a1a] border-[#2a2a2a] rounded-xl">
         <CardContent className="flex flex-col items-center justify-center h-48 gap-2">
           <p className="text-sm text-[#4a4a4a]">Nenhum token adicionado</p>
-          <p className="text-xs text-[#3a3a3a]">Use "Adicionar Token" para rastrear seu portfolio.</p>
+          <p className="text-xs text-[#3a3a3a]">Use &quot;Adicionar Token&quot; para rastrear seu portfolio.</p>
         </CardContent>
       </Card>
     );
@@ -70,8 +75,12 @@ export function TokenList() {
       </CardHeader>
       <CardContent className="space-y-2 p-4 pt-0">
         {tokens.map((token, idx) => {
-          const value = token.quantity * token.priceInBRL;
-          const pct = total > 0 ? ((value / total) * 100).toFixed(1) : "0";
+          const valueUSD = token.priceInUSD
+            ? token.quantity * token.priceInUSD
+            : exchangeRate?.usdToBRL
+            ? (token.quantity * token.priceInBRL) / exchangeRate.usdToBRL
+            : 0;
+          const pct = total > 0 ? ((valueUSD / total) * 100).toFixed(1) : "0";
           const editing = editingId === token.id;
           const variation = calcVariation(token);
           const hasAlert = variation !== null;
@@ -120,18 +129,12 @@ export function TokenList() {
                       placeholder="Qtd"
                     />
                     <div className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => setEditCurrency(editCurrency === "BRL" ? "USD" : "BRL")}
-                        className="text-xs px-1.5 py-1 rounded bg-[#2a2a2a] text-[#9ca3af] hover:text-white cursor-pointer transition-colors"
-                      >
-                        {editCurrency}
-                      </button>
+                      <span className="text-xs text-[#6b7280]">$</span>
                       <Input
                         value={editPrice}
                         onChange={(e) => setEditPrice(e.target.value)}
                         className="h-7 w-24 text-xs bg-[#1a1a1a] border-[#2a2a2a] px-2"
-                        placeholder={editCurrency === "USD" ? "Preço $" : "Preço R$"}
+                        placeholder="Preço USD"
                       />
                     </div>
                     <Button variant="ghost" size="icon" className="h-9 w-9 text-[#22c55e] hover:bg-transparent cursor-pointer" onClick={() => confirmEdit(token.id)}>
@@ -143,9 +146,9 @@ export function TokenList() {
                   </div>
                 ) : (
                   <div className="text-right mx-2">
-                    <p className="text-sm text-white font-medium">{formatBRL(value)}</p>
-                    {token.priceInUSD && exchangeRate && (
-                      <p className="text-xs text-[#4a4a4a]">${(token.priceInUSD * token.quantity).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                    <p className="text-sm text-white font-medium">{formatUSD(valueUSD)}</p>
+                    {token.priceInUSD && (
+                      <p className="text-xs text-[#4a4a4a]">{formatUSD(token.priceInUSD)} / token</p>
                     )}
                     <p className="text-xs text-[#6b7280]">{token.quantity} · {pct}%</p>
                   </div>
@@ -156,7 +159,7 @@ export function TokenList() {
                   <div className="flex items-center gap-0.5">
                     <Button
                       variant="ghost" size="icon"
-                      title={token.priceAtAlert ? `Base: ${formatBRL(token.priceAtAlert)}` : "Definir preço base"}
+                      title={token.priceAtAlert ? `Base: ${token.priceAtAlert.toFixed(2)}` : "Definir preço base"}
                       className="h-9 w-9 hover:bg-transparent cursor-pointer"
                       style={{ color: token.priceAtAlert ? "#f59e0b" : "#3a3a3a" }}
                       onClick={() => { setAlertPrice(token.id, token.priceInBRL); success("Preço base definido!"); }}
@@ -201,8 +204,9 @@ export function TokenList() {
                   <TokenAvgCost
                     tokenId={token.id}
                     symbol={token.symbol}
-                    currentPrice={token.priceInBRL}
-                    avgCost={token.avgCostBRL}
+                    currentPriceUSD={token.priceInUSD ?? null}
+                    avgCostUSD={token.avgCostUSD}
+                    avgCostBRL={token.avgCostBRL}
                   />
                   <PriceHistoryPanel tokenId={token.id} symbol={token.symbol} />
                 </div>

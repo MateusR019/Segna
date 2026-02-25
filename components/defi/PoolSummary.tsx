@@ -1,6 +1,6 @@
 "use client";
 import { useDefiStore } from "@/store/defiStore";
-import { formatBRL } from "@/lib/format";
+import { formatUSD } from "@/lib/format";
 import { Droplets, TrendingUp, TrendingDown, Coins } from "lucide-react";
 
 export function PoolSummary() {
@@ -10,10 +10,10 @@ export function PoolSummary() {
 
   const activePools = pools.filter((p) => p.status === "active");
 
-  const totalLiquidity = activePools.reduce((sum, p) => sum + p.currentValueBRL, 0);
-  const totalPnl = pools.reduce((sum, p) => sum + (p.currentValueBRL - p.depositedBRL), 0);
+  const totalLiquidity = activePools.reduce((sum, p) => sum + p.currentValueUSD, 0);
+  const totalPnl = pools.reduce((sum, p) => sum + (p.currentValueUSD - p.depositedUSD), 0);
   const totalFees = pools.reduce(
-    (sum, p) => sum + (p.feesEarnedBRL ?? 0),
+    (sum, p) => sum + (p.feesEarnedUSD ?? 0),
     0
   );
 
@@ -30,7 +30,7 @@ export function PoolSummary() {
           <span className="text-[11px] text-[#4a4a4a]">Liquidez ativa</span>
         </div>
         <p className="text-base font-bold text-white truncate">
-          {formatBRL(totalLiquidity)}
+          {formatUSD(totalLiquidity)}
         </p>
         <p className="text-[10px] text-[#4a4a4a] mt-0.5">
           {activePools.length} {activePools.length === 1 ? "pool" : "pools"}
@@ -59,7 +59,7 @@ export function PoolSummary() {
           style={{ color: pnlPositive ? "#22c55e" : "#ef4444" }}
         >
           {pnlPositive ? "+" : ""}
-          {formatBRL(totalPnl)}
+          {formatUSD(totalPnl)}
         </p>
         <p className="text-[10px] text-[#4a4a4a] mt-0.5">todas as pools</p>
       </div>
@@ -73,7 +73,7 @@ export function PoolSummary() {
           <span className="text-[11px] text-[#4a4a4a]">Fees ganhas</span>
         </div>
         <p className="text-base font-bold text-[#f59e0b] truncate">
-          {totalFees > 0 ? formatBRL(totalFees) : "—"}
+          {totalFees > 0 ? formatUSD(totalFees) : "—"}
         </p>
         <p className="text-[10px] text-[#4a4a4a] mt-0.5">acumulado</p>
       </div>

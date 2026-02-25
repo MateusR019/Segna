@@ -1,24 +1,23 @@
 "use client";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDefiStore } from "@/store/defiStore";
-import { formatBRL } from "@/lib/format";
+import { formatUSD } from "@/lib/format";
 
 export function TokenPieChart() {
   const tokens = useDefiStore((s) => s.tokens);
-  const total = tokens.reduce((acc, t) => acc + t.quantity * t.priceInBRL, 0);
+  const exchangeRate = useDefiStore((s) => s.exchangeRate);
 
-  const data = tokens.map((t) => ({
-    name: t.symbol,
-    value: t.quantity * t.priceInBRL,
-    color: t.color,
-  }));
+  const data = tokens.map((t) => {
+    const valueUSD = t.priceInUSD
+      ? t.quantity * t.priceInUSD
+      : exchangeRate?.usdToBRL
+      ? (t.quantity * t.priceInBRL) / exchangeRate.usdToBRL
+      : 0;
+    return { name: t.symbol, value: valueUSD, color: t.color };
+  });
+
+  const total = data.reduce((acc, d) => acc + d.value, 0);
 
   if (data.length === 0) {
     return (
@@ -66,7 +65,7 @@ export function TokenPieChart() {
                 color: "#f5f5f5",
               }}
               formatter={(value: number | undefined, name: string | undefined) => [
-                formatBRL(value ?? 0),
+                formatUSD(value ?? 0),
                 name ?? "",
               ]}
             />
@@ -88,14 +87,16 @@ export function TokenPieChart() {
                   <span className="text-xs text-[#4a4a4a]">{pct}%</span>
                 </div>
                 <span className="text-xs text-white font-medium">
-                  {formatBRL(d.value)}
+                  {formatUSD(d.value)}
                 </span>
               </div>
             );
           })}
           <div className="flex items-center justify-between pt-2 border-t border-[#2a2a2a] mt-1">
             <span className="text-xs text-[#6b7280]">Total</span>
-            <span className="text-xs font-semibold text-white">{formatBRL(total)}</span>
+            <span className="text-xs font-semibold text-white">
+              {formatUSD(total)}
+            </span>
           </div>
         </div>
       </CardContent>

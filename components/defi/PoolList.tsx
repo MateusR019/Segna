@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useDefiStore } from "@/store/defiStore";
 import { useToast } from "@/hooks/useToast";
-import { formatBRL } from "@/lib/format";
+import { formatUSD } from "@/lib/format";
 import { LiquidityPool } from "@/types";
 import {
   Trash2, Check, X, Pencil, CheckCircle2, RefreshCcw,
@@ -21,7 +21,7 @@ function PnlBadge({ current, deposited }: { current: number; deposited: number }
         style={{ color: pos ? "#22c55e" : "#ef4444" }}
       >
         {pos ? "+" : ""}
-        {formatBRL(pnl)}
+        {formatUSD(pnl)}
       </p>
       <p
         className="text-[10px]"
@@ -62,14 +62,14 @@ function PoolRow({ pool }: { pool: LiquidityPool }) {
 
   const [editingValue, setEditingValue] = useState(false);
   const [editingFees, setEditingFees] = useState(false);
-  const [valueInput, setValueInput] = useState(String(pool.currentValueBRL));
-  const [feesInput, setFeesInput] = useState(String(pool.feesEarnedBRL ?? ""));
+  const [valueInput, setValueInput] = useState(String(pool.currentValueUSD));
+  const [feesInput, setFeesInput] = useState(String(pool.feesEarnedUSD ?? ""));
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   function saveValue() {
     const v = parseFloat(valueInput.replace(",", "."));
     if (!isNaN(v) && v >= 0) {
-      updatePool(pool.id, { currentValueBRL: v });
+      updatePool(pool.id, { currentValueUSD: v });
       success("Valor atualizado");
     }
     setEditingValue(false);
@@ -77,7 +77,7 @@ function PoolRow({ pool }: { pool: LiquidityPool }) {
 
   function saveFees() {
     const v = parseFloat(feesInput.replace(",", "."));
-    updatePool(pool.id, { feesEarnedBRL: isNaN(v) ? undefined : v });
+    updatePool(pool.id, { feesEarnedUSD: isNaN(v) ? undefined : v });
     success("Fees atualizadas");
     setEditingFees(false);
   }
@@ -123,7 +123,7 @@ function PoolRow({ pool }: { pool: LiquidityPool }) {
             <p className="text-xs text-[#6b7280] mt-0.5">{pool.protocol}</p>
           </div>
         </div>
-        <PnlBadge current={pool.currentValueBRL} deposited={pool.depositedBRL} />
+        <PnlBadge current={pool.currentValueUSD} deposited={pool.depositedUSD} />
       </div>
 
       {/* Values row */}
@@ -131,7 +131,7 @@ function PoolRow({ pool }: { pool: LiquidityPool }) {
         {/* Deposited */}
         <div>
           <p className="text-[10px] text-[#4a4a4a]">Depositado</p>
-          <p className="text-white font-medium">{formatBRL(pool.depositedBRL)}</p>
+          <p className="text-white font-medium">{formatUSD(pool.depositedUSD)}</p>
         </div>
 
         {/* Current value — inline editable */}
@@ -155,10 +155,10 @@ function PoolRow({ pool }: { pool: LiquidityPool }) {
             </div>
           ) : (
             <button
-              onClick={() => { setValueInput(String(pool.currentValueBRL)); setEditingValue(true); }}
+              onClick={() => { setValueInput(String(pool.currentValueUSD)); setEditingValue(true); }}
               className="text-white font-medium hover:text-[#06b6d4] transition-colors cursor-pointer flex items-center gap-1 group"
             >
-              {formatBRL(pool.currentValueBRL)}
+              {formatUSD(pool.currentValueUSD)}
               <Pencil size={9} className="opacity-0 group-hover:opacity-50 transition-opacity" />
             </button>
           )}
@@ -185,10 +185,10 @@ function PoolRow({ pool }: { pool: LiquidityPool }) {
             </div>
           ) : (
             <button
-              onClick={() => { setFeesInput(String(pool.feesEarnedBRL ?? "")); setEditingFees(true); }}
+              onClick={() => { setFeesInput(String(pool.feesEarnedUSD ?? "")); setEditingFees(true); }}
               className="text-[#f59e0b] font-medium hover:text-[#fbbf24] transition-colors cursor-pointer flex items-center gap-1 group"
             >
-              {pool.feesEarnedBRL ? formatBRL(pool.feesEarnedBRL) : <span className="text-[#3a3a3a]">—</span>}
+              {pool.feesEarnedUSD ? formatUSD(pool.feesEarnedUSD) : <span className="text-[#3a3a3a]">—</span>}
               <Pencil size={9} className="opacity-0 group-hover:opacity-50 transition-opacity text-[#6b7280]" />
             </button>
           )}

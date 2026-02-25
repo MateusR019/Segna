@@ -70,9 +70,9 @@ export function AddPoolDialog() {
       tokenA: tokenA.trim().toUpperCase(),
       tokenB: tokenB.trim().toUpperCase(),
       network,
-      depositedBRL: dep,
-      currentValueBRL: isNaN(cur) ? dep : cur,
-      feesEarnedBRL: fees ? parseFloat(fees.replace(",", ".")) || undefined : undefined,
+      depositedUSD: dep,
+      currentValueUSD: isNaN(cur) ? dep : cur,
+      feesEarnedUSD: fees ? parseFloat(fees.replace(",", ".")) || undefined : undefined,
       apy: apy ? parseFloat(apy.replace(",", ".")) || undefined : undefined,
       color,
       status: "active" as PoolStatus,
@@ -160,25 +160,25 @@ export function AddPoolDialog() {
           {/* Deposited / Current value */}
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
-              <label className="text-xs text-[#6b7280]">Depositado (R$)</label>
+              <label className="text-xs text-[#6b7280]">Depositado ($)</label>
               <input
                 type="text"
                 inputMode="decimal"
                 value={deposited}
                 onChange={(e) => setDeposited(e.target.value)}
-                placeholder="0,00"
+                placeholder="0.00"
                 required
                 className="w-full px-3 py-2 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg text-sm text-white placeholder-[#3a3a3a] outline-none focus:border-[#3a3a3a]"
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-[#6b7280]">Valor atual (R$)</label>
+              <label className="text-xs text-[#6b7280]">Valor atual ($)</label>
               <input
                 type="text"
                 inputMode="decimal"
                 value={currentValue}
                 onChange={(e) => setCurrentValue(e.target.value)}
-                placeholder={deposited || "0,00"}
+                placeholder={deposited || "0.00"}
                 className="w-full px-3 py-2 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg text-sm text-white placeholder-[#3a3a3a] outline-none focus:border-[#3a3a3a]"
               />
             </div>
@@ -193,18 +193,18 @@ export function AddPoolDialog() {
                 inputMode="decimal"
                 value={apy}
                 onChange={(e) => setApy(e.target.value)}
-                placeholder="12,5"
+                placeholder="12.5"
                 className="w-full px-3 py-2 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg text-sm text-white placeholder-[#3a3a3a] outline-none focus:border-[#3a3a3a]"
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-[#6b7280]">Fees ganhas (R$)</label>
+              <label className="text-xs text-[#6b7280]">Fees ganhas ($)</label>
               <input
                 type="text"
                 inputMode="decimal"
                 value={fees}
                 onChange={(e) => setFees(e.target.value)}
-                placeholder="0,00"
+                placeholder="0.00"
                 className="w-full px-3 py-2 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg text-sm text-white placeholder-[#3a3a3a] outline-none focus:border-[#3a3a3a]"
               />
             </div>

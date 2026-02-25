@@ -157,9 +157,10 @@ export interface Token {
   name: string;
   quantity: number;
   priceInBRL: number;
-  priceInUSD?: number; // preço em dólar
+  priceInUSD?: number;   // preço em dólar (display principal)
   priceAtAlert?: number;
-  avgCostBRL?: number;
+  avgCostBRL?: number;   // preço médio de entrada em BRL (legado)
+  avgCostUSD?: number;   // preço médio de entrada em USD (preferencial)
   color: string;
   addedAt: string;
 }
@@ -193,9 +194,9 @@ export interface LiquidityPool {
   tokenA: string;             // "ETH"
   tokenB: string;             // "USDC"
   network: string;            // "Ethereum", "BSC", "Polygon", etc.
-  depositedBRL: number;       // valor no momento do depósito
-  currentValueBRL: number;    // valor atual da posição (atualização manual)
-  feesEarnedBRL?: number;     // fees/rendimentos acumulados em BRL
+  depositedUSD: number;       // valor no momento do depósito em USD
+  currentValueUSD: number;    // valor atual da posição em USD (manual)
+  feesEarnedUSD?: number;     // fees/rendimentos acumulados em USD
   apy?: number;               // APY estimado em % (ex: 12.5)
   color: string;
   addedAt: string;            // ISO string

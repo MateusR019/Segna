@@ -17,6 +17,7 @@ interface DefiState {
   updateQuantity: (id: string, newQuantity: number) => void;
   setAlertPrice: (id: string, price: number) => void;
   setAvgCost: (id: string, avgCost: number) => void;
+  setAvgCostUSD: (id: string, avgCostUSD: number) => void;
   setExchangeRate: (usdToBRL: number) => void;
   saveSnapshot: () => void;
   addPriceEntry: (tokenId: string, date: string, priceBRL: number) => void;
@@ -87,6 +88,13 @@ export const useDefiStore = create<DefiState>()(
         set((state) => ({
           tokens: state.tokens.map((t) =>
             t.id === id ? { ...t, avgCostBRL: avgCost } : t
+          ),
+        })),
+
+      setAvgCostUSD: (id, avgCostUSD) =>
+        set((state) => ({
+          tokens: state.tokens.map((t) =>
+            t.id === id ? { ...t, avgCostUSD } : t
           ),
         })),
 
