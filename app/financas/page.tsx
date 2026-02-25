@@ -11,6 +11,7 @@ import { CategoryGoals } from "@/components/financas/CategoryGoals";
 import { MonthlyReport } from "@/components/financas/MonthlyReport";
 import { MonthlyBudget } from "@/components/financas/MonthlyBudget";
 import { SavingsGoalWidget } from "@/components/financas/SavingsGoalWidget";
+import { ImportExportButton } from "@/components/financas/ImportExportButton";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useFinancasStore } from "@/store/financasStore";
 
@@ -30,7 +31,10 @@ export default function FinancasPage() {
           <h1 className="text-xl font-semibold text-white">Finanças</h1>
           <p className="text-sm text-[#6b7280]">Controle de receitas e despesas</p>
         </div>
-        <AddTransactionDialog />
+        <div className="flex items-center gap-2">
+          <ImportExportButton />
+          <AddTransactionDialog />
+        </div>
       </div>
 
       {hydrated ? (
