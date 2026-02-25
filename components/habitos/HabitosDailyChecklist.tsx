@@ -1,18 +1,27 @@
 "use client";
 import { useState, useRef } from "react";
 import { useHabitosStore, calcStreak } from "@/store/habitosStore";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Flame, Trash2, GripVertical, AlertTriangle, Check, X } from "lucide-react";
+import { Flame, Trash2, GripVertical, Check, X, Ban, Minus, Plus, Pencil } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/useToast";
 import { HabitNoteInline } from "./HabitNoteInline";
 import { HabitBestStreakBadge } from "./HabitBestStreakBadge";
+import { EditHabitDialog } from "./EditHabitDialog";
 import Link from "next/link";
+import { Habit } from "@/types";
 
 export function HabitosDailyChecklist() {
-  const { habits, completions, toggleCompletion, removeHabit, reorderHabits } =
-    useHabitosStore();
+  const {
+    habits,
+    completions,
+    counts,
+    toggleCompletion,
+    removeHabit,
+    reorderHabits,
+    incrementCount,
+    decrementCount,
+  } = useHabitosStore();
   const { success } = useToast();
   const todayKey = format(new Date(), "yyyy-MM-dd");
   const completedIds = completions[todayKey] ?? [];
@@ -22,16 +31,24 @@ export function HabitosDailyChecklist() {
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   // Delete confirmation
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  // Bounce animation trigger — stores id of last toggled habit
+  // Bounce animation trigger
   const [bouncingId, setBouncingId] = useState<string | null>(null);
+  // Edit habit dialog
+  const [editHabit, setEditHabit] = useState<Habit | null>(null);
 
-  // Filtra hábitos por dia da semana configurado
-  const todayWeekDay = new Date().getDay() as 0|1|2|3|4|5|6;
+  // Filter: skip paused; filter by weekDay
+  const todayWeekDay = new Date().getDay() as 0 | 1 | 2 | 3 | 4 | 5 | 6;
   const sorted = [...habits]
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-    .filter((h) => !h.weekDays || h.weekDays.length === 0 || h.weekDays.includes(todayWeekDay));
+    .filter((h) => !h.paused)
+    .filter(
+      (h) =>
+        !h.weekDays || h.weekDays.length === 0 || h.weekDays.includes(todayWeekDay)
+    );
 
-  function onDragStart(id: string) { dragId.current = id; }
+  function onDragStart(id: string) {
+    dragId.current = id;
+  }
   function onDragOver(e: React.DragEvent, id: string) {
     e.preventDefault();
     setDragOverId(id);
@@ -39,7 +56,10 @@ export function HabitosDailyChecklist() {
   function onDrop(e: React.DragEvent, targetId: string) {
     e.preventDefault();
     const fromId = dragId.current;
-    if (!fromId || fromId === targetId) { setDragOverId(null); return; }
+    if (!fromId || fromId === targetId) {
+      setDragOverId(null);
+      return;
+    }
     const ids = sorted.map((h) => h.id);
     const fromIdx = ids.indexOf(fromId);
     const toIdx = ids.indexOf(targetId);
@@ -50,148 +70,285 @@ export function HabitosDailyChecklist() {
     setDragOverId(null);
     dragId.current = null;
   }
-  function onDragEnd() { setDragOverId(null); dragId.current = null; }
+  function onDragEnd() {
+    setDragOverId(null);
+    dragId.current = null;
+  }
 
-  if (habits.length === 0) {
+  if (habits.filter((h) => !h.paused).length === 0) {
     return (
       <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-8 text-center space-y-2">
         <p className="text-sm text-[#4a4a4a]">Nenhum hábito criado ainda</p>
-        <p className="text-xs text-[#3a3a3a]">Clique em "Novo hábito" para começar a rastrear.</p>
+        <p className="text-xs text-[#3a3a3a]">
+          Clique em &quot;Novo hábito&quot; para começar a rastrear.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-2">
-      {sorted.map((habit, idx) => {
-        const done = completedIds.includes(habit.id);
-        const streak = calcStreak(habit.id, completions);
-        const isDragTarget = dragOverId === habit.id;
+    <>
+      <div className="space-y-2">
+        {sorted.map((habit, idx) => {
+          const done = completedIds.includes(habit.id);
+          const streak = calcStreak(habit.id, completions);
+          const isDragTarget = dragOverId === habit.id;
+          const isCounter = (habit.targetCount ?? 1) > 1;
+          const isNegative = habit.negative ?? false;
+          const currentCount = counts[todayKey]?.[habit.id] ?? 0;
+          const target = habit.targetCount ?? 1;
 
-        return (
-          <div
-            key={habit.id}
-            draggable
-            onDragStart={() => onDragStart(habit.id)}
-            onDragOver={(e) => onDragOver(e, habit.id)}
-            onDrop={(e) => onDrop(e, habit.id)}
-            onDragEnd={onDragEnd}
-            onClick={() => {
-              const done = completedIds.includes(habit.id);
-              toggleCompletion(habit.id, todayKey);
-              success(done ? "Hábito desmarcado" : `${habit.name} ✓`);
-              setBouncingId(habit.id);
-              setTimeout(() => setBouncingId(null), 320);
-            }}
-            className={`list-item relative bg-[#1a1a1a] border rounded-xl overflow-hidden transition-all cursor-pointer select-none ${
-              done
-                ? "border-[#22c55e]/25 bg-[#22c55e]/5"
-                : isDragTarget
-                ? "border-[#6366f1]/60"
-                : "border-[#2a2a2a] hover:border-[#3a3a3a] hover:bg-[#1d1d1d]"
-            }`}
-            style={{ animationDelay: `${Math.min(idx * 35, 280)}ms` }}
-          >
-            {/* Habit color left accent bar */}
+          // Card border / background
+          let cardClass =
+            "border-[#2a2a2a] hover:border-[#3a3a3a] hover:bg-[#1d1d1d]";
+          if (isDragTarget) cardClass = "border-[#6366f1]/60";
+          else if (done) cardClass = "border-[#22c55e]/25 bg-[#22c55e]/5";
+          else if (isNegative)
+            cardClass = "border-[#ef4444]/25 hover:border-[#ef4444]/45";
+
+          return (
             <div
-              className="absolute left-0 top-0 bottom-0 w-0.5 rounded-l-xl"
-              style={{ background: done ? "#22c55e" : habit.color }}
-            />
-
-            <div className="flex items-center justify-between px-3 py-3 gap-2 pl-4">
-              {/* Drag handle */}
+              key={habit.id}
+              draggable
+              onDragStart={() => onDragStart(habit.id)}
+              onDragOver={(e) => onDragOver(e, habit.id)}
+              onDrop={(e) => onDrop(e, habit.id)}
+              onDragEnd={onDragEnd}
+              onClick={() => {
+                if (isCounter) {
+                  if (currentCount < target) {
+                    incrementCount(habit.id, todayKey);
+                    const next = currentCount + 1;
+                    if (next >= target) {
+                      success(`${habit.name} ✓`);
+                      setBouncingId(habit.id);
+                      setTimeout(() => setBouncingId(null), 320);
+                    } else {
+                      success(`${habit.name}: ${next}/${target}`);
+                    }
+                  }
+                  return;
+                }
+                const wasDone = completedIds.includes(habit.id);
+                toggleCompletion(habit.id, todayKey);
+                if (isNegative) {
+                  success(wasDone ? "Hábito desmarcado" : `${habit.name} — evitado! ✓`);
+                } else {
+                  success(wasDone ? "Hábito desmarcado" : `${habit.name} ✓`);
+                }
+                setBouncingId(habit.id);
+                setTimeout(() => setBouncingId(null), 320);
+              }}
+              className={`list-item relative bg-[#1a1a1a] border rounded-xl overflow-hidden transition-all cursor-pointer select-none ${cardClass}`}
+              style={{ animationDelay: `${Math.min(idx * 35, 280)}ms` }}
+            >
+              {/* Color accent bar */}
               <div
-                className="flex-shrink-0 text-[#2a2a2a] hover:text-[#4a4a4a] cursor-grab active:cursor-grabbing"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <GripVertical size={14} />
-              </div>
+                className="absolute left-0 top-0 bottom-0 w-0.5 rounded-l-xl"
+                style={{
+                  background:
+                    done
+                      ? "#22c55e"
+                      : isNegative && !done
+                      ? "#ef4444"
+                      : habit.color,
+                }}
+              />
 
-              {/* Checkbox */}
-              <div
-                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 ${
-                  done ? "border-[#22c55e] bg-[#22c55e]" : "border-[#3a3a3a]"
-                } ${bouncingId === habit.id ? "check-bounce" : ""}`}
-              >
-                {done && (
-                  <svg viewBox="0 0 12 12" width="10" height="10" fill="none">
-                    <path d="M2 6l3 3 5-5" stroke="black" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                )}
-              </div>
-
-              {/* Name + note */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Link
-                    href={`/habitos/${habit.id}`}
-                    onClick={(e) => e.stopPropagation()}
-                    className={`text-sm font-medium transition-colors hover:underline underline-offset-2 ${
-                      done ? "text-[#6b7280] line-through" : "text-white hover:text-[#a78bfa]"
-                    }`}
-                  >
-                    {habit.name}
-                  </Link>
-                  {habit.tag && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-[#2a2a2a] text-[#6b7280] capitalize">
-                      {habit.tag}
-                    </span>
-                  )}
+              <div className="flex items-center justify-between px-3 py-3 gap-2 pl-4">
+                {/* Drag handle */}
+                <div
+                  className="flex-shrink-0 text-[#2a2a2a] hover:text-[#4a4a4a] cursor-grab active:cursor-grabbing"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <GripVertical size={14} />
                 </div>
-                <div onClick={(e) => e.stopPropagation()}>
-                  <HabitNoteInline habitId={habit.id} />
-                </div>
-              </div>
 
-              {/* Streak + best + delete */}
-              <div className="flex items-center gap-2 flex-shrink-0">
-                {streak > 0 && confirmDeleteId !== habit.id && (
-                  <div className="flex flex-col items-center gap-0.5">
-                    <div className="flex items-center gap-0.5 text-xs text-[#f59e0b] font-semibold">
-                      <Flame size={12} />
-                      <span>{streak}</span>
-                    </div>
-                    <HabitBestStreakBadge habitId={habit.id} completions={completions} currentStreak={streak} />
-                  </div>
-                )}
-                {confirmDeleteId === habit.id ? (
+                {/* Checkbox OR Counter */}
+                {isCounter ? (
                   <div
-                    className="flex items-center gap-1"
+                    className="flex items-center gap-1 flex-shrink-0"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <span className="text-xs text-[#ef4444] mr-1">Excluir?</span>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => { e.stopPropagation(); removeHabit(habit.id); success("Hábito removido"); }}
-                      className="h-7 w-7 text-[#ef4444] hover:text-[#dc2626] hover:bg-transparent cursor-pointer"
+                    <button
+                      onClick={() => decrementCount(habit.id, todayKey)}
+                      disabled={currentCount <= 0}
+                      className="w-5 h-5 rounded flex items-center justify-center text-[#6b7280] hover:text-white hover:bg-[#2a2a2a] disabled:opacity-20 transition-colors cursor-pointer"
                     >
-                      <Check size={13} />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(null); }}
-                      className="h-7 w-7 text-[#4a4a4a] hover:text-[#9ca3af] hover:bg-transparent cursor-pointer"
+                      <Minus size={10} />
+                    </button>
+                    <span
+                      className={`text-xs font-semibold w-10 text-center tabular-nums ${
+                        done ? "text-[#22c55e]" : "text-[#9ca3af]"
+                      } ${bouncingId === habit.id ? "check-bounce" : ""}`}
                     >
-                      <X size={13} />
-                    </Button>
+                      {currentCount}/{target}
+                    </span>
+                    <button
+                      onClick={() => {
+                        incrementCount(habit.id, todayKey);
+                        const next = currentCount + 1;
+                        if (next >= target) {
+                          success(`${habit.name} ✓`);
+                          setBouncingId(habit.id);
+                          setTimeout(() => setBouncingId(null), 320);
+                        }
+                      }}
+                      disabled={currentCount >= target}
+                      className="w-5 h-5 rounded flex items-center justify-center text-[#6b7280] hover:text-white hover:bg-[#2a2a2a] disabled:opacity-20 transition-colors cursor-pointer"
+                    >
+                      <Plus size={10} />
+                    </button>
                   </div>
                 ) : (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(habit.id); }}
-                    className="h-8 w-8 text-[#3a3a3a] hover:text-[#ef4444] hover:bg-transparent cursor-pointer"
+                  <div
+                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 ${
+                      done
+                        ? "border-[#22c55e] bg-[#22c55e]"
+                        : isNegative
+                        ? "border-[#ef4444]/50"
+                        : "border-[#3a3a3a]"
+                    } ${bouncingId === habit.id ? "check-bounce" : ""}`}
                   >
-                    <Trash2 size={13} />
-                  </Button>
+                    {done && (
+                      <svg viewBox="0 0 12 12" width="10" height="10" fill="none">
+                        <path
+                          d="M2 6l3 3 5-5"
+                          stroke="black"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    )}
+                    {!done && isNegative && (
+                      <div className="w-2 h-2 rounded-full bg-[#ef4444]/50" />
+                    )}
+                  </div>
                 )}
+
+                {/* Name + tag + note */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {isNegative && (
+                      <Ban
+                        size={11}
+                        className={
+                          done ? "text-[#22c55e]" : "text-[#ef4444]/70"
+                        }
+                      />
+                    )}
+                    <Link
+                      href={`/habitos/${habit.id}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className={`text-sm font-medium transition-colors hover:underline underline-offset-2 ${
+                        done
+                          ? "text-[#6b7280] line-through"
+                          : "text-white hover:text-[#a78bfa]"
+                      }`}
+                    >
+                      {habit.name}
+                    </Link>
+                    {habit.tag && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-[#2a2a2a] text-[#6b7280] capitalize">
+                        {habit.tag}
+                      </span>
+                    )}
+                  </div>
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <HabitNoteInline habitId={habit.id} />
+                  </div>
+                </div>
+
+                {/* Right: streak + edit + delete */}
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  {streak > 0 && confirmDeleteId !== habit.id && (
+                    <div className="flex flex-col items-center gap-0.5 mr-1">
+                      <div className="flex items-center gap-0.5 text-xs text-[#f59e0b] font-semibold">
+                        <Flame size={12} />
+                        <span>{streak}</span>
+                      </div>
+                      <HabitBestStreakBadge
+                        habitId={habit.id}
+                        completions={completions}
+                        currentStreak={streak}
+                      />
+                    </div>
+                  )}
+
+                  {confirmDeleteId === habit.id ? (
+                    <div
+                      className="flex items-center gap-1"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <span className="text-xs text-[#ef4444] mr-1">Excluir?</span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeHabit(habit.id);
+                          success("Hábito removido");
+                        }}
+                        className="h-7 w-7 text-[#ef4444] hover:text-[#dc2626] hover:bg-transparent cursor-pointer"
+                      >
+                        <Check size={13} />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setConfirmDeleteId(null);
+                        }}
+                        className="h-7 w-7 text-[#4a4a4a] hover:text-[#9ca3af] hover:bg-transparent cursor-pointer"
+                      >
+                        <X size={13} />
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Edit */}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditHabit(habit);
+                        }}
+                        className="h-8 w-8 text-[#3a3a3a] hover:text-[#a78bfa] hover:bg-transparent cursor-pointer"
+                      >
+                        <Pencil size={12} />
+                      </Button>
+                      {/* Delete */}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setConfirmDeleteId(habit.id);
+                        }}
+                        className="h-8 w-8 text-[#3a3a3a] hover:text-[#ef4444] hover:bg-transparent cursor-pointer"
+                      >
+                        <Trash2 size={13} />
+                      </Button>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        );
-      })}
-    </div>
+          );
+        })}
+      </div>
+
+      {/* Edit dialog */}
+      {editHabit && (
+        <EditHabitDialog
+          habit={editHabit}
+          open={!!editHabit}
+          onClose={() => setEditHabit(null)}
+        />
+      )}
+    </>
   );
 }

@@ -5,6 +5,7 @@ import { HabitosDailyChecklist } from "@/components/habitos/HabitosDailyChecklis
 import { HabitosWeeklyGrid } from "@/components/habitos/HabitosWeeklyGrid";
 import { HabitHeatmap } from "@/components/habitos/HabitHeatmap";
 import { HabitFrequencyGoals } from "@/components/habitos/HabitFrequencyGoals";
+import { HabitAdvancedStats } from "@/components/habitos/HabitAdvancedStats";
 import { AddHabitDialog } from "@/components/habitos/AddHabitDialog";
 import { useHydrated } from "@/hooks/useHydrated";
 
@@ -28,6 +29,7 @@ export default function HabitosPage() {
           <HabitFrequencyGoals />
           <HabitosWeeklyGrid />
           <HabitHeatmap />
+          <HabitAdvancedStats />
         </>
       ) : (
         <div className="space-y-4">

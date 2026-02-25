@@ -75,7 +75,10 @@ export interface Habit {
   weekDays?: WeekDayIndex[]; // undefined = todos os dias
   order?: number;
   createdAt: string;
-  template?: HabitTemplate; // undefined = "default"
+  template?: HabitTemplate;  // undefined = "default"
+  paused?: boolean;          // se true, oculto no checklist diário
+  negative?: boolean;        // se true, "não fazer" é o objetivo (ex: Sem açúcar)
+  targetCount?: number;      // undefined/1 = toggle; >1 = modo contador (ex: Água 8x)
 }
 
 // Key: "YYYY-MM-DD", Value: array of completed habit IDs

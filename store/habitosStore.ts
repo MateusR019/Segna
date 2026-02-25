@@ -3,18 +3,25 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import { subDays, format } from "date-fns";
 import { Habit, CompletionMap, HabitFrequencyGoal, HabitNote, HabitTemplate, HabitAnnotation, WeekDayIndex } from "@/types";
 
+// counts[date][habitId] = count (for targetCount > 1 habits)
+type CountMap = Record<string, Record<string, number>>;
+
 interface HabitosState {
   habits: Habit[];
   completions: CompletionMap;
+  counts: CountMap;
   frequencyGoals: HabitFrequencyGoal[];
   habitNotes: HabitNote[];
   workoutSchedule: Record<string, Partial<Record<WeekDayIndex, string>>>;
   annotations: Record<string, HabitAnnotation[]>;
 
   addHabit: (h: Omit<Habit, "id" | "createdAt">) => void;
+  updateHabit: (id: string, updates: Partial<Omit<Habit, "id" | "createdAt">>) => void;
   removeHabit: (id: string) => void;
   reorderHabits: (orderedIds: string[]) => void;
   toggleCompletion: (habitId: string, date: string) => void;
+  incrementCount: (habitId: string, date: string) => void;
+  decrementCount: (habitId: string, date: string) => void;
   setFrequencyGoal: (habitId: string, timesPerWeek: number) => void;
   removeFrequencyGoal: (habitId: string) => void;
   setHabitNote: (habitId: string, date: string, text: string) => void;
@@ -28,9 +35,10 @@ interface HabitosState {
 
 export const useHabitosStore = create<HabitosState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       habits: [],
       completions: {},
+      counts: {},
       frequencyGoals: [],
       habitNotes: [],
       workoutSchedule: {},
@@ -49,10 +57,23 @@ export const useHabitosStore = create<HabitosState>()(
           ],
         })),
 
+      updateHabit: (id, updates) =>
+        set((state) => ({
+          habits: state.habits.map((h) =>
+            h.id === id ? { ...h, ...updates } : h
+          ),
+        })),
+
       removeHabit: (id) =>
         set((state) => {
           const { [id]: _ws, ...restWs } = state.workoutSchedule;
           const { [id]: _an, ...restAn } = state.annotations;
+          // remove counts for this habit in all dates
+          const newCounts: CountMap = {};
+          for (const [date, dayMap] of Object.entries(state.counts)) {
+            const { [id]: _c, ...restC } = dayMap;
+            newCounts[date] = restC;
+          }
           return {
             habits: state.habits.filter((h) => h.id !== id),
             completions: Object.fromEntries(
@@ -61,6 +82,7 @@ export const useHabitosStore = create<HabitosState>()(
                 ids.filter((hId) => hId !== id),
               ])
             ),
+            counts: newCounts,
             habitNotes: state.habitNotes.filter((n) => n.habitId !== id),
             workoutSchedule: restWs,
             annotations: restAn,
@@ -84,6 +106,48 @@ export const useHabitosStore = create<HabitosState>()(
             ? current.filter((id) => id !== habitId)
             : [...current, habitId];
           return { completions: { ...state.completions, [date]: updated } };
+        }),
+
+      incrementCount: (habitId, date) =>
+        set((state) => {
+          const habit = state.habits.find((h) => h.id === habitId);
+          const target = habit?.targetCount ?? 1;
+          const existing = state.counts[date]?.[habitId] ?? 0;
+          const newCount = existing + 1;
+          const newCounts: CountMap = {
+            ...state.counts,
+            [date]: { ...(state.counts[date] ?? {}), [habitId]: newCount },
+          };
+          // auto-complete when count reaches target
+          let newCompletions = state.completions;
+          if (newCount >= target) {
+            const current = state.completions[date] ?? [];
+            if (!current.includes(habitId)) {
+              newCompletions = { ...state.completions, [date]: [...current, habitId] };
+            }
+          }
+          return { counts: newCounts, completions: newCompletions };
+        }),
+
+      decrementCount: (habitId, date) =>
+        set((state) => {
+          const habit = state.habits.find((h) => h.id === habitId);
+          const target = habit?.targetCount ?? 1;
+          const existing = state.counts[date]?.[habitId] ?? 0;
+          const newCount = Math.max(0, existing - 1);
+          const newCounts: CountMap = {
+            ...state.counts,
+            [date]: { ...(state.counts[date] ?? {}), [habitId]: newCount },
+          };
+          // remove from completions if below target
+          let newCompletions = state.completions;
+          if (newCount < target) {
+            newCompletions = {
+              ...state.completions,
+              [date]: (state.completions[date] ?? []).filter((id) => id !== habitId),
+            };
+          }
+          return { counts: newCounts, completions: newCompletions };
         }),
 
       setFrequencyGoal: (habitId, timesPerWeek) =>
