@@ -52,9 +52,13 @@ export function TokenList() {
     success("Token atualizado!");
   }
 
+  // Calcula variação vs preço base (priceAtAlert) em USD
   function calcVariation(token: typeof tokens[0]): number | null {
     if (!token.priceAtAlert || token.priceAtAlert === 0) return null;
-    return ((token.priceInBRL - token.priceAtAlert) / token.priceAtAlert) * 100;
+    const current = token.priceInUSD
+      ?? (exchangeRate?.usdToBRL ? token.priceInBRL / exchangeRate.usdToBRL : null);
+    if (!current) return null;
+    return ((current - token.priceAtAlert) / token.priceAtAlert) * 100;
   }
 
   if (tokens.length === 0) {
@@ -159,10 +163,14 @@ export function TokenList() {
                   <div className="flex items-center gap-0.5">
                     <Button
                       variant="ghost" size="icon"
-                      title={token.priceAtAlert ? `Base: ${token.priceAtAlert.toFixed(2)}` : "Definir preço base"}
+                      title={token.priceAtAlert ? `Base: $${token.priceAtAlert.toFixed(4)}` : "Definir preço base (USD atual)"}
                       className="h-9 w-9 hover:bg-transparent cursor-pointer"
                       style={{ color: token.priceAtAlert ? "#f59e0b" : "#3a3a3a" }}
-                      onClick={() => { setAlertPrice(token.id, token.priceInBRL); success("Preço base definido!"); }}
+                      onClick={() => {
+                        const priceUSD = token.priceInUSD ?? (exchangeRate?.usdToBRL ? token.priceInBRL / exchangeRate.usdToBRL : 0);
+                        setAlertPrice(token.id, priceUSD);
+                        success("Preço base definido!");
+                      }}
                     >
                       <TrendingUp size={14} />
                     </Button>

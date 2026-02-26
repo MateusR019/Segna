@@ -202,3 +202,41 @@ export interface LiquidityPool {
   addedAt: string;            // ISO string
   status: PoolStatus;
 }
+
+// ─── DeFi - Watchlist ─────────────────────────────────────────────────────────
+
+export interface WatchToken {
+  id: string;
+  symbol: string;           // "BTC"
+  name: string;             // "Bitcoin"
+  targetPriceUSD?: number;  // preço alvo de compra em USD (opcional)
+  color: string;
+  addedAt: string;
+}
+
+// ─── Tarefas ──────────────────────────────────────────────────────────────────
+
+export type TaskPriority = "low" | "medium" | "high";
+
+export interface Task {
+  id: string;
+  title: string;
+  description?: string;
+  date: string;           // "YYYY-MM-DD" — dia que pertence
+  completed: boolean;
+  completedAt?: string;   // ISO string
+  priority: TaskPriority;
+  createdAt: string;
+}
+
+// ─── Mood ─────────────────────────────────────────────────────────────────────
+
+export type MoodLevel = 1 | 2 | 3 | 4 | 5;
+
+export interface MoodEntry {
+  id: string;
+  date: string;          // "YYYY-MM-DD"
+  mood: MoodLevel;       // 1=Péssimo … 5=Ótimo
+  note?: string;
+  createdAt: string;
+}

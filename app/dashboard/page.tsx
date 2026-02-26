@@ -17,6 +17,8 @@ import { WeatherWidget } from "@/components/dashboard/WeatherWidget";
 import { BudgetAlertBanner } from "@/components/BudgetAlertBanner";
 import { ExportDataButton } from "@/components/ExportDataButton";
 import { QuickAddFAB } from "@/components/dashboard/QuickAddFAB";
+import { MoodWidget } from "@/components/dashboard/MoodWidget";
+import { DailyScore } from "@/components/dashboard/DailyScore";
 
 /** Strip checklist markdown syntax from note preview */
 function stripChecklist(text: string): string {
@@ -560,6 +562,12 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Score + Mood */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <DailyScore />
+        <MoodWidget />
+      </div>
 
       {/* Quick Add FAB */}
       <QuickAddFAB />

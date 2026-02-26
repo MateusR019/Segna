@@ -6,7 +6,7 @@
 type AnyRecord = Record<string, any>;
 import { supabase } from "./supabase";
 
-export type StoreKey = "financas" | "habitos" | "notas" | "defi" | "settings";
+export type StoreKey = "financas" | "habitos" | "notas" | "defi" | "settings" | "tarefas" | "mood";
 
 async function getUserId(): Promise<string | null> {
   const { data: { user } } = await supabase.auth.getUser();

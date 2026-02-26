@@ -11,6 +11,7 @@ import { AddPoolDialog } from "@/components/defi/AddPoolDialog";
 import { PoolList } from "@/components/defi/PoolList";
 import { PoolSummary } from "@/components/defi/PoolSummary";
 import { WalletSyncButton } from "@/components/defi/WalletSyncButton";
+import { WatchlistSection } from "@/components/defi/WatchlistSection";
 import { useHydrated } from "@/hooks/useHydrated";
 import { Droplets } from "lucide-react";
 
@@ -60,6 +61,11 @@ export default function DefiPage() {
             </div>
             <PoolSummary />
             <PoolList />
+          </div>
+
+          {/* ── Watchlist ── */}
+          <div className="pt-2">
+            <WatchlistSection />
           </div>
         </>
       ) : (

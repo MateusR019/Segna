@@ -32,14 +32,17 @@ export function AddTokenDialog() {
   const symbolUpper = symbol.toUpperCase();
   const known = symbolUpper.length > 0 && isKnownSymbol(symbolUpper);
 
-  async function fetchPrice(sym: string): Promise<number | null> {
+  // Busca BRL e USD em uma única chamada (a API já retorna os dois)
+  async function fetchPrices(sym: string): Promise<{ brl: number; usd: number } | null> {
     const geckoId = SYMBOL_TO_ID[sym];
     if (!geckoId) return null;
     try {
       const res = await fetch(`/api/crypto-prices?ids=${geckoId}`, { cache: "no-store" });
       if (!res.ok) return null;
       const data = await res.json();
-      return data[geckoId]?.brl ?? null;
+      const entry = data[geckoId];
+      if (!entry?.brl) return null;
+      return { brl: entry.brl, usd: entry.usd ?? 0 };
     } catch {
       return null;
     }
@@ -59,10 +62,10 @@ export function AddTokenDialog() {
     }
 
     setLoading(true);
-    const price = await fetchPrice(symbolUpper);
+    const prices = await fetchPrices(symbolUpper);
     setLoading(false);
 
-    if (price === null) {
+    if (prices === null) {
       setError("Não foi possível buscar o preço agora. Tente novamente.");
       return;
     }
@@ -71,7 +74,8 @@ export function AddTokenDialog() {
       symbol: symbolUpper,
       name: name.trim() || symbolUpper,
       quantity,
-      priceInBRL: price,
+      priceInBRL: prices.brl,
+      priceInUSD: prices.usd > 0 ? prices.usd : undefined,
       color,
     });
 

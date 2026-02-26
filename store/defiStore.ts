@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { Token, PortfolioSnapshot, PriceEntry, ExchangeRate, LiquidityPool } from "@/types";
+import { Token, PortfolioSnapshot, PriceEntry, ExchangeRate, LiquidityPool, WatchToken } from "@/types";
 import { format } from "date-fns";
 import { loadStoreData, saveStoreData } from "@/lib/db";
 
@@ -28,6 +28,11 @@ interface DefiState {
   removePool: (id: string) => void;
   updatePool: (id: string, updates: Partial<LiquidityPool>) => void;
 
+  watchlist: WatchToken[];
+  addWatch: (w: Omit<WatchToken, "id" | "addedAt">) => void;
+  removeWatch: (id: string) => void;
+  updateWatch: (id: string, updates: Partial<WatchToken>) => void;
+
   loadFromDB: () => Promise<void>;
 }
 
@@ -45,6 +50,7 @@ function scheduleSync() {
       priceHistory: s.priceHistory,
       exchangeRate: s.exchangeRate,
       pools:        s.pools,
+      watchlist:    s.watchlist,
     });
   }, 1000);
 }
@@ -59,6 +65,7 @@ export const useDefiStore = create<DefiState>()(
       priceHistory: [],
       exchangeRate: null,
       pools: [],
+      watchlist: [],
 
       addToken: (t) => {
         set((state) => ({
@@ -208,6 +215,30 @@ export const useDefiStore = create<DefiState>()(
         scheduleSync();
       },
 
+      addWatch: (w) => {
+        set((state) => ({
+          watchlist: [
+            ...state.watchlist,
+            { ...w, id: crypto.randomUUID(), addedAt: new Date().toISOString() },
+          ],
+        }));
+        scheduleSync();
+      },
+
+      removeWatch: (id) => {
+        set((state) => ({
+          watchlist: state.watchlist.filter((w) => w.id !== id),
+        }));
+        scheduleSync();
+      },
+
+      updateWatch: (id, updates) => {
+        set((state) => ({
+          watchlist: state.watchlist.map((w) => (w.id === id ? { ...w, ...updates } : w)),
+        }));
+        scheduleSync();
+      },
+
       loadFromDB: async () => {
         const data = await loadStoreData("defi");
         if (!data) return;
@@ -217,6 +248,7 @@ export const useDefiStore = create<DefiState>()(
           priceHistory: (data.priceHistory as PriceEntry[])     ?? [],
           exchangeRate: (data.exchangeRate as ExchangeRate)     ?? null,
           pools:        (data.pools as LiquidityPool[])         ?? [],
+          watchlist:    (data.watchlist as WatchToken[])        ?? [],
         });
       },
     }),

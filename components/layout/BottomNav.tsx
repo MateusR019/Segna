@@ -1,15 +1,16 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { TrendingUp, CheckSquare, Coins, StickyNote, LayoutDashboard } from "lucide-react";
+import { TrendingUp, CheckSquare, Coins, LayoutDashboard, ClipboardList } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// Mobile: 5 itens mais usados diariamente. DeFi e Notas ficam acessíveis pelo sidebar.
 const navItems = [
-  { href: "/dashboard", label: "Home", icon: LayoutDashboard },
-  { href: "/financas", label: "Finanças", icon: TrendingUp },
-  { href: "/habitos", label: "Hábitos", icon: CheckSquare },
-  { href: "/defi", label: "DeFi", icon: Coins },
-  { href: "/notas", label: "Notas", icon: StickyNote },
+  { href: "/dashboard", label: "Home",     icon: LayoutDashboard },
+  { href: "/tarefas",   label: "Tarefas",  icon: ClipboardList },
+  { href: "/habitos",   label: "Hábitos",  icon: CheckSquare },
+  { href: "/financas",  label: "Finanças", icon: TrendingUp },
+  { href: "/defi",      label: "DeFi",     icon: Coins },
 ] as const;
 
 export function BottomNav() {

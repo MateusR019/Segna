@@ -6,6 +6,8 @@ import { useHabitosStore } from "@/store/habitosStore";
 import { useNotasStore } from "@/store/notasStore";
 import { useDefiStore } from "@/store/defiStore";
 import { useSettingsStore } from "@/store/settingsStore";
+import { useTarefasStore } from "@/store/tarefasStore";
+import { useMoodStore } from "@/store/moodStore";
 
 async function loadAllStores() {
   await Promise.all([
@@ -14,6 +16,8 @@ async function loadAllStores() {
     useNotasStore.getState().loadFromDB(),
     useDefiStore.getState().loadFromDB(),
     useSettingsStore.getState().loadFromDB(),
+    useTarefasStore.getState().loadFromDB(),
+    useMoodStore.getState().loadFromDB(),
   ]);
 }
 

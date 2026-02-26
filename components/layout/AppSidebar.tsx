@@ -2,16 +2,17 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { TrendingUp, CheckSquare, Coins, StickyNote, LayoutDashboard, HelpCircle, LogOut } from "lucide-react";
+import { TrendingUp, CheckSquare, Coins, StickyNote, LayoutDashboard, HelpCircle, LogOut, ClipboardList, SmilePlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/financas", label: "Finanças", icon: TrendingUp },
-  { href: "/habitos", label: "Hábitos", icon: CheckSquare },
-  { href: "/defi", label: "DeFi", icon: Coins },
-  { href: "/notas", label: "Notas", icon: StickyNote },
+  { href: "/dashboard", label: "Dashboard",  icon: LayoutDashboard },
+  { href: "/tarefas",   label: "Tarefas",    icon: ClipboardList },
+  { href: "/financas",  label: "Finanças",   icon: TrendingUp },
+  { href: "/habitos",   label: "Hábitos",    icon: CheckSquare },
+  { href: "/defi",      label: "DeFi",       icon: Coins },
+  { href: "/notas",     label: "Notas",      icon: StickyNote },
 ] as const;
 
 export function AppSidebar() {
