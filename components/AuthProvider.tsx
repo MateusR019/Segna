@@ -1,6 +1,7 @@
 "use client";
 import { useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import type { AuthChangeEvent } from "@supabase/supabase-js";
+import { supabase, getAuthUser } from "@/lib/supabase";
 import { useFinancasStore } from "@/store/financasStore";
 import { useHabitosStore } from "@/store/habitosStore";
 import { useNotasStore } from "@/store/notasStore";
@@ -8,6 +9,7 @@ import { useDefiStore } from "@/store/defiStore";
 import { useSettingsStore } from "@/store/settingsStore";
 import { useTarefasStore } from "@/store/tarefasStore";
 import { useMoodStore } from "@/store/moodStore";
+import { useCorporalStore } from "@/store/corporalStore";
 
 async function loadAllStores() {
   await Promise.all([
@@ -18,26 +20,18 @@ async function loadAllStores() {
     useSettingsStore.getState().loadFromDB(),
     useTarefasStore.getState().loadFromDB(),
     useMoodStore.getState().loadFromDB(),
+    useCorporalStore.getState().loadFromDB(),
   ]);
 }
 
-/**
- * Hydrata os stores Zustand com dados do Supabase ao autenticar.
- * Não bloqueia a renderização — os dados do localStorage já estão disponíveis
- * imediatamente pelo persist middleware dos stores.
- */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    // Tenta carregar dados da sessão atual (ex: refresh de página)
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) loadAllStores();
+    void getAuthUser().then((user) => {
+      if (user) void loadAllStores();
     });
 
-    // Escuta mudanças de autenticação
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_IN") {
-        loadAllStores();
-      }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: AuthChangeEvent) => {
+      if (event === "SIGNED_IN") void loadAllStores();
     });
 
     return () => subscription.unsubscribe();

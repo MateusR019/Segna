@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useHabitosStore } from "@/store/habitosStore";
 import { useFinancasStore } from "@/store/financasStore";
-import { supabase } from "@/lib/supabase";
+import { supabase, getAuthUser } from "@/lib/supabase";
 import Image from "next/image";
 import {
   CheckSquare, TrendingUp, StickyNote, Coins,
@@ -65,8 +65,8 @@ export function Onboarding() {
 
   // Verifica no Supabase se onboarding já foi feito
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user && !user.user_metadata?.onboarding_done) {
+    void getAuthUser().then((user) => {
+      if (user && !(user.user_metadata as Record<string, unknown>)?.onboarding_done) {
         setDone(false);
       }
     });

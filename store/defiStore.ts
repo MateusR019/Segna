@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { Token, PortfolioSnapshot, PriceEntry, ExchangeRate, LiquidityPool, WatchToken } from "@/types";
+import { Token, PortfolioSnapshot, PriceEntry, ExchangeRate, LiquidityPool, WatchToken, TradeEntry } from "@/types";
 import { format } from "date-fns";
 import { loadStoreData, saveStoreData } from "@/lib/db";
 
@@ -33,6 +33,11 @@ interface DefiState {
   removeWatch: (id: string) => void;
   updateWatch: (id: string, updates: Partial<WatchToken>) => void;
 
+  trades: TradeEntry[];
+  addTrade: (t: Omit<TradeEntry, "id" | "totalUSD" | "createdAt">) => void;
+  removeTrade: (id: string) => void;
+  getTradesForToken: (tokenId: string) => TradeEntry[];
+
   loadFromDB: () => Promise<void>;
 }
 
@@ -51,6 +56,7 @@ function scheduleSync() {
       exchangeRate: s.exchangeRate,
       pools:        s.pools,
       watchlist:    s.watchlist,
+      trades:       s.trades,
     });
   }, 1000);
 }
@@ -66,6 +72,7 @@ export const useDefiStore = create<DefiState>()(
       exchangeRate: null,
       pools: [],
       watchlist: [],
+      trades: [],
 
       addToken: (t) => {
         set((state) => ({
@@ -239,6 +246,26 @@ export const useDefiStore = create<DefiState>()(
         scheduleSync();
       },
 
+      addTrade: (t) => {
+        const entry: TradeEntry = {
+          ...t,
+          id: crypto.randomUUID(),
+          totalUSD: t.quantity * t.priceUSD,
+          createdAt: new Date().toISOString(),
+        };
+        set((state) => ({ trades: [...state.trades, entry] }));
+        scheduleSync();
+      },
+
+      removeTrade: (id) => {
+        set((state) => ({ trades: state.trades.filter((t) => t.id !== id) }));
+        scheduleSync();
+      },
+
+      getTradesForToken: (tokenId) => {
+        return get().trades.filter((t) => t.tokenId === tokenId);
+      },
+
       loadFromDB: async () => {
         const data = await loadStoreData("defi");
         if (!data) return;
@@ -249,6 +276,7 @@ export const useDefiStore = create<DefiState>()(
           exchangeRate: (data.exchangeRate as ExchangeRate)     ?? null,
           pools:        (data.pools as LiquidityPool[])         ?? [],
           watchlist:    (data.watchlist as WatchToken[])        ?? [],
+          trades:       (data.trades as TradeEntry[])           ?? [],
         });
       },
     }),

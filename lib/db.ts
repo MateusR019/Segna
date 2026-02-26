@@ -4,12 +4,12 @@
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyRecord = Record<string, any>;
-import { supabase } from "./supabase";
+import { supabase, getAuthUser } from "./supabase";
 
-export type StoreKey = "financas" | "habitos" | "notas" | "defi" | "settings" | "tarefas" | "mood";
+export type StoreKey = "financas" | "habitos" | "notas" | "defi" | "settings" | "tarefas" | "mood" | "corporal";
 
 async function getUserId(): Promise<string | null> {
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getAuthUser();
   return user?.id ?? null;
 }
 

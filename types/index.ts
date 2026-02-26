@@ -240,3 +240,32 @@ export interface MoodEntry {
   note?: string;
   createdAt: string;
 }
+
+// ─── Métricas Corporais ───────────────────────────────────────────────────────
+
+export interface BodyMetric {
+  id: string;
+  date: string;          // "YYYY-MM-DD"
+  weight?: number;       // kg
+  waist?: number;        // cm
+  bodyFat?: number;      // %
+  muscleMass?: number;   // %
+  note?: string;
+  createdAt: string;
+}
+
+// ─── DeFi - Trade Log ────────────────────────────────────────────────────────
+
+export type TradeType = "buy" | "sell";
+
+export interface TradeEntry {
+  id: string;
+  tokenId: string;
+  type: TradeType;
+  quantity: number;
+  priceUSD: number;       // preço por unidade no momento da trade
+  totalUSD: number;       // quantity * priceUSD
+  date: string;           // "YYYY-MM-DD"
+  note?: string;
+  createdAt: string;
+}
