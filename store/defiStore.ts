@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { Token, PortfolioSnapshot, PriceEntry, ExchangeRate, LiquidityPool } from "@/types";
 import { format } from "date-fns";
+import { loadStoreData, saveStoreData } from "@/lib/db";
 
 interface DefiState {
   tokens: Token[];
@@ -26,7 +27,29 @@ interface DefiState {
   addPool: (pool: Omit<LiquidityPool, "id" | "addedAt">) => void;
   removePool: (id: string) => void;
   updatePool: (id: string, updates: Partial<LiquidityPool>) => void;
+
+  loadFromDB: () => Promise<void>;
 }
+
+// ─── Sync helper ────────────────────────────────────────────────────────────
+
+let _syncTimer: ReturnType<typeof setTimeout> | null = null;
+
+function scheduleSync() {
+  if (_syncTimer) clearTimeout(_syncTimer);
+  _syncTimer = setTimeout(() => {
+    const s = useDefiStore.getState();
+    saveStoreData("defi", {
+      tokens:       s.tokens,
+      snapshots:    s.snapshots,
+      priceHistory: s.priceHistory,
+      exchangeRate: s.exchangeRate,
+      pools:        s.pools,
+    });
+  }, 1000);
+}
+
+// ─── Store ───────────────────────────────────────────────────────────────────
 
 export const useDefiStore = create<DefiState>()(
   persist(
@@ -37,69 +60,91 @@ export const useDefiStore = create<DefiState>()(
       exchangeRate: null,
       pools: [],
 
-      addToken: (t) =>
+      addToken: (t) => {
         set((state) => ({
           tokens: [
             ...state.tokens,
             { ...t, id: crypto.randomUUID(), addedAt: new Date().toISOString() },
           ],
-        })),
+        }));
+        scheduleSync();
+      },
 
-      removeToken: (id) =>
+      removeToken: (id) => {
         set((state) => ({
           tokens: state.tokens.filter((t) => t.id !== id),
           priceHistory: state.priceHistory.filter((e) => e.tokenId !== id),
-        })),
+        }));
+        scheduleSync();
+      },
 
-      updatePrice: (id, newPrice) =>
+      updatePrice: (id, newPrice) => {
         set((state) => ({
           tokens: state.tokens.map((t) =>
             t.id === id ? { ...t, priceInBRL: newPrice } : t
           ),
-        })),
+        }));
+        scheduleSync();
+      },
 
-      updatePriceUSD: (id, priceUSD) =>
+      updatePriceUSD: (id, priceUSD) => {
         set((state) => {
           const rate = state.exchangeRate?.usdToBRL ?? 0;
           return {
             tokens: state.tokens.map((t) =>
               t.id === id
-                ? { ...t, priceInUSD: priceUSD, priceInBRL: rate > 0 ? priceUSD * rate : t.priceInBRL }
+                ? {
+                    ...t,
+                    priceInUSD: priceUSD,
+                    priceInBRL: rate > 0 ? priceUSD * rate : t.priceInBRL,
+                  }
                 : t
             ),
           };
-        }),
+        });
+        scheduleSync();
+      },
 
-      updateQuantity: (id, newQuantity) =>
+      updateQuantity: (id, newQuantity) => {
         set((state) => ({
           tokens: state.tokens.map((t) =>
             t.id === id ? { ...t, quantity: newQuantity } : t
           ),
-        })),
+        }));
+        scheduleSync();
+      },
 
-      setAlertPrice: (id, price) =>
+      setAlertPrice: (id, price) => {
         set((state) => ({
           tokens: state.tokens.map((t) =>
             t.id === id ? { ...t, priceAtAlert: price } : t
           ),
-        })),
+        }));
+        scheduleSync();
+      },
 
-      setAvgCost: (id, avgCost) =>
+      setAvgCost: (id, avgCost) => {
         set((state) => ({
           tokens: state.tokens.map((t) =>
             t.id === id ? { ...t, avgCostBRL: avgCost } : t
           ),
-        })),
+        }));
+        scheduleSync();
+      },
 
-      setAvgCostUSD: (id, avgCostUSD) =>
+      setAvgCostUSD: (id, avgCostUSD) => {
         set((state) => ({
           tokens: state.tokens.map((t) =>
             t.id === id ? { ...t, avgCostUSD } : t
           ),
-        })),
+        }));
+        scheduleSync();
+      },
 
-      setExchangeRate: (usdToBRL) =>
-        set({ exchangeRate: { usdToBRL, updatedAt: new Date().toISOString() } }),
+      setExchangeRate: (usdToBRL) => {
+        set({ exchangeRate: { usdToBRL, updatedAt: new Date().toISOString() } });
+        scheduleSync();
+      },
 
       saveSnapshot: () => {
         const { tokens, snapshots } = get();
@@ -117,9 +162,10 @@ export const useDefiStore = create<DefiState>()(
             snapshots: [...state.snapshots, { date: today, totalBRL: total }].slice(-90),
           }));
         }
+        scheduleSync();
       },
 
-      addPriceEntry: (tokenId, date, priceBRL) =>
+      addPriceEntry: (tokenId, date, priceBRL) => {
         set((state) => ({
           priceHistory: [
             ...state.priceHistory.filter(
@@ -127,30 +173,52 @@ export const useDefiStore = create<DefiState>()(
             ),
             { id: crypto.randomUUID(), tokenId, date, priceBRL },
           ].sort((a, b) => a.date.localeCompare(b.date)),
-        })),
+        }));
+        scheduleSync();
+      },
 
-      removePriceEntry: (id) =>
+      removePriceEntry: (id) => {
         set((state) => ({
           priceHistory: state.priceHistory.filter((e) => e.id !== id),
-        })),
+        }));
+        scheduleSync();
+      },
 
-      addPool: (pool) =>
+      addPool: (pool) => {
         set((state) => ({
           pools: [
             ...state.pools,
             { ...pool, id: crypto.randomUUID(), addedAt: new Date().toISOString() },
           ],
-        })),
+        }));
+        scheduleSync();
+      },
 
-      removePool: (id) =>
+      removePool: (id) => {
         set((state) => ({
           pools: state.pools.filter((p) => p.id !== id),
-        })),
+        }));
+        scheduleSync();
+      },
 
-      updatePool: (id, updates) =>
+      updatePool: (id, updates) => {
         set((state) => ({
           pools: state.pools.map((p) => (p.id === id ? { ...p, ...updates } : p)),
-        })),
+        }));
+        scheduleSync();
+      },
+
+      loadFromDB: async () => {
+        const data = await loadStoreData("defi");
+        if (!data) return;
+        set({
+          tokens:       (data.tokens as Token[])                ?? [],
+          snapshots:    (data.snapshots as PortfolioSnapshot[]) ?? [],
+          priceHistory: (data.priceHistory as PriceEntry[])     ?? [],
+          exchangeRate: (data.exchangeRate as ExchangeRate)     ?? null,
+          pools:        (data.pools as LiquidityPool[])         ?? [],
+        });
+      },
     }),
     {
       name: "segna-defi",

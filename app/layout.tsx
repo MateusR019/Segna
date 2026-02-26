@@ -8,6 +8,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/Toaster";
 import { CommandPalette } from "@/components/CommandPalette";
 import { Onboarding } from "@/components/Onboarding";
+import { AuthProvider } from "@/components/AuthProvider";
 
 const geist = Geist({ subsets: ["latin"] });
 
@@ -50,6 +51,7 @@ export default function RootLayout({
     <html lang="pt-BR" suppressHydrationWarning>
       <body className={geist.className}>
         <Providers>
+          <AuthProvider>
           <TooltipProvider>
             <div className="flex h-screen overflow-hidden bg-[#0f0f0f]">
               <AppSidebar />
@@ -62,6 +64,7 @@ export default function RootLayout({
             <CommandPalette />
             <Onboarding />
           </TooltipProvider>
+          </AuthProvider>
         </Providers>
       </body>
     </html>

@@ -6,6 +6,7 @@ import {
   BarChart2, Flame, Calendar, GripVertical, Tag, Pin, List,
   RefreshCw, TrendingDown, HelpCircle, Keyboard,
 } from "lucide-react";
+import { MigrateButton } from "@/components/MigrateButton";
 
 interface Section {
   id: string;
@@ -410,12 +411,12 @@ const sections: Section[] = [
         title: "Onde ficam os dados?",
         content: (
           <div className="space-y-2 text-sm text-[#9ca3af] leading-relaxed">
-            <p>Todos os dados ficam salvos no <strong className="text-white">localStorage</strong> do seu navegador — diretamente no dispositivo, sem servidor. Isso significa:</p>
+            <p>Os dados ficam em dois lugares:</p>
             <ul className="space-y-1.5 pl-3">
-              <li className="flex gap-2"><span className="text-[#9ca3af] mt-0.5">•</span><span>Funciona offline</span></li>
-              <li className="flex gap-2"><span className="text-[#9ca3af] mt-0.5">•</span><span>Os dados do celular ficam no celular, e os do PC ficam no PC (separados)</span></li>
-              <li className="flex gap-2"><span className="text-[#ef4444] mt-0.5">•</span><span>Limpar os dados do navegador apaga tudo — não faça isso</span></li>
+              <li className="flex gap-2"><span className="text-[#6366f1] mt-0.5">•</span><span><strong className="text-white">Supabase (nuvem)</strong> — salvo automaticamente a cada mudança. Acessível de qualquer dispositivo após login.</span></li>
+              <li className="flex gap-2"><span className="text-[#9ca3af] mt-0.5">•</span><span><strong className="text-white">localStorage</strong> — cache local para carregamento instantâneo, mesmo offline.</span></li>
             </ul>
+            <p>Para sincronizar dados de um dispositivo antigo, use o botão <strong className="text-white">"Migrar para nuvem"</strong> na seção abaixo.</p>
           </div>
         ),
       },
@@ -578,6 +579,9 @@ export default function AjudaPage() {
           </div>
         ))}
       </div>
+
+      {/* Migrate */}
+      <MigrateButton />
 
       {/* Footer */}
       <div className="text-center py-4 text-xs text-[#3a3a3a]">

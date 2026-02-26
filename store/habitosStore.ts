@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { subDays, format } from "date-fns";
 import { Habit, CompletionMap, HabitFrequencyGoal, HabitNote, HabitTemplate, HabitAnnotation, WeekDayIndex } from "@/types";
+import { loadStoreData, saveStoreData } from "@/lib/db";
 
 // counts[date][habitId] = count (for targetCount > 1 habits)
 type CountMap = Record<string, Record<string, number>>;
@@ -31,6 +32,27 @@ interface HabitosState {
   setWorkoutDay: (habitId: string, day: WeekDayIndex, text: string) => void;
   addAnnotation: (habitId: string, annotation: Omit<HabitAnnotation, "id" | "createdAt">) => void;
   removeAnnotation: (habitId: string, annotationId: string) => void;
+  loadFromDB: () => Promise<void>;
+}
+
+// ─── Sync helper ────────────────────────────────────────────────────────────
+
+let _syncTimer: ReturnType<typeof setTimeout> | null = null;
+
+function scheduleSync() {
+  if (_syncTimer) clearTimeout(_syncTimer);
+  _syncTimer = setTimeout(() => {
+    const s = useHabitosStore.getState();
+    saveStoreData("habitos", {
+      habits:          s.habits,
+      completions:     s.completions,
+      counts:          s.counts,
+      frequencyGoals:  s.frequencyGoals,
+      habitNotes:      s.habitNotes,
+      workoutSchedule: s.workoutSchedule,
+      annotations:     s.annotations,
+    });
+  }, 1000);
 }
 
 export const useHabitosStore = create<HabitosState>()(
@@ -44,7 +66,7 @@ export const useHabitosStore = create<HabitosState>()(
       workoutSchedule: {},
       annotations: {},
 
-      addHabit: (h) =>
+      addHabit: (h) => {
         set((state) => ({
           habits: [
             ...state.habits,
@@ -55,16 +77,20 @@ export const useHabitosStore = create<HabitosState>()(
               order: state.habits.length,
             },
           ],
-        })),
+        }));
+        scheduleSync();
+      },
 
-      updateHabit: (id, updates) =>
+      updateHabit: (id, updates) => {
         set((state) => ({
           habits: state.habits.map((h) =>
             h.id === id ? { ...h, ...updates } : h
           ),
-        })),
+        }));
+        scheduleSync();
+      },
 
-      removeHabit: (id) =>
+      removeHabit: (id) => {
         set((state) => {
           const { [id]: _ws, ...restWs } = state.workoutSchedule;
           const { [id]: _an, ...restAn } = state.annotations;
@@ -87,9 +113,11 @@ export const useHabitosStore = create<HabitosState>()(
             workoutSchedule: restWs,
             annotations: restAn,
           };
-        }),
+        });
+        scheduleSync();
+      },
 
-      reorderHabits: (orderedIds) =>
+      reorderHabits: (orderedIds) => {
         set((state) => ({
           habits: orderedIds
             .map((id, index) => {
@@ -97,18 +125,22 @@ export const useHabitosStore = create<HabitosState>()(
               return h ? { ...h, order: index } : null;
             })
             .filter(Boolean) as Habit[],
-        })),
+        }));
+        scheduleSync();
+      },
 
-      toggleCompletion: (habitId, date) =>
+      toggleCompletion: (habitId, date) => {
         set((state) => {
           const current = state.completions[date] ?? [];
           const updated = current.includes(habitId)
             ? current.filter((id) => id !== habitId)
             : [...current, habitId];
           return { completions: { ...state.completions, [date]: updated } };
-        }),
+        });
+        scheduleSync();
+      },
 
-      incrementCount: (habitId, date) =>
+      incrementCount: (habitId, date) => {
         set((state) => {
           const habit = state.habits.find((h) => h.id === habitId);
           const target = habit?.targetCount ?? 1;
@@ -127,9 +159,11 @@ export const useHabitosStore = create<HabitosState>()(
             }
           }
           return { counts: newCounts, completions: newCompletions };
-        }),
+        });
+        scheduleSync();
+      },
 
-      decrementCount: (habitId, date) =>
+      decrementCount: (habitId, date) => {
         set((state) => {
           const habit = state.habits.find((h) => h.id === habitId);
           const target = habit?.targetCount ?? 1;
@@ -148,22 +182,28 @@ export const useHabitosStore = create<HabitosState>()(
             };
           }
           return { counts: newCounts, completions: newCompletions };
-        }),
+        });
+        scheduleSync();
+      },
 
-      setFrequencyGoal: (habitId, timesPerWeek) =>
+      setFrequencyGoal: (habitId, timesPerWeek) => {
         set((state) => ({
           frequencyGoals: [
             ...state.frequencyGoals.filter((g) => g.habitId !== habitId),
             { habitId, timesPerWeek },
           ],
-        })),
+        }));
+        scheduleSync();
+      },
 
-      removeFrequencyGoal: (habitId) =>
+      removeFrequencyGoal: (habitId) => {
         set((state) => ({
           frequencyGoals: state.frequencyGoals.filter((g) => g.habitId !== habitId),
-        })),
+        }));
+        scheduleSync();
+      },
 
-      setHabitNote: (habitId, date, text) =>
+      setHabitNote: (habitId, date, text) => {
         set((state) => ({
           habitNotes: [
             ...state.habitNotes.filter(
@@ -171,23 +211,29 @@ export const useHabitosStore = create<HabitosState>()(
             ),
             ...(text.trim() ? [{ habitId, date, text: text.trim() }] : []),
           ],
-        })),
+        }));
+        scheduleSync();
+      },
 
-      removeHabitNote: (habitId, date) =>
+      removeHabitNote: (habitId, date) => {
         set((state) => ({
           habitNotes: state.habitNotes.filter(
             (n) => !(n.habitId === habitId && n.date === date)
           ),
-        })),
+        }));
+        scheduleSync();
+      },
 
-      setTemplate: (habitId, template) =>
+      setTemplate: (habitId, template) => {
         set((state) => ({
           habits: state.habits.map((h) =>
             h.id === habitId ? { ...h, template } : h
           ),
-        })),
+        }));
+        scheduleSync();
+      },
 
-      setWorkoutDay: (habitId, day, text) =>
+      setWorkoutDay: (habitId, day, text) => {
         set((state) => {
           const existing = state.workoutSchedule[habitId] ?? {};
           const updated = text.trim()
@@ -198,9 +244,11 @@ export const useHabitosStore = create<HabitosState>()(
           return {
             workoutSchedule: { ...state.workoutSchedule, [habitId]: updated },
           };
-        }),
+        });
+        scheduleSync();
+      },
 
-      addAnnotation: (habitId, annotation) =>
+      addAnnotation: (habitId, annotation) => {
         set((state) => ({
           annotations: {
             ...state.annotations,
@@ -213,9 +261,11 @@ export const useHabitosStore = create<HabitosState>()(
               ...(state.annotations[habitId] ?? []),
             ],
           },
-        })),
+        }));
+        scheduleSync();
+      },
 
-      removeAnnotation: (habitId, annotationId) =>
+      removeAnnotation: (habitId, annotationId) => {
         set((state) => ({
           annotations: {
             ...state.annotations,
@@ -223,7 +273,23 @@ export const useHabitosStore = create<HabitosState>()(
               (a) => a.id !== annotationId
             ),
           },
-        })),
+        }));
+        scheduleSync();
+      },
+
+      loadFromDB: async () => {
+        const data = await loadStoreData("habitos");
+        if (!data) return;
+        set({
+          habits:          (data.habits as Habit[])                                                       ?? [],
+          completions:     (data.completions as CompletionMap)                                            ?? {},
+          counts:          (data.counts as CountMap)                                                      ?? {},
+          frequencyGoals:  (data.frequencyGoals as HabitFrequencyGoal[])                                  ?? [],
+          habitNotes:      (data.habitNotes as HabitNote[])                                               ?? [],
+          workoutSchedule: (data.workoutSchedule as Record<string, Partial<Record<WeekDayIndex, string>>>) ?? {},
+          annotations:     (data.annotations as Record<string, HabitAnnotation[]>)                        ?? {},
+        });
+      },
     }),
     {
       name: "segna-habitos",

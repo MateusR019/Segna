@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { Note, NoteTag } from "@/types";
+import { loadStoreData, saveStoreData } from "@/lib/db";
 
 const DEFAULT_TAGS: NoteTag[] = [
   { id: "ideias", label: "Ideias", color: "#6366f1" },
@@ -19,7 +20,22 @@ interface NotasState {
   removeTag: (id: string) => void;
   togglePin: (id: string) => void;
   setNoteMode: (id: string, mode: "text" | "checklist") => void;
+  loadFromDB: () => Promise<void>;
 }
+
+// ─── Sync helper ────────────────────────────────────────────────────────────
+
+let _syncTimer: ReturnType<typeof setTimeout> | null = null;
+
+function scheduleSync() {
+  if (_syncTimer) clearTimeout(_syncTimer);
+  _syncTimer = setTimeout(() => {
+    const s = useNotasStore.getState();
+    saveStoreData("notas", { notes: s.notes, tags: s.tags });
+  }, 1000);
+}
+
+// ─── Store ───────────────────────────────────────────────────────────────────
 
 export const useNotasStore = create<NotasState>()(
   persist(
@@ -27,7 +43,7 @@ export const useNotasStore = create<NotasState>()(
       notes: [],
       tags: DEFAULT_TAGS,
 
-      addNote: (content, tagId, mode, image) =>
+      addNote: (content, tagId, mode, image) => {
         set((s) => ({
           notes: [
             {
@@ -40,12 +56,13 @@ export const useNotasStore = create<NotasState>()(
             },
             ...s.notes,
           ],
-        })),
+        }));
+        scheduleSync();
+      },
 
-      editNote: (id, content) =>
+      editNote: (id, content) => {
         set((s) => {
           const trimmed = content.trim();
-          // Auto-detect mode on edit too
           const newMode: "text" | "checklist" = /^\[[ xX]\] /.test(trimmed)
             ? "checklist"
             : "text";
@@ -54,42 +71,57 @@ export const useNotasStore = create<NotasState>()(
               n.id === id ? { ...n, content: trimmed, mode: newMode } : n
             ),
           };
-        }),
+        });
+        scheduleSync();
+      },
 
-      removeNote: (id) =>
-        set((s) => ({ notes: s.notes.filter((n) => n.id !== id) })),
+      removeNote: (id) => {
+        set((s) => ({ notes: s.notes.filter((n) => n.id !== id) }));
+        scheduleSync();
+      },
 
-      clearAll: () => set({ notes: [] }),
+      clearAll: () => {
+        set({ notes: [] });
+        scheduleSync();
+      },
 
-      addTag: (label, color) =>
+      addTag: (label, color) => {
         set((s) => ({
-          tags: [
-            ...s.tags,
-            { id: crypto.randomUUID(), label: label.trim(), color },
-          ],
-        })),
+          tags: [...s.tags, { id: crypto.randomUUID(), label: label.trim(), color }],
+        }));
+        scheduleSync();
+      },
 
-      removeTag: (id) =>
+      removeTag: (id) => {
         set((s) => ({
           tags: s.tags.filter((t) => t.id !== id),
-          notes: s.notes.map((n) =>
-            n.tagId === id ? { ...n, tagId: undefined } : n
-          ),
-        })),
+          notes: s.notes.map((n) => (n.tagId === id ? { ...n, tagId: undefined } : n)),
+        }));
+        scheduleSync();
+      },
 
-      togglePin: (id) =>
+      togglePin: (id) => {
         set((s) => ({
-          notes: s.notes.map((n) =>
-            n.id === id ? { ...n, pinned: !n.pinned } : n
-          ),
-        })),
+          notes: s.notes.map((n) => (n.id === id ? { ...n, pinned: !n.pinned } : n)),
+        }));
+        scheduleSync();
+      },
 
-      setNoteMode: (id, mode) =>
+      setNoteMode: (id, mode) => {
         set((s) => ({
-          notes: s.notes.map((n) =>
-            n.id === id ? { ...n, mode } : n
-          ),
-        })),
+          notes: s.notes.map((n) => (n.id === id ? { ...n, mode } : n)),
+        }));
+        scheduleSync();
+      },
+
+      loadFromDB: async () => {
+        const data = await loadStoreData("notas");
+        if (!data) return;
+        set({
+          notes: (data.notes as Note[])     ?? [],
+          tags:  (data.tags as NoteTag[])   ?? DEFAULT_TAGS,
+        });
+      },
     }),
     {
       name: "segna-notas",

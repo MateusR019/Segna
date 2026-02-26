@@ -1,13 +1,14 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { Transaction, CategoryGoal, MonthlyBudget, SavingsGoal, ExpenseCategory, AnyCategory } from "@/types";
+import { Transaction, CategoryGoal, MonthlyBudget, SavingsGoal, AnyCategory } from "@/types";
 import { format, addMonths } from "date-fns";
+import { loadStoreData, saveStoreData } from "@/lib/db";
 
 interface FinancasState {
   transactions: Transaction[];
   goals: CategoryGoal[];
   budget: MonthlyBudget | null;
-  savingsGoal: SavingsGoal | null; // Feature 2
+  savingsGoal: SavingsGoal | null;
 
   addTransaction: (t: Omit<Transaction, "id" | "createdAt">) => void;
   removeTransaction: (id: string) => void;
@@ -20,11 +21,32 @@ interface FinancasState {
   setBudget: (limitAmount: number) => void;
   clearBudget: () => void;
 
-  setSavingsGoal: (targetAmount: number) => void; // Feature 2
+  setSavingsGoal: (targetAmount: number) => void;
   clearSavingsGoal: () => void;
 
   generateRecurring: () => void;
+
+  loadFromDB: () => Promise<void>;
 }
+
+// ─── Sync helper ────────────────────────────────────────────────────────────
+
+let _syncTimer: ReturnType<typeof setTimeout> | null = null;
+
+function scheduleSync() {
+  if (_syncTimer) clearTimeout(_syncTimer);
+  _syncTimer = setTimeout(() => {
+    const s = useFinancasStore.getState();
+    saveStoreData("financas", {
+      transactions: s.transactions,
+      goals: s.goals,
+      budget: s.budget,
+      savingsGoal: s.savingsGoal,
+    });
+  }, 1000);
+}
+
+// ─── Store ───────────────────────────────────────────────────────────────────
 
 export const useFinancasStore = create<FinancasState>()(
   persist(
@@ -34,59 +56,75 @@ export const useFinancasStore = create<FinancasState>()(
       budget: null,
       savingsGoal: null,
 
-      addTransaction: (t) =>
+      addTransaction: (t) => {
         set((state) => ({
           transactions: [
             ...state.transactions,
-            {
-              ...t,
-              id: crypto.randomUUID(),
-              createdAt: new Date().toISOString(),
-            },
+            { ...t, id: crypto.randomUUID(), createdAt: new Date().toISOString() },
           ],
-        })),
+        }));
+        scheduleSync();
+      },
 
-      removeTransaction: (id) =>
+      removeTransaction: (id) => {
         set((state) => ({
           transactions: state.transactions.filter((t) => t.id !== id),
-        })),
+        }));
+        scheduleSync();
+      },
 
-      editTransaction: (id, updates) =>
+      editTransaction: (id, updates) => {
         set((state) => ({
           transactions: state.transactions.map((t) =>
             t.id === id ? { ...t, ...updates } : t
           ),
-        })),
+        }));
+        scheduleSync();
+      },
 
-      addGoal: (g) =>
+      addGoal: (g) => {
         set((state) => ({
           goals: [
             ...state.goals.filter((x) => x.category !== g.category),
-            {
-              ...g,
-              id: crypto.randomUUID(),
-              createdAt: new Date().toISOString(),
-            },
+            { ...g, id: crypto.randomUUID(), createdAt: new Date().toISOString() },
           ],
-        })),
+        }));
+        scheduleSync();
+      },
 
-      removeGoal: (id) =>
-        set((state) => ({
-          goals: state.goals.filter((g) => g.id !== id),
-        })),
+      removeGoal: (id) => {
+        set((state) => ({ goals: state.goals.filter((g) => g.id !== id) }));
+        scheduleSync();
+      },
 
-      updateGoal: (id, limitAmount) =>
+      updateGoal: (id, limitAmount) => {
         set((state) => ({
           goals: state.goals.map((g) =>
             g.id === id ? { ...g, limitAmount } : g
           ),
-        })),
+        }));
+        scheduleSync();
+      },
 
-      setBudget: (limitAmount) => set({ budget: { limitAmount } }),
-      clearBudget: () => set({ budget: null }),
+      setBudget: (limitAmount) => {
+        set({ budget: { limitAmount } });
+        scheduleSync();
+      },
 
-      setSavingsGoal: (targetAmount) => set({ savingsGoal: { targetAmount } }),
-      clearSavingsGoal: () => set({ savingsGoal: null }),
+      clearBudget: () => {
+        set({ budget: null });
+        scheduleSync();
+      },
+
+      setSavingsGoal: (targetAmount) => {
+        set({ savingsGoal: { targetAmount } });
+        scheduleSync();
+      },
+
+      clearSavingsGoal: () => {
+        set({ savingsGoal: null });
+        scheduleSync();
+      },
 
       generateRecurring: () => {
         const { transactions } = get();
@@ -104,8 +142,7 @@ export const useFinancasStore = create<FinancasState>()(
         );
 
         const toGenerate = lastMonthRecurring.filter(
-          (t) =>
-            !thisMonthKeys.has(`${t.description}|${t.amount}|${t.category}`)
+          (t) => !thisMonthKeys.has(`${t.description}|${t.amount}|${t.category}`)
         );
 
         if (toGenerate.length === 0) return;
@@ -121,6 +158,18 @@ export const useFinancasStore = create<FinancasState>()(
             })),
           ],
         }));
+        scheduleSync();
+      },
+
+      loadFromDB: async () => {
+        const data = await loadStoreData("financas");
+        if (!data) return;
+        set({
+          transactions: (data.transactions as Transaction[]) ?? [],
+          goals:        (data.goals as CategoryGoal[])      ?? [],
+          budget:       (data.budget as MonthlyBudget)      ?? null,
+          savingsGoal:  (data.savingsGoal as SavingsGoal)   ?? null,
+        });
       },
     }),
     {
@@ -130,6 +179,8 @@ export const useFinancasStore = create<FinancasState>()(
   )
 );
 
+// ─── Helpers de cálculo ──────────────────────────────────────────────────────
+
 export function calcBalance(transactions: Transaction[]): number {
   return transactions.reduce(
     (acc, t) => acc + (t.type === "income" ? t.amount : -t.amount),
@@ -138,15 +189,11 @@ export function calcBalance(transactions: Transaction[]): number {
 }
 
 export function calcTotalIncome(transactions: Transaction[]): number {
-  return transactions
-    .filter((t) => t.type === "income")
-    .reduce((acc, t) => acc + t.amount, 0);
+  return transactions.filter((t) => t.type === "income").reduce((acc, t) => acc + t.amount, 0);
 }
 
 export function calcTotalExpenses(transactions: Transaction[]): number {
-  return transactions
-    .filter((t) => t.type === "expense")
-    .reduce((acc, t) => acc + t.amount, 0);
+  return transactions.filter((t) => t.type === "expense").reduce((acc, t) => acc + t.amount, 0);
 }
 
 export function calcCategorySpendThisMonth(

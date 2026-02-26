@@ -1,9 +1,10 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
-import { TrendingUp, CheckSquare, Coins, StickyNote, LayoutDashboard, HelpCircle } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { TrendingUp, CheckSquare, Coins, StickyNote, LayoutDashboard, HelpCircle, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -15,6 +16,13 @@ const navItems = [
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const router   = useRouter();
+
+  async function handleSignOut() {
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
+  }
 
   return (
     <aside className="hidden md:flex w-56 flex-shrink-0 flex-col h-full border-r border-[#1f1f1f]">
@@ -94,6 +102,13 @@ export function AppSidebar() {
           />
           Como funciona?
         </Link>
+        <button
+          onClick={handleSignOut}
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-150 text-[#6b7280] hover:text-[#ef4444] hover:bg-[#161616] cursor-pointer btn-press"
+        >
+          <LogOut size={15} className="flex-shrink-0" />
+          Sair da conta
+        </button>
         <p className="text-[10px] text-[#3a3a3a] px-3">v1.0.0 · Mateus Segna</p>
       </div>
     </aside>
