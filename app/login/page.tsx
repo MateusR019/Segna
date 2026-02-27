@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { loadAllStores } from "@/components/AuthProvider";
 import Image from "next/image";
 import { Eye, EyeOff, LogIn } from "lucide-react";
 
@@ -23,6 +24,7 @@ export default function LoginPage() {
       if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        await loadAllStores();
         router.push("/dashboard");
         router.refresh();
       } else {

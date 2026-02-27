@@ -12,8 +12,9 @@ import { PoolList } from "@/components/defi/PoolList";
 import { PoolSummary } from "@/components/defi/PoolSummary";
 import { WalletSyncButton } from "@/components/defi/WalletSyncButton";
 import { WatchlistSection } from "@/components/defi/WatchlistSection";
+import { TradeDialog, TradeHistory } from "@/components/defi/TradeDialog";
 import { useHydrated } from "@/hooks/useHydrated";
-import { Droplets } from "lucide-react";
+import { Droplets, ArrowRightLeft } from "lucide-react";
 
 export default function DefiPage() {
   const hydrated = useHydrated();
@@ -42,6 +43,22 @@ export default function DefiPage() {
             </div>
             <div className="lg:col-span-2">
               <TokenPieChart />
+            </div>
+          </div>
+
+          {/* ── Histórico de Trades ── */}
+          <div className="pt-2 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ArrowRightLeft size={15} className="text-[#a78bfa]" />
+                <span className="text-base font-semibold text-white">
+                  Trades
+                </span>
+              </div>
+              <TradeDialog />
+            </div>
+            <div className="bg-[#111111] border border-[#2a2a2a] rounded-xl p-4">
+              <TradeHistory />
             </div>
           </div>
 

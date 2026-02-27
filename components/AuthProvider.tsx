@@ -11,7 +11,7 @@ import { useTarefasStore } from "@/store/tarefasStore";
 import { useMoodStore } from "@/store/moodStore";
 import { useCorporalStore } from "@/store/corporalStore";
 
-async function loadAllStores() {
+export async function loadAllStores() {
   await Promise.all([
     useFinancasStore.getState().loadFromDB(),
     useHabitosStore.getState().loadFromDB(),
@@ -26,13 +26,19 @@ async function loadAllStores() {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
+    // Carrega stores se já houver sessão ativa (ex: refresh de página)
     void getAuthUser().then((user) => {
       if (user) void loadAllStores();
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: AuthChangeEvent) => {
-      if (event === "SIGNED_IN") void loadAllStores();
-    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event: AuthChangeEvent) => {
+        // TOKEN_REFRESHED cobre sessões que expiram e renovam automaticamente
+        if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+          void loadAllStores();
+        }
+      }
+    );
 
     return () => subscription.unsubscribe();
   }, []);
