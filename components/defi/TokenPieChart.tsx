@@ -64,6 +64,8 @@ export function TokenPieChart() {
                 borderRadius: "6px",
                 color: "#f5f5f5",
               }}
+              itemStyle={{ color: "#f5f5f5" }}
+              labelStyle={{ color: "#9ca3af" }}
               formatter={(value: number | undefined, name: string | undefined) => [
                 formatUSD(value ?? 0),
                 name ?? "",
@@ -84,7 +86,7 @@ export function TokenPieChart() {
                     style={{ background: d.color }}
                   />
                   <span className="text-xs text-[#9ca3af]">{d.name}</span>
-                  <span className="text-xs text-[#4a4a4a]">{pct}%</span>
+                  <span className="text-xs text-[#6b7280]">{pct}%</span>
                 </div>
                 <span className="text-xs text-white font-medium">
                   {formatUSD(d.value)}
