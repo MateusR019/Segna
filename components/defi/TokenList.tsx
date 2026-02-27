@@ -152,7 +152,7 @@ export function TokenList() {
                   <div className="text-right mx-2">
                     <p className="text-sm text-white font-medium">{formatUSD(valueUSD)}</p>
                     {token.priceInUSD && (
-                      <p className="text-xs text-[#4a4a4a]">{formatUSD(token.priceInUSD)} / token</p>
+                      <p className="text-xs text-[#9ca3af]">{formatUSD(token.priceInUSD)} / token</p>
                     )}
                     <p className="text-xs text-[#6b7280]">{token.quantity} · {pct}%</p>
                   </div>
