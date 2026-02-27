@@ -19,6 +19,7 @@ import { ExportDataButton } from "@/components/ExportDataButton";
 import { QuickAddFAB } from "@/components/dashboard/QuickAddFAB";
 import { MoodWidget } from "@/components/dashboard/MoodWidget";
 import { DailyScore } from "@/components/dashboard/DailyScore";
+import InsightsPanel from "@/components/dashboard/InsightsPanel";
 
 /** Strip checklist markdown syntax from note preview */
 function stripChecklist(text: string): string {
@@ -567,6 +568,11 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <DailyScore />
         <MoodWidget />
+      </div>
+
+      {/* Insights */}
+      <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-4">
+        <InsightsPanel />
       </div>
 
       {/* Quick Add FAB */}

@@ -14,13 +14,15 @@ CREATE TABLE IF NOT EXISTS user_data (
   settings   JSONB NOT NULL DEFAULT '{}',
   tarefas    JSONB NOT NULL DEFAULT '{}',
   mood       JSONB NOT NULL DEFAULT '{}',
+  corporal   JSONB NOT NULL DEFAULT '{}',
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 -- Adiciona colunas novas caso a tabela já exista (safe to re-run)
 ALTER TABLE user_data
-  ADD COLUMN IF NOT EXISTS tarefas JSONB NOT NULL DEFAULT '{}',
-  ADD COLUMN IF NOT EXISTS mood    JSONB NOT NULL DEFAULT '{}';
+  ADD COLUMN IF NOT EXISTS tarefas  JSONB NOT NULL DEFAULT '{}',
+  ADD COLUMN IF NOT EXISTS mood     JSONB NOT NULL DEFAULT '{}',
+  ADD COLUMN IF NOT EXISTS corporal JSONB NOT NULL DEFAULT '{}';
 
 -- Row Level Security — cada usuário só acessa seus próprios dados
 ALTER TABLE user_data ENABLE ROW LEVEL SECURITY;
