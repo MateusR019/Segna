@@ -87,6 +87,8 @@ export function PortfolioChart() {
                 fontSize: "12px",
                 color: "#f5f5f5",
               }}
+              itemStyle={{ color: "#f5f5f5" }}
+              labelStyle={{ color: "#9ca3af" }}
               formatter={(value: number | undefined) => [formatBRL(value ?? 0), "Portfolio"]}
             />
             <Area

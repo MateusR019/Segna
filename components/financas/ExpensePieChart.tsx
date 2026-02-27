@@ -98,6 +98,8 @@ export function ExpensePieChart() {
                 color: "#f5f5f5",
                 fontSize: "12px",
               }}
+              itemStyle={{ color: "#f5f5f5" }}
+              labelStyle={{ color: "#9ca3af" }}
               formatter={(value: number | undefined) => [
                 formatBRL(value ?? 0),
                 "",
@@ -118,7 +120,7 @@ export function ExpensePieChart() {
                     style={{ background: COLORS[i] }}
                   />
                   <span className="text-xs text-[#9ca3af] truncate">{entry.name}</span>
-                  <span className="text-xs text-[#4a4a4a] flex-shrink-0">{pct}%</span>
+                  <span className="text-xs text-[#6b7280] flex-shrink-0">{pct}%</span>
                 </div>
                 <span className="text-xs text-white font-medium flex-shrink-0 ml-3">
                   {formatBRL(entry.value)}

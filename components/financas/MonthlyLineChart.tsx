@@ -81,6 +81,8 @@ export function MonthlyLineChart() {
                 borderRadius: "6px",
                 color: "#f5f5f5",
               }}
+              itemStyle={{ color: "#f5f5f5" }}
+              labelStyle={{ color: "#9ca3af" }}
               formatter={(value: number | undefined, name: string | undefined) => [
                 new Intl.NumberFormat("pt-BR", {
                   style: "currency",

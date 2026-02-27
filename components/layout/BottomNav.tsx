@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { TrendingUp, CheckSquare, Coins, LayoutDashboard, ClipboardList } from "lucide-react";
+import { useEffect, useState } from "react";
+import { TrendingUp, CheckSquare, Coins, LayoutDashboard, ClipboardList, WifiOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Mobile: 5 itens mais usados diariamente. DeFi e Notas ficam acessíveis pelo sidebar.
@@ -15,8 +16,25 @@ const navItems = [
 
 export function BottomNav() {
   const pathname = usePathname();
+  const [offline, setOffline] = useState(false);
+
+  useEffect(() => {
+    setOffline(!navigator.onLine);
+    const on = () => setOffline(false);
+    const off = () => setOffline(true);
+    window.addEventListener("online", on);
+    window.addEventListener("offline", off);
+    return () => { window.removeEventListener("online", on); window.removeEventListener("offline", off); };
+  }, []);
 
   return (
+    <>
+      {offline && (
+        <div className="md:hidden fixed bottom-[60px] left-0 right-0 z-50 flex items-center justify-center gap-1.5 bg-[#f59e0b]/10 border-t border-[#f59e0b]/20 py-1.5">
+          <WifiOff size={11} className="text-[#f59e0b]" />
+          <span className="text-[11px] text-[#f59e0b] font-medium">Sem conexão — dados salvos localmente</span>
+        </div>
+      )}
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0a0a0a]/95 backdrop-blur-md border-t border-[#1f1f1f] flex items-stretch">
       {navItems.map(({ href, label, icon: Icon }) => {
         const active = pathname.startsWith(href);
@@ -56,5 +74,6 @@ export function BottomNav() {
         );
       })}
     </nav>
+    </>
   );
 }
