@@ -25,7 +25,7 @@ function PnlBadge({ current, deposited }: { current: number; deposited: number }
       </p>
       <p
         className="text-[10px]"
-        style={{ color: pos ? "#16a34a" : "#dc2626" }}
+        style={{ color: pos ? "#22c55e" : "#ef4444" }}
       >
         {pos ? "+" : ""}
         {pct.toFixed(2)}%

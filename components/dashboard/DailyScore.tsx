@@ -177,7 +177,7 @@ export function DailyScore() {
           style={{ color: scoreColor }}
         >
           {breakdown.total}
-          <span className="text-[#4a4a4a] font-normal">/100</span>
+          <span className="text-[#6b7280] font-normal">/100</span>
         </span>
       </div>
     </div>

@@ -320,9 +320,9 @@ export function TradeHistory() {
                 >
                   {trade.type === "buy" ? "Compra" : "Venda"}
                 </span>
-                <span className="text-xs text-[#4a4a4a]">{trade.date}</span>
+                <span className="text-xs text-[#6b7280]">{trade.date}</span>
               </div>
-              <p className="text-xs text-[#4a4a4a]">
+              <p className="text-xs text-[#6b7280]">
                 {trade.quantity} ×{" "}
                 {trade.priceUSD < 1
                   ? `$${trade.priceUSD.toFixed(6)}`
@@ -330,7 +330,7 @@ export function TradeHistory() {
                       minimumFractionDigits: 2,
                     })}`}{" "}
                 ={" "}
-                <span className="text-[#9ca3af] font-medium">
+                <span className="text-white font-medium">
                   $
                   {trade.totalUSD.toLocaleString("en-US", {
                     minimumFractionDigits: 2,
@@ -339,7 +339,7 @@ export function TradeHistory() {
                 </span>
               </p>
               {trade.note && (
-                <p className="text-[11px] text-[#3a3a3a]">{trade.note}</p>
+                <p className="text-[11px] text-[#6b7280]">{trade.note}</p>
               )}
             </div>
 
