@@ -55,8 +55,11 @@ export function MigrateButton() {
           pools:        d.pools,
         },
         settings: {
+          displayName:  s.displayName,
+          avatarColor:  s.avatarColor,
           walletAddress: s.walletAddress,
           height: s.height,
+          theme:  s.theme,
         },
       });
 

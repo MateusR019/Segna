@@ -2,9 +2,13 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { TrendingUp, CheckSquare, Coins, StickyNote, LayoutDashboard, HelpCircle, LogOut, ClipboardList, CalendarDays, Scale, PiggyBank } from "lucide-react";
+import {
+  TrendingUp, CheckSquare, Coins, StickyNote, LayoutDashboard,
+  HelpCircle, LogOut, ClipboardList, CalendarDays, Scale, PiggyBank, Settings,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
+import { useSettingsStore } from "@/store/settingsStore";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard",  icon: LayoutDashboard },
@@ -18,9 +22,25 @@ const navItems = [
   { href: "/investimentos", label: "Investimentos", icon: PiggyBank },
 ] as const;
 
+function ProfileAvatar({ name, color }: { name: string; color: string }) {
+  const initials = name.trim()
+    ? name.trim().split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("")
+    : "?";
+  return (
+    <div
+      className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-white text-[11px] flex-shrink-0 select-none"
+      style={{ background: color }}
+    >
+      {initials}
+    </div>
+  );
+}
+
 export function AppSidebar() {
   const pathname = usePathname();
   const router   = useRouter();
+  const displayName = useSettingsStore((s) => s.displayName);
+  const avatarColor = useSettingsStore((s) => s.avatarColor);
 
   async function handleSignOut() {
     await supabase.auth.signOut();
@@ -52,7 +72,7 @@ export function AppSidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-2 space-y-0.5">
+      <nav className="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto">
         {navItems.map(({ href, label, icon: Icon }) => {
           const active = pathname.startsWith(href);
           return (
@@ -85,6 +105,24 @@ export function AppSidebar() {
 
       {/* Footer */}
       <div className="px-3 py-3 border-t border-[#1f1f1f] space-y-1">
+        {/* Perfil / Configurações */}
+        <Link
+          href="/configuracoes"
+          className={cn(
+            "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-150 btn-press",
+            pathname.startsWith("/configuracoes")
+              ? "bg-[#1a1a1a] text-white font-medium"
+              : "text-[#6b7280] hover:text-white hover:bg-[#161616]"
+          )}
+        >
+          <ProfileAvatar name={displayName} color={avatarColor} />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm leading-none truncate">{displayName || "Perfil"}</p>
+            <p className="text-[10px] text-[#4a4a4a] mt-0.5">Configurações</p>
+          </div>
+          <Settings size={12} className="text-[#3a3a3a] flex-shrink-0" />
+        </Link>
+
         <Link
           href="/ajuda"
           className={cn(
@@ -94,9 +132,6 @@ export function AppSidebar() {
               : "text-[#6b7280] hover:text-white hover:bg-[#161616]"
           )}
         >
-          {pathname.startsWith("/ajuda") && (
-            <span className="nav-pill absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-full bg-[#6366f1]" />
-          )}
           <HelpCircle
             size={15}
             className={cn(
@@ -106,6 +141,7 @@ export function AppSidebar() {
           />
           Como funciona?
         </Link>
+
         <button
           onClick={handleSignOut}
           className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-150 text-[#6b7280] hover:text-[#ef4444] hover:bg-[#161616] cursor-pointer btn-press"
@@ -113,7 +149,7 @@ export function AppSidebar() {
           <LogOut size={15} className="flex-shrink-0" />
           Sair da conta
         </button>
-        <p className="text-[10px] text-[#3a3a3a] px-3">v1.0.0 · Mateus Segna</p>
+        <p className="text-[10px] text-[#3a3a3a] px-3">v1.0.0 · Segna</p>
       </div>
     </aside>
   );

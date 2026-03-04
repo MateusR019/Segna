@@ -7,7 +7,7 @@ import { useNotasStore } from "@/store/notasStore";
 import {
   Search, TrendingUp, CheckSquare, StickyNote, Coins,
   LayoutDashboard, HelpCircle, ArrowRight, ClipboardList,
-  Scale, PiggyBank, CalendarDays,
+  Scale, PiggyBank, CalendarDays, Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -28,8 +28,9 @@ const NAV_ITEMS = [
   { href: "/notas",        label: "Notas",           icon: <StickyNote size={14} /> },
   { href: "/corporal",     label: "Corporal",        icon: <Scale size={14} /> },
   { href: "/investimentos",label: "Investimentos",   icon: <PiggyBank size={14} /> },
-  { href: "/revisao",      label: "Revisão Semanal", icon: <CalendarDays size={14} /> },
-  { href: "/ajuda",        label: "Como funciona?",  icon: <HelpCircle size={14} /> },
+  { href: "/revisao",        label: "Revisão Semanal", icon: <CalendarDays size={14} /> },
+  { href: "/configuracoes", label: "Configurações",   icon: <Settings size={14} /> },
+  { href: "/ajuda",         label: "Como funciona?",  icon: <HelpCircle size={14} /> },
 ];
 
 export function CommandPalette() {

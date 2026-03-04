@@ -1,17 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const CHAIN_MAP: Record<string, string> = {
-  ethereum: "Ethereum",
-  "binance-smart-chain": "BSC",
-  polygon: "Polygon",
-  arbitrum: "Arbitrum",
-  optimism: "Optimism",
-  avalanche: "Avalanche",
-  base: "Base",
-  fantom: "Fantom",
-  gnosis: "Gnosis",
-};
-
 export interface DetectedPool {
   protocol: string;
   tokenA: string;
@@ -26,17 +14,63 @@ export interface DetectedPool {
 // Zapper public GraphQL API (sem API key necessária)
 const ZAPPER_GRAPHQL = "https://public.zapper.xyz/graphql";
 
+// Query corrigida usando portfolioV2 + appBalances (schema atual do Zapper)
 const PORTFOLIO_QUERY = `
-  query Portfolio($addresses: [Address!]!) {
-    portfolio(addresses: $addresses) {
-      appTokenPositions {
-        appName
-        network
-        balanceUSD
-        tokens {
-          symbol
-          balance
-          price
+  query PortfolioV2($addresses: [Address!]!) {
+    portfolioV2(addresses: $addresses) {
+      appBalances {
+        totalBalanceUSD
+        byApp(first: 30) {
+          edges {
+            node {
+              app {
+                displayName
+                slug
+              }
+              network {
+                name
+                chainId
+              }
+              balanceUSD
+              positionBalances(first: 20) {
+                edges {
+                  node {
+                    ... on ContractPositionBalance {
+                      balanceUSD
+                      tokens {
+                        metaType
+                        token {
+                          ... on BaseTokenPositionBalance {
+                            symbol
+                            balance
+                            balanceUSD
+                            price
+                          }
+                        }
+                      }
+                    }
+                    ... on AppTokenPositionBalance {
+                      balanceUSD
+                      symbol
+                      price
+                      balance
+                      tokens {
+                        metaType
+                        token {
+                          ... on BaseTokenPositionBalance {
+                            symbol
+                            balance
+                            balanceUSD
+                            price
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -91,37 +125,70 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const positions: Record<string, unknown>[] =
-      json?.data?.portfolio?.appTokenPositions ?? [];
+    const appEdges: Record<string, unknown>[] =
+      json?.data?.portfolioV2?.appBalances?.byApp?.edges ?? [];
 
     const pools: DetectedPool[] = [];
 
-    for (const pos of positions) {
-      const balanceUSD = Number(pos.balanceUSD ?? 0);
-      if (balanceUSD <= 0) continue;
+    for (const edge of appEdges) {
+      const node = edge.node as Record<string, unknown>;
+      const app = node.app as Record<string, unknown>;
+      const network = node.network as Record<string, unknown>;
+      const appBalanceUSD = Number(node.balanceUSD ?? 0);
+      if (appBalanceUSD <= 0) continue;
 
-      const tokens = (pos.tokens as Record<string, unknown>[]) ?? [];
-      if (tokens.length < 2) continue;
+      const appName = String(app?.displayName ?? app?.slug ?? "Unknown");
+      const networkName = String(network?.name ?? "Unknown");
+      const chainId = String(network?.chainId ?? "");
 
-      const tokenA = String(tokens[0]?.symbol ?? "?").toUpperCase();
-      const tokenB = String(tokens[1]?.symbol ?? "?").toUpperCase();
-      const chainKey = String(pos.network ?? "").toLowerCase();
-      const network = CHAIN_MAP[chainKey] ?? String(pos.network ?? "Unknown");
+      const posEdges = (node.positionBalances as Record<string, unknown>)
+        ?.edges as Record<string, unknown>[] ?? [];
 
-      pools.push({
-        protocol: String(pos.appName ?? "Unknown"),
-        tokenA,
-        tokenB,
-        network,
-        chain: chainKey,
-        currentValueUSD: balanceUSD,
-        depositedUSD: balanceUSD,
-        rawTokens: tokens.map((t) => ({
-          symbol: String(t.symbol ?? "").toUpperCase(),
-          amount: Number(t.balance ?? 0),
-          priceUSD: Number(t.price ?? 0),
-        })),
-      });
+      for (const posEdge of posEdges) {
+        const pos = posEdge.node as Record<string, unknown>;
+        const posBalance = Number(pos?.balanceUSD ?? 0);
+        if (posBalance <= 0) continue;
+
+        // Extrai tokens da posição (suporta ContractPositionBalance e AppTokenPositionBalance)
+        const tokenEntries = (pos.tokens as Record<string, unknown>[]) ?? [];
+
+        const rawTokens: { symbol: string; amount: number; priceUSD: number }[] = [];
+        for (const entry of tokenEntries) {
+          const t = (entry.token ?? entry) as Record<string, unknown>;
+          const sym = String(t?.symbol ?? "?").toUpperCase();
+          const balance = Number(t?.balance ?? 0);
+          const price = Number(t?.price ?? 0);
+          rawTokens.push({ symbol: sym, amount: balance, priceUSD: price });
+        }
+
+        const tokenA = rawTokens[0]?.symbol ?? "?";
+        const tokenB = rawTokens[1]?.symbol ?? tokenA;
+
+        pools.push({
+          protocol: appName,
+          tokenA,
+          tokenB,
+          network: networkName,
+          chain: chainId,
+          currentValueUSD: posBalance,
+          depositedUSD: posBalance,
+          rawTokens,
+        });
+      }
+
+      // Fallback: se não há posições individuais, usa o saldo agregado do app
+      if (posEdges.length === 0 && appBalanceUSD > 0) {
+        pools.push({
+          protocol: appName,
+          tokenA: "?",
+          tokenB: "?",
+          network: networkName,
+          chain: chainId,
+          currentValueUSD: appBalanceUSD,
+          depositedUSD: appBalanceUSD,
+          rawTokens: [],
+        });
+      }
     }
 
     return NextResponse.json({ pools, total: pools.length });

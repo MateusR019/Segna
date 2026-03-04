@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   TrendingUp, CheckSquare, Coins, LayoutDashboard, ClipboardList,
-  WifiOff, MoreHorizontal, StickyNote, Scale, CalendarDays, PiggyBank, X,
+  WifiOff, MoreHorizontal, StickyNote, Scale, CalendarDays, PiggyBank, X, Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -18,11 +18,12 @@ const mainItems = [
 
 // Itens extras que ficam no drawer "Mais"
 const extraItems = [
-  { href: "/defi",          label: "DeFi",          icon: Coins },
-  { href: "/notas",         label: "Notas",         icon: StickyNote },
-  { href: "/corporal",      label: "Corporal",      icon: Scale },
-  { href: "/investimentos", label: "Investimentos", icon: PiggyBank },
-  { href: "/revisao",       label: "Revisão",       icon: CalendarDays },
+  { href: "/defi",            label: "DeFi",           icon: Coins },
+  { href: "/notas",           label: "Notas",          icon: StickyNote },
+  { href: "/corporal",        label: "Corporal",       icon: Scale },
+  { href: "/investimentos",   label: "Investimentos",  icon: PiggyBank },
+  { href: "/revisao",         label: "Revisão",        icon: CalendarDays },
+  { href: "/configuracoes",   label: "Config.",        icon: Settings },
 ];
 
 export function BottomNav() {

@@ -16,7 +16,6 @@ import {
 import { WeatherWidget } from "@/components/dashboard/WeatherWidget";
 import { BudgetAlertBanner } from "@/components/BudgetAlertBanner";
 import { ExportDataButton } from "@/components/ExportDataButton";
-import { QuickAddFAB } from "@/components/dashboard/QuickAddFAB";
 import { MoodWidget } from "@/components/dashboard/MoodWidget";
 import { DailyScore } from "@/components/dashboard/DailyScore";
 import InsightsPanel from "@/components/dashboard/InsightsPanel";
@@ -575,8 +574,6 @@ export default function DashboardPage() {
         <InsightsPanel />
       </div>
 
-      {/* Quick Add FAB */}
-      <QuickAddFAB />
     </div>
   );
 }
