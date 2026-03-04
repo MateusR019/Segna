@@ -20,6 +20,7 @@ function AddMetricForm({ onClose }: { onClose: () => void }) {
   const [bodyFat, setBodyFat] = useState("");
   const [muscleMass, setMuscleMass] = useState("");
   const [note, setNote] = useState("");
+  const [showExtras, setShowExtras] = useState(false);
 
   const hasValue = weight || waist || bodyFat || muscleMass;
 
@@ -43,53 +44,61 @@ function AddMetricForm({ onClose }: { onClose: () => void }) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4 space-y-4"
+      className="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4 space-y-3"
     >
       <p className="text-sm font-medium text-white">Nova medição</p>
 
+      {/* Campos principais — Data + Peso */}
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <label className="text-[10px] font-medium text-[#4a4a4a] uppercase tracking-wide">
-            Data
-          </label>
+          <label className="text-[10px] font-medium text-[#4a4a4a] uppercase tracking-wide">Data</label>
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputClass} />
         </div>
-
         <div className="space-y-1.5">
-          <label className="text-[10px] font-medium text-[#4a4a4a] uppercase tracking-wide">
-            Peso (kg)
-          </label>
-          <input type="number" step="0.1" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="ex: 75.5" className={inputClass} />
-        </div>
-
-        <div className="space-y-1.5">
-          <label className="text-[10px] font-medium text-[#4a4a4a] uppercase tracking-wide">
-            Cintura (cm)
-          </label>
-          <input type="number" step="0.1" value={waist} onChange={(e) => setWaist(e.target.value)} placeholder="ex: 82" className={inputClass} />
-        </div>
-
-        <div className="space-y-1.5">
-          <label className="text-[10px] font-medium text-[#4a4a4a] uppercase tracking-wide">
-            Gordura Corporal (%)
-          </label>
-          <input type="number" step="0.1" value={bodyFat} onChange={(e) => setBodyFat(e.target.value)} placeholder="ex: 18.5" className={inputClass} />
-        </div>
-
-        <div className="space-y-1.5">
-          <label className="text-[10px] font-medium text-[#4a4a4a] uppercase tracking-wide">
-            Massa Muscular (%)
-          </label>
-          <input type="number" step="0.1" value={muscleMass} onChange={(e) => setMuscleMass(e.target.value)} placeholder="ex: 42" className={inputClass} />
-        </div>
-
-        <div className="space-y-1.5 col-span-2">
-          <label className="text-[10px] font-medium text-[#4a4a4a] uppercase tracking-wide">
-            Nota (opcional)
-          </label>
-          <input type="text" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Observações" className={inputClass} />
+          <label className="text-[10px] font-medium text-[#4a4a4a] uppercase tracking-wide">Peso (kg)</label>
+          <input
+            type="number"
+            step="0.1"
+            value={weight}
+            onChange={(e) => setWeight(e.target.value)}
+            placeholder="ex: 75.5"
+            className={inputClass}
+            autoFocus
+          />
         </div>
       </div>
+
+      {/* Toggle campos extras */}
+      <button
+        type="button"
+        onClick={() => setShowExtras((v) => !v)}
+        className="flex items-center gap-1.5 text-[11px] text-[#4a4a4a] hover:text-[#6b7280] transition-colors cursor-pointer"
+      >
+        <span className={`transition-transform duration-200 ${showExtras ? "rotate-90" : ""}`}>▶</span>
+        {showExtras ? "Ocultar" : "Adicionar"} cintura, gordura e músculo
+      </button>
+
+      {/* Campos extras */}
+      {showExtras && (
+        <div className="grid grid-cols-2 gap-3 pt-1">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-medium text-[#4a4a4a] uppercase tracking-wide">Cintura (cm)</label>
+            <input type="number" step="0.1" value={waist} onChange={(e) => setWaist(e.target.value)} placeholder="ex: 82" className={inputClass} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-medium text-[#4a4a4a] uppercase tracking-wide">Gordura (%)</label>
+            <input type="number" step="0.1" value={bodyFat} onChange={(e) => setBodyFat(e.target.value)} placeholder="ex: 18.5" className={inputClass} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-medium text-[#4a4a4a] uppercase tracking-wide">Músculo (%)</label>
+            <input type="number" step="0.1" value={muscleMass} onChange={(e) => setMuscleMass(e.target.value)} placeholder="ex: 42" className={inputClass} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-medium text-[#4a4a4a] uppercase tracking-wide">Nota</label>
+            <input type="text" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Opcional" className={inputClass} />
+          </div>
+        </div>
+      )}
 
       <div className="flex items-center justify-end gap-2 pt-1 border-t border-[#1f1f1f]">
         <button type="button" onClick={onClose} className="px-3 py-1.5 text-xs text-[#6b7280] hover:text-[#9ca3af] transition-colors cursor-pointer">
@@ -342,37 +351,41 @@ export default function CorporalPage() {
             </span>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {latest.weight !== undefined && (
-              <div className="bg-[#141414] rounded-xl p-3 text-center">
-                <p className="text-xl font-bold text-white">{latest.weight}</p>
-                <p className="text-[10px] text-[#4a4a4a] mt-0.5">kg peso</p>
+          {/* Peso — destaque principal */}
+          {latest.weight !== undefined && (
+            <div className="flex items-end gap-3 mb-3">
+              <p className="text-4xl font-bold text-white leading-none">{latest.weight}</p>
+              <div className="pb-1">
+                <p className="text-sm text-[#6b7280]">kg</p>
                 {weightDiff !== null && (
-                  <p className="text-[10px] font-semibold mt-1.5" style={{ color: weightDiff <= 0 ? "#22c55e" : "#ef4444" }}>
-                    {weightDiff > 0 ? "+" : ""}{weightDiff.toFixed(1)} kg
+                  <p className="text-xs font-semibold" style={{ color: weightDiff <= 0 ? "#22c55e" : "#ef4444" }}>
+                    {weightDiff > 0 ? "+" : ""}{weightDiff.toFixed(1)} kg vs anterior
                   </p>
                 )}
               </div>
-            )}
-            {latest.waist !== undefined && (
-              <div className="bg-[#141414] rounded-xl p-3 text-center">
-                <p className="text-xl font-bold text-white">{latest.waist}</p>
-                <p className="text-[10px] text-[#4a4a4a] mt-0.5">cm cintura</p>
-              </div>
-            )}
-            {latest.bodyFat !== undefined && (
-              <div className="bg-[#141414] rounded-xl p-3 text-center">
-                <p className="text-xl font-bold text-white">{latest.bodyFat}%</p>
-                <p className="text-[10px] text-[#4a4a4a] mt-0.5">gordura corporal</p>
-              </div>
-            )}
-            {latest.muscleMass !== undefined && (
-              <div className="bg-[#141414] rounded-xl p-3 text-center">
-                <p className="text-xl font-bold text-white">{latest.muscleMass}%</p>
-                <p className="text-[10px] text-[#4a4a4a] mt-0.5">massa muscular</p>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
+
+          {/* Extras — só aparecem se foram preenchidos */}
+          {(latest.waist !== undefined || latest.bodyFat !== undefined || latest.muscleMass !== undefined) && (
+            <div className="flex flex-wrap gap-2 mb-3">
+              {latest.waist !== undefined && (
+                <span className="text-xs bg-[#141414] border border-[#2a2a2a] rounded-lg px-3 py-1.5 text-[#9ca3af]">
+                  <span className="font-medium text-white">{latest.waist} cm</span> cintura
+                </span>
+              )}
+              {latest.bodyFat !== undefined && (
+                <span className="text-xs bg-[#141414] border border-[#2a2a2a] rounded-lg px-3 py-1.5 text-[#9ca3af]">
+                  <span className="font-medium text-white">{latest.bodyFat}%</span> gordura
+                </span>
+              )}
+              {latest.muscleMass !== undefined && (
+                <span className="text-xs bg-[#141414] border border-[#2a2a2a] rounded-lg px-3 py-1.5 text-[#9ca3af]">
+                  <span className="font-medium text-white">{latest.muscleMass}%</span> músculo
+                </span>
+              )}
+            </div>
+          )}
 
           {/* IMC */}
           <div className="mt-3 pt-3 border-t border-[#2a2a2a] flex items-center gap-4 flex-wrap">
