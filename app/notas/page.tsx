@@ -243,7 +243,7 @@ export default function NotasPage() {
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 max-w-2xl">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -260,7 +260,7 @@ export default function NotasPage() {
 
       {/* Input box */}
       <div
-        className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4 space-y-3 max-w-2xl"
+        className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4 space-y-3"
         onDragOver={(e) => e.preventDefault()}
         onDrop={handleDrop}
       >
@@ -332,7 +332,7 @@ export default function NotasPage() {
 
       {/* Filter bar + search */}
       {hydrated && (
-        <div className="space-y-2.5 max-w-2xl">
+        <div className="space-y-2.5">
           <div className="relative">
             <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#4a4a4a]" />
             <Input
