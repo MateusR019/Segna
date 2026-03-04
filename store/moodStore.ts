@@ -38,7 +38,7 @@ export const useMoodStore = create<MoodState>()(
           if (existing) {
             return {
               entries: state.entries.map((e) =>
-                e.date === date ? { ...e, mood, note, createdAt: new Date().toISOString() } : e
+                e.date === date ? { ...e, mood, note } : e
               ),
             };
           }

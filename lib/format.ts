@@ -1,3 +1,17 @@
+/**
+ * Converte string com vírgula ou ponto decimal para número.
+ * Aceita tanto "1.234,56" (pt-BR) quanto "1234.56" (en-US).
+ */
+export function parseNumber(value: string): number {
+  // Se contiver vírgula após ponto (ex: "1.234,56") → formato pt-BR
+  if (/\.\d{3},/.test(value) || (value.includes(",") && !value.includes("."))) {
+    // Remove pontos de milhar e troca vírgula decimal por ponto
+    return parseFloat(value.replace(/\./g, "").replace(",", ".")) || 0;
+  }
+  // Remove vírgulas de milhar (ex: "1,234.56") ou simplesmente troca vírgula por ponto
+  return parseFloat(value.replace(",", ".")) || 0;
+}
+
 export function formatBRL(value: number): string {
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",

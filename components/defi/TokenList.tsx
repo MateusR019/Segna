@@ -14,10 +14,11 @@ export function TokenList() {
   const { tokens, removeToken, updatePrice, updatePriceUSD, updateQuantity, setAlertPrice, exchangeRate } = useDefiStore();
   const { success } = useToast();
 
+  const hasRate = !!exchangeRate?.usdToBRL;
   const total = tokens.reduce((acc, t) => {
     if (t.priceInUSD) return acc + t.quantity * t.priceInUSD;
-    if (exchangeRate?.usdToBRL) return acc + (t.quantity * t.priceInBRL) / exchangeRate.usdToBRL;
-    return acc;
+    if (hasRate) return acc + (t.quantity * t.priceInBRL) / exchangeRate!.usdToBRL;
+    return acc; // sem taxa de câmbio: exclui do total mas não silencia — indicado abaixo
   }, 0);
 
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -81,10 +82,10 @@ export function TokenList() {
         {tokens.map((token, idx) => {
           const valueUSD = token.priceInUSD
             ? token.quantity * token.priceInUSD
-            : exchangeRate?.usdToBRL
-            ? (token.quantity * token.priceInBRL) / exchangeRate.usdToBRL
-            : 0;
-          const pct = total > 0 ? ((valueUSD / total) * 100).toFixed(1) : "0";
+            : hasRate
+            ? (token.quantity * token.priceInBRL) / exchangeRate!.usdToBRL
+            : null; // null = preço indisponível
+          const pct = valueUSD !== null && total > 0 ? ((valueUSD / total) * 100).toFixed(1) : "—";
           const editing = editingId === token.id;
           const variation = calcVariation(token);
           const hasAlert = variation !== null;
@@ -150,7 +151,9 @@ export function TokenList() {
                   </div>
                 ) : (
                   <div className="text-right mx-2">
-                    <p className="text-sm text-white font-medium">{formatUSD(valueUSD)}</p>
+                    <p className="text-sm text-white font-medium">
+                    {valueUSD !== null ? formatUSD(valueUSD) : <span className="text-[#4a4a4a] text-xs">câmbio indisponível</span>}
+                  </p>
                     {token.priceInUSD && (
                       <p className="text-xs text-[#9ca3af]">{formatUSD(token.priceInUSD)} / token</p>
                     )}

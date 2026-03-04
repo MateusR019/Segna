@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { Investment } from "@/types";
 import { loadStoreData, saveStoreData } from "@/lib/db";
+import { useFinancasStore } from "@/store/financasStore";
 
 interface InvestimentosState {
   investments: Investment[];
@@ -39,6 +40,11 @@ export const useInvestimentosStore = create<InvestimentosState>()(
         set((state) => ({
           investments: state.investments.filter((i) => i.id !== id),
         }));
+        // Limpa referências órfãs nas transações de finanças
+        const financas = useFinancasStore.getState();
+        financas.transactions
+          .filter((t) => t.investmentId === id)
+          .forEach((t) => financas.editTransaction(t.id, { investmentId: undefined }));
         scheduleSync();
       },
 

@@ -42,7 +42,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     );
 
-    return () => subscription.unsubscribe();
+    // Revalida dados ao voltar à aba (ex: usuário alterna entre abas)
+    async function onVisibilityChange() {
+      if (document.visibilityState === "visible") {
+        const user = await getAuthUser();
+        if (user) void loadAllStores();
+      }
+    }
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    return () => {
+      subscription.unsubscribe();
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
   }, []);
 
   return <>{children}</>;
