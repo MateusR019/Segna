@@ -1,19 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const CHAIN_MAP: Record<string, string> = {
-  eth: "Ethereum",
-  bsc: "BSC",
-  matic: "Polygon",
-  arb: "Arbitrum",
-  op: "Optimism",
-  avax: "Avalanche",
-  sol: "Solana",
+  ethereum: "Ethereum",
+  "binance-smart-chain": "BSC",
+  polygon: "Polygon",
+  arbitrum: "Arbitrum",
+  optimism: "Optimism",
+  avalanche: "Avalanche",
   base: "Base",
-  ftm: "Fantom",
-  xdai: "Gnosis",
-  cro: "Cronos",
-  klay: "Klaytn",
-  hmy: "Harmony",
+  fantom: "Fantom",
+  gnosis: "Gnosis",
 };
 
 export interface DetectedPool {
@@ -27,85 +23,112 @@ export interface DetectedPool {
   rawTokens: { symbol: string; amount: number; priceUSD: number }[];
 }
 
+// Zapper public GraphQL API (sem API key necessária)
+const ZAPPER_GRAPHQL = "https://public.zapper.xyz/graphql";
+
+const PORTFOLIO_QUERY = `
+  query Portfolio($addresses: [Address!]!) {
+    portfolio(addresses: $addresses) {
+      appTokenPositions {
+        appName
+        network
+        balanceUSD
+        tokens {
+          symbol
+          balance
+          price
+        }
+      }
+    }
+  }
+`;
+
 export async function GET(req: NextRequest) {
   const address = req.nextUrl.searchParams.get("address");
-  const apiKey = req.nextUrl.searchParams.get("key");
 
-  if (!address || !apiKey) {
+  if (!address) {
     return NextResponse.json(
-      { error: "Endereço de wallet e API key são obrigatórios" },
+      { error: "Endereço de wallet é obrigatório" },
       { status: 400 }
     );
   }
 
-  let data: Record<string, unknown>[];
-  try {
-    const res = await fetch(
-      `https://pro-openapi.debank.com/v1/user/complex_protocol_list?id=${encodeURIComponent(address)}`,
-      {
-        headers: {
-          AccessKey: apiKey,
-          accept: "application/json",
-        },
-      }
+  // Validação básica de endereço EVM
+  if (!/^0x[0-9a-fA-F]{40}$/.test(address)) {
+    return NextResponse.json(
+      { error: "Endereço inválido. Use um endereço EVM (0x...)" },
+      { status: 400 }
     );
+  }
+
+  try {
+    const res = await fetch(ZAPPER_GRAPHQL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        query: PORTFOLIO_QUERY,
+        variables: { addresses: [address] },
+      }),
+    });
 
     if (!res.ok) {
       const text = await res.text();
       return NextResponse.json(
-        { error: `DeBank retornou ${res.status}: ${text}` },
+        { error: `API retornou ${res.status}: ${text.slice(0, 200)}` },
         { status: res.status }
       );
     }
 
-    data = await res.json();
-  } catch (err) {
-    return NextResponse.json(
-      { error: `Erro de conexão: ${String(err)}` },
-      { status: 502 }
-    );
-  }
+    const json = await res.json();
 
-  const pools: DetectedPool[] = [];
+    if (json.errors?.length) {
+      return NextResponse.json(
+        { error: `Erro da API: ${json.errors[0]?.message ?? "Desconhecido"}` },
+        { status: 422 }
+      );
+    }
 
-  for (const protocol of data) {
-    const network =
-      CHAIN_MAP[protocol.chain as string] ?? String(protocol.chain).toUpperCase();
-    const protocolName = String(protocol.name ?? protocol.id ?? "Unknown");
+    const positions: Record<string, unknown>[] =
+      json?.data?.portfolio?.appTokenPositions ?? [];
 
-    for (const item of (protocol.portfolio_item_list as Record<string, unknown>[]) ?? []) {
-      // Only LP positions
-      if (item.name !== "Liquidity Pool") continue;
+    const pools: DetectedPool[] = [];
 
-      const detail = item.detail as Record<string, unknown> | undefined;
-      const tokens = (detail?.supply_token_list as Record<string, unknown>[]) ?? [];
-      if (tokens.length < 1) continue;
+    for (const pos of positions) {
+      const balanceUSD = Number(pos.balanceUSD ?? 0);
+      if (balanceUSD <= 0) continue;
 
-      const stats = item.stats as Record<string, number> | undefined;
-      const value = stats?.net_usd_value ?? 0;
-      if (value <= 0) continue;
+      const tokens = (pos.tokens as Record<string, unknown>[]) ?? [];
+      if (tokens.length < 2) continue;
 
       const tokenA = String(tokens[0]?.symbol ?? "?").toUpperCase();
-      const tokenB = tokens[1]
-        ? String(tokens[1].symbol ?? "?").toUpperCase()
-        : tokenA;
+      const tokenB = String(tokens[1]?.symbol ?? "?").toUpperCase();
+      const chainKey = String(pos.network ?? "").toLowerCase();
+      const network = CHAIN_MAP[chainKey] ?? String(pos.network ?? "Unknown");
 
       pools.push({
-        protocol: protocolName,
+        protocol: String(pos.appName ?? "Unknown"),
         tokenA,
         tokenB,
         network,
-        chain: String(protocol.chain),
-        currentValueUSD: value,
-        depositedUSD: value,
+        chain: chainKey,
+        currentValueUSD: balanceUSD,
+        depositedUSD: balanceUSD,
         rawTokens: tokens.map((t) => ({
           symbol: String(t.symbol ?? "").toUpperCase(),
-          amount: Number(t.amount ?? 0),
+          amount: Number(t.balance ?? 0),
           priceUSD: Number(t.price ?? 0),
         })),
       });
     }
-  }
 
-  return NextResponse.json({ pools, total: pools.length });
+    return NextResponse.json({ pools, total: pools.length });
+  } catch (err) {
+    return NextResponse.json(
+      { error: `Erro de conexão com a API: ${String(err)}` },
+      { status: 502 }
+    );
+  }
 }

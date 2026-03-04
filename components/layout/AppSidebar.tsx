@@ -2,7 +2,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { TrendingUp, CheckSquare, Coins, StickyNote, LayoutDashboard, HelpCircle, LogOut, ClipboardList, CalendarDays, Scale } from "lucide-react";
+import { TrendingUp, CheckSquare, Coins, StickyNote, LayoutDashboard, HelpCircle, LogOut, ClipboardList, CalendarDays, Scale, PiggyBank } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 
@@ -14,7 +14,8 @@ const navItems = [
   { href: "/defi",      label: "DeFi",       icon: Coins },
   { href: "/notas",     label: "Notas",      icon: StickyNote },
   { href: "/revisao",   label: "Revisão",    icon: CalendarDays },
-  { href: "/corporal",  label: "Corporal",   icon: Scale },
+  { href: "/corporal",      label: "Corporal",     icon: Scale },
+  { href: "/investimentos", label: "Investimentos", icon: PiggyBank },
 ] as const;
 
 export function AppSidebar() {

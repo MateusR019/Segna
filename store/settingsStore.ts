@@ -4,9 +4,9 @@ import { loadStoreData, saveStoreData } from "@/lib/db";
 
 interface SettingsState {
   walletAddress: string;
-  debankApiKey: string;
+  height: number; // cm — para cálculo de IMC
   setWalletAddress: (address: string) => void;
-  setDebankApiKey: (key: string) => void;
+  setHeight: (h: number) => void;
   loadFromDB: () => Promise<void>;
 }
 
@@ -15,7 +15,7 @@ function scheduleSync() {
   if (_syncTimer) clearTimeout(_syncTimer);
   _syncTimer = setTimeout(() => {
     const s = useSettingsStore.getState();
-    saveStoreData("settings", { walletAddress: s.walletAddress, debankApiKey: s.debankApiKey });
+    saveStoreData("settings", { walletAddress: s.walletAddress, height: s.height });
   }, 1000);
 }
 
@@ -23,13 +23,16 @@ export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
       walletAddress: "",
-      debankApiKey: "",
+      height: 0,
       setWalletAddress: (address) => { set({ walletAddress: address.trim() }); scheduleSync(); },
-      setDebankApiKey: (key) => { set({ debankApiKey: key.trim() }); scheduleSync(); },
+      setHeight: (h) => { set({ height: h }); scheduleSync(); },
       loadFromDB: async () => {
         const data = await loadStoreData("settings");
         if (!data) return;
-        set({ walletAddress: (data.walletAddress as string) ?? "", debankApiKey: (data.debankApiKey as string) ?? "" });
+        set({
+          walletAddress: (data.walletAddress as string) ?? "",
+          height: (data.height as number) ?? 0,
+        });
       },
     }),
     { name: "segna-settings", storage: createJSONStorage(() => localStorage) }

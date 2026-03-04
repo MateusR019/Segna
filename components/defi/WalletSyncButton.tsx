@@ -12,7 +12,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Wallet, RefreshCw, AlertCircle, CheckCircle2, ChevronRight, ExternalLink } from "lucide-react";
+import { Wallet, RefreshCw, AlertCircle, CheckCircle2 } from "lucide-react";
 import { formatUSD } from "@/lib/format";
 import type { DetectedPool } from "@/app/api/wallet-sync/route";
 
@@ -39,18 +39,17 @@ function NetworkBadge({ network }: { network: string }) {
 }
 
 export function WalletSyncButton() {
-  const { walletAddress, debankApiKey, setWalletAddress, setDebankApiKey } = useSettingsStore();
+  const { walletAddress, setWalletAddress } = useSettingsStore();
   const addPool = useDefiStore((s) => s.addPool);
   const { success, error: toastError } = useToast();
 
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<View>(() =>
-    walletAddress && debankApiKey ? "ready" : "setup"
+    walletAddress ? "ready" : "setup"
   );
 
   // Setup form state
   const [inputAddress, setInputAddress] = useState(walletAddress);
-  const [inputKey, setInputKey] = useState(debankApiKey);
 
   // Sync results
   const [detected, setDetected] = useState<DetectedPool[]>([]);
@@ -60,9 +59,8 @@ export function WalletSyncButton() {
   function handleOpenChange(v: boolean) {
     setOpen(v);
     if (v) {
-      setView(walletAddress && debankApiKey ? "ready" : "setup");
+      setView(walletAddress ? "ready" : "setup");
       setInputAddress(walletAddress);
-      setInputKey(debankApiKey);
       setDetected([]);
       setSelected(new Set());
       setSyncError(null);
@@ -70,9 +68,8 @@ export function WalletSyncButton() {
   }
 
   function saveSetup() {
-    if (!inputAddress.trim() || !inputKey.trim()) return;
+    if (!inputAddress.trim()) return;
     setWalletAddress(inputAddress);
-    setDebankApiKey(inputKey);
     setView("ready");
   }
 
@@ -81,7 +78,7 @@ export function WalletSyncButton() {
     setSyncError(null);
     try {
       const res = await fetch(
-        `/api/wallet-sync?address=${encodeURIComponent(walletAddress)}&key=${encodeURIComponent(debankApiKey)}`
+        `/api/wallet-sync?address=${encodeURIComponent(walletAddress)}`
       );
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? `Erro ${res.status}`);
@@ -149,60 +146,28 @@ export function WalletSyncButton() {
         {view === "setup" && (
           <div className="space-y-4 mt-1">
             <p className="text-xs text-[#6b7280]">
-              Conecte sua wallet para importar pools automaticamente via{" "}
-              <a
-                href="https://cloud.debank.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[#a78bfa] hover:underline inline-flex items-center gap-0.5"
-              >
-                DeBank API <ExternalLink size={9} />
-              </a>
-              {" "}(grátis).
+              Conecte sua wallet EVM para importar pools de liquidez automaticamente.
+              Sem necessidade de API key — gratuito.
             </p>
 
             <div className="space-y-1">
-              <label className="text-xs text-[#6b7280]">Endereço da wallet</label>
+              <label className="text-xs text-[#6b7280]">Endereço da wallet (EVM)</label>
               <input
                 type="text"
                 value={inputAddress}
                 onChange={(e) => setInputAddress(e.target.value)}
-                placeholder="0x... ou endereço Solana"
+                placeholder="0x..."
                 className="w-full px-3 py-2 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg text-sm text-white placeholder-[#3a3a3a] outline-none focus:border-[#3a3a3a] font-mono text-xs"
               />
             </div>
 
-            <div className="space-y-1">
-              <label className="text-xs text-[#6b7280]">
-                DeBank API Key{" "}
-                <a
-                  href="https://cloud.debank.com/open-api"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[#a78bfa] hover:underline inline-flex items-center gap-0.5"
-                >
-                  obter grátis <ExternalLink size={9} />
-                </a>
-              </label>
-              <input
-                type="password"
-                value={inputKey}
-                onChange={(e) => setInputKey(e.target.value)}
-                placeholder="sua-api-key"
-                className="w-full px-3 py-2 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg text-sm text-white placeholder-[#3a3a3a] outline-none focus:border-[#3a3a3a] font-mono text-xs"
-              />
-            </div>
-
-            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-3 space-y-1.5 text-[11px] text-[#6b7280]">
-              <p className="font-medium text-[#9ca3af]">Como obter a API key gratuita:</p>
-              <p className="flex items-start gap-1.5"><ChevronRight size={10} className="mt-0.5 flex-shrink-0 text-[#a78bfa]" />Acesse cloud.debank.com</p>
-              <p className="flex items-start gap-1.5"><ChevronRight size={10} className="mt-0.5 flex-shrink-0 text-[#a78bfa]" />Crie conta → Open API → Create Key</p>
-              <p className="flex items-start gap-1.5"><ChevronRight size={10} className="mt-0.5 flex-shrink-0 text-[#a78bfa]" />Plano free: 100 req/dia (mais que suficiente)</p>
+            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-3 text-[11px] text-[#6b7280]">
+              Suporta Ethereum, Polygon, Arbitrum, Base, Optimism, BSC e outras chains EVM.
             </div>
 
             <Button
               onClick={saveSetup}
-              disabled={!inputAddress.trim() || !inputKey.trim()}
+              disabled={!inputAddress.trim()}
               className="w-full bg-[#6366f1] hover:bg-[#5558e8] text-white text-sm font-semibold disabled:opacity-30 cursor-pointer"
             >
               Salvar e continuar
@@ -226,7 +191,7 @@ export function WalletSyncButton() {
               <p className="text-xs text-white font-mono truncate">{walletAddress}</p>
               <div className="flex items-center gap-1.5">
                 <div className="w-1.5 h-1.5 rounded-full bg-[#22c55e]" />
-                <span className="text-[10px] text-[#22c55e]">API key configurada</span>
+                <span className="text-[10px] text-[#22c55e]">Wallet configurada</span>
               </div>
             </div>
 

@@ -56,7 +56,7 @@ export function MigrateButton() {
         },
         settings: {
           walletAddress: s.walletAddress,
-          debankApiKey:  s.debankApiKey,
+          height: s.height,
         },
       });
 

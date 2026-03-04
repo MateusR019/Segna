@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import { useFinancasStore } from "@/store/financasStore";
+import { useInvestimentosStore } from "@/store/investimentosStore";
 import { useToast } from "@/hooks/useToast";
 import { AnyCategory, ExpenseCategory, IncomeCategory, TransactionType } from "@/types";
 
@@ -42,8 +43,13 @@ const INCOME_CATEGORIES: { value: IncomeCategory; label: string }[] = [
   { value: "other_income", label: "Outra receita" },
 ];
 
-export function AddTransactionDialog() {
+interface Props {
+  trigger?: "fab" | "default";
+}
+
+export function AddTransactionDialog({ trigger = "default" }: Props) {
   const addTransaction = useFinancasStore((s) => s.addTransaction);
+  const investments = useInvestimentosStore((s) => s.investments);
   const { success, error: toastError } = useToast();
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<TransactionType>("expense");
@@ -52,13 +58,23 @@ export function AddTransactionDialog() {
   const [category, setCategory] = useState<AnyCategory>("other");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [recurring, setRecurring] = useState(false);
+  const [investmentId, setInvestmentId] = useState<string>("none");
 
   const categories = type === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
 
+  const showInvestmentField =
+    (type === "expense" && category === "investments") ||
+    (type === "income" && category === "investment_return");
+
   function handleTypeChange(t: TransactionType) {
     setType(t);
-    // Reset category to default for the new type
     setCategory(t === "income" ? "salary" : "other");
+    setInvestmentId("none");
+  }
+
+  function handleCategoryChange(v: AnyCategory) {
+    setCategory(v);
+    setInvestmentId("none");
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -68,11 +84,20 @@ export function AddTransactionDialog() {
       toastError("Informe um valor válido maior que zero.");
       return;
     }
-    addTransaction({ type, category, description, amount: parsedAmount, date, recurring });
+    addTransaction({
+      type,
+      category,
+      description,
+      amount: parsedAmount,
+      date,
+      recurring,
+      investmentId: investmentId !== "none" ? investmentId : undefined,
+    });
     setAmount("");
     setDesc("");
     setCategory("other");
     setRecurring(false);
+    setInvestmentId("none");
     setOpen(false);
     success(type === "income" ? "Receita adicionada!" : "Despesa adicionada!");
   }
@@ -80,13 +105,22 @@ export function AddTransactionDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button
-          size="sm"
-          className="bg-[#22c55e] hover:bg-[#16a34a] text-black font-medium cursor-pointer"
-        >
-          <Plus size={14} className="mr-1.5" />
-          Adicionar
-        </Button>
+        {trigger === "fab" ? (
+          <button
+            className="w-12 h-12 rounded-full bg-[#22c55e] hover:bg-[#16a34a] text-black flex items-center justify-center shadow-lg shadow-[#22c55e]/20 transition-colors cursor-pointer"
+            aria-label="Adicionar transação"
+          >
+            <Plus size={20} strokeWidth={2.5} />
+          </button>
+        ) : (
+          <Button
+            size="sm"
+            className="bg-[#22c55e] hover:bg-[#16a34a] text-black font-medium cursor-pointer"
+          >
+            <Plus size={14} className="mr-1.5" />
+            Adicionar
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="bg-[#1a1a1a] border-[#2a2a2a] text-white max-w-md">
         <DialogHeader>
@@ -140,7 +174,7 @@ export function AddTransactionDialog() {
             <Label>Categoria</Label>
             <Select
               value={category}
-              onValueChange={(v) => setCategory(v as AnyCategory)}
+              onValueChange={(v) => handleCategoryChange(v as AnyCategory)}
             >
               <SelectTrigger className="bg-[#0f0f0f] border-[#2a2a2a] w-full">
                 <SelectValue />
@@ -154,6 +188,29 @@ export function AddTransactionDialog() {
               </SelectContent>
             </Select>
           </div>
+
+          {/* Vínculo com investimento — só aparece para categorias de investimento */}
+          {showInvestmentField && investments.length > 0 && (
+            <div className="space-y-1.5">
+              <Label>
+                {type === "expense" ? "Em qual investimento?" : "De qual investimento?"}
+                <span className="text-[#6b7280] ml-1 font-normal">(opcional)</span>
+              </Label>
+              <Select value={investmentId} onValueChange={(v) => setInvestmentId(v)}>
+                <SelectTrigger className="bg-[#0f0f0f] border-[#2a2a2a] w-full">
+                  <SelectValue placeholder="Nenhum" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a]">
+                  <SelectItem value="none">Nenhum</SelectItem>
+                  {investments.map((inv) => (
+                    <SelectItem key={inv.id} value={inv.id}>
+                      {inv.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="space-y-1.5">
             <Label htmlFor="date">Data</Label>

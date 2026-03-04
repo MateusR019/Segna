@@ -31,6 +31,7 @@ export interface Transaction {
   date: string; // "YYYY-MM-DD"
   createdAt: string;
   recurring?: boolean;
+  investmentId?: string; // vincula a um investimento (aporte ou resgate)
 }
 
 export interface CategorySummary {
@@ -251,6 +252,28 @@ export interface BodyMetric {
   bodyFat?: number;      // %
   muscleMass?: number;   // %
   note?: string;
+  createdAt: string;
+}
+
+// ─── Investimentos / Reservas ────────────────────────────────────────────────
+
+export type InvestmentType =
+  | "renda-fixa"
+  | "acoes"
+  | "fundos"
+  | "cripto"
+  | "previdencia"
+  | "poupanca"
+  | "outro";
+
+export interface Investment {
+  id: string;
+  name: string;           // "Tesouro IPCA+ 2035", "Poupança"
+  type: InvestmentType;
+  currentValue: number;   // valor atual de mercado (atualizado manualmente)
+  yieldRate?: number;     // % ao ano estimado (para exibição)
+  note?: string;
+  color: string;
   createdAt: string;
 }
 

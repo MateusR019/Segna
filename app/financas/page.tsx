@@ -55,6 +55,11 @@ export default function FinancasPage() {
         </div>
       )}
 
+      {/* FAB — mobile only, acima da BottomNav */}
+      <div className="md:hidden fixed bottom-20 right-4 z-40">
+        <AddTransactionDialog trigger="fab" />
+      </div>
+
       <Tabs defaultValue="overview">
         <TabsList className="bg-[#1a1a1a] border border-[#2a2a2a] h-9">
           <TabsTrigger value="overview" className="text-xs cursor-pointer">
