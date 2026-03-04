@@ -1,0 +1,153 @@
+import type { AppLanguage } from "@/store/settingsStore";
+
+const translations = {
+  pt: {
+    // Nav
+    dashboard:    "Dashboard",
+    tasks:        "Tarefas",
+    habits:       "Hábitos",
+    finances:     "Finanças",
+    defi:         "DeFi",
+    notes:        "Notas",
+    review:       "Revisão",
+    corporal:     "Corporal",
+    investments:  "Investimentos",
+    settings:     "Configurações",
+    help:         "Como funciona?",
+    signOut:      "Sair da conta",
+
+    // Settings page
+    settingsTitle:       "Configurações",
+    settingsDesc:        "Perfil, aparência e dados",
+    sectionProfile:      "Perfil",
+    sectionAppearance:   "Aparência",
+    sectionBody:         "Métricas Corporais",
+    sectionWallet:       "DeFi / Wallet",
+    sectionData:         "Importar / Exportar",
+    sectionDanger:       "Zona de Perigo",
+
+    labelName:           "Nome de exibição",
+    hintName:            "Aparece no perfil e no sidebar",
+    labelAvatarColor:    "Cor do avatar",
+    labelTheme:          "Tema",
+    hintTheme:           "Claro ainda em desenvolvimento",
+    labelLanguage:       "Idioma",
+    labelHeight:         "Altura",
+    hintHeight:          "Usada para calcular o IMC",
+    labelWalletAddress:  "Endereço EVM",
+    hintWallet:          "Para sincronizar pools de liquidez",
+    labelResetSettings:  "Redefinir configurações",
+    hintResetSettings:   "Apaga nome, avatar, altura e wallet",
+
+    themeDark:    "Escuro",
+    themeLight:   "Claro",
+    themeAuto:    "Sistema",
+    langPT:       "Português",
+    langEN:       "English",
+
+    namePlaceholder:   "Seu nome",
+    walletPlaceholder: "0x...",
+    heightPlaceholder: "cm",
+    save:              "Salvar",
+    cancel:            "Cancelar",
+    reset:             "Redefinir",
+    confirm:           "Confirmar?",
+    yesReset:          "Sim, redefinir",
+    saved:             "Salvo!",
+    nameUpdated:       "Nome atualizado!",
+    heightSaved:       "Altura salva!",
+    walletSaved:       "Wallet atualizada!",
+    settingsReset:     "Configurações redefinidas.",
+
+    importCSV:         "Importar CSV",
+    exportCSV:         "Exportar CSV",
+    chooseFile:        "Clique para selecionar arquivo CSV",
+    importBtn:         "Importar",
+    exportBtn:         "Baixar CSV",
+    valid:             "válidos",
+    invalid:           "inválidos",
+    periodMonth:       "Este mês",
+    period3Months:     "3 meses",
+    periodYear:        "Este ano",
+    periodAll:         "Todos",
+  },
+
+  en: {
+    // Nav
+    dashboard:    "Dashboard",
+    tasks:        "Tasks",
+    habits:       "Habits",
+    finances:     "Finances",
+    defi:         "DeFi",
+    notes:        "Notes",
+    review:       "Review",
+    corporal:     "Body",
+    investments:  "Investments",
+    settings:     "Settings",
+    help:         "How it works?",
+    signOut:      "Sign out",
+
+    // Settings page
+    settingsTitle:       "Settings",
+    settingsDesc:        "Profile, appearance & data",
+    sectionProfile:      "Profile",
+    sectionAppearance:   "Appearance",
+    sectionBody:         "Body Metrics",
+    sectionWallet:       "DeFi / Wallet",
+    sectionData:         "Import / Export",
+    sectionDanger:       "Danger Zone",
+
+    labelName:           "Display name",
+    hintName:            "Shown in the profile and sidebar",
+    labelAvatarColor:    "Avatar color",
+    labelTheme:          "Theme",
+    hintTheme:           "Light mode still in development",
+    labelLanguage:       "Language",
+    labelHeight:         "Height",
+    hintHeight:          "Used to calculate BMI",
+    labelWalletAddress:  "EVM Address",
+    hintWallet:          "To sync liquidity pools",
+    labelResetSettings:  "Reset settings",
+    hintResetSettings:   "Clears name, avatar, height and wallet",
+
+    themeDark:    "Dark",
+    themeLight:   "Light",
+    themeAuto:    "System",
+    langPT:       "Português",
+    langEN:       "English",
+
+    namePlaceholder:   "Your name",
+    walletPlaceholder: "0x...",
+    heightPlaceholder: "cm",
+    save:              "Save",
+    cancel:            "Cancel",
+    reset:             "Reset",
+    confirm:           "Confirm?",
+    yesReset:          "Yes, reset",
+    saved:             "Saved!",
+    nameUpdated:       "Name updated!",
+    heightSaved:       "Height saved!",
+    walletSaved:       "Wallet updated!",
+    settingsReset:     "Settings reset.",
+
+    importCSV:         "Import CSV",
+    exportCSV:         "Export CSV",
+    chooseFile:        "Click to select CSV file",
+    importBtn:         "Import",
+    exportBtn:         "Download CSV",
+    valid:             "valid",
+    invalid:           "invalid",
+    periodMonth:       "This month",
+    period3Months:     "3 months",
+    periodYear:        "This year",
+    periodAll:         "All time",
+  },
+} as const;
+
+export type TranslationKey = keyof typeof translations.pt;
+
+export function useT(language: AppLanguage) {
+  return (key: TranslationKey): string => {
+    return (translations[language] as Record<string, string>)[key] ?? (translations.pt as Record<string, string>)[key] ?? key;
+  };
+}

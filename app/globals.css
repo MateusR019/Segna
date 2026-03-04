@@ -52,6 +52,49 @@
   --ring: #22c55e;
 }
 
+/* ─── Light theme ────────────────────────────────────── */
+.light {
+  --background: #f8f8f8;
+  --foreground: #111111;
+  --card: #ffffff;
+  --card-foreground: #111111;
+  --popover: #ffffff;
+  --popover-foreground: #111111;
+  --primary: #16a34a;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #111111;
+  --muted: #e5e7eb;
+  --muted-foreground: #6b7280;
+  --accent: #e5e7eb;
+  --accent-foreground: #111111;
+  --destructive: #dc2626;
+  --border: #e5e7eb;
+  --input: #e5e7eb;
+  --ring: #16a34a;
+}
+
+/* Overrides para hardcoded bg/text no modo claro */
+.light body {
+  background-color: #f8f8f8 !important;
+}
+.light [class*="bg-[#0f0f0f]"]  { background-color: #f8f8f8 !important; }
+.light [class*="bg-[#0a0a0a]"]  { background-color: #ffffff !important; }
+.light [class*="bg-[#111111]"]  { background-color: #ffffff !important; }
+.light [class*="bg-[#141414]"]  { background-color: #f9fafb !important; }
+.light [class*="bg-[#1a1a1a]"]  { background-color: #ffffff !important; }
+.light [class*="bg-[#1f1f1f]"]  { background-color: #f3f4f6 !important; }
+.light [class*="bg-[#2a2a2a]"]  { background-color: #e5e7eb !important; }
+.light [class*="border-[#1f1f1f]"] { border-color: #e5e7eb !important; }
+.light [class*="border-[#2a2a2a]"] { border-color: #d1d5db !important; }
+.light [class*="border-[#3a3a3a]"] { border-color: #9ca3af !important; }
+.light [class*="text-white"]    { color: #111111 !important; }
+.light [class*="text-[#f5f5f5]"] { color: #111111 !important; }
+.light [class*="text-[#9ca3af]"] { color: #4b5563 !important; }
+.light [class*="text-[#6b7280]"] { color: #374151 !important; }
+.light [class*="text-[#4a4a4a]"] { color: #6b7280 !important; }
+.light [class*="text-[#3a3a3a]"] { color: #9ca3af !important; }
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

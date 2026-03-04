@@ -3,17 +3,14 @@
 import { useState, useRef } from "react";
 import { useSettingsStore } from "@/store/settingsStore";
 import { useFinancasStore } from "@/store/financasStore";
-import { useHabitosStore } from "@/store/habitosStore";
-import { useNotasStore } from "@/store/notasStore";
-import { useDefiStore } from "@/store/defiStore";
-import { useCorporalStore } from "@/store/corporalStore";
 import { useToast } from "@/hooks/useToast";
+import { useT } from "@/lib/i18n";
 import {
   User, Palette, Wallet, Scale, Download, Upload,
-  Sun, Moon, Monitor, ChevronRight, Check, Trash2, X,
+  Sun, Moon, Monitor, Check, Trash2,
 } from "lucide-react";
 import { format, parseISO, isValid } from "date-fns";
-import { Transaction, TransactionType, AnyCategory } from "@/types";
+import type { TransactionType, AnyCategory } from "@/types";
 import { formatBRL } from "@/lib/format";
 
 // ─── Avatar ───────────────────────────────────────────────────────────────────
@@ -23,7 +20,7 @@ const AVATAR_COLORS = [
   "#06b6d4", "#a78bfa", "#fb923c", "#ec4899",
 ];
 
-function Avatar({ name, color, size = 40 }: { name: string; color: string; size?: number }) {
+function Avatar({ name, color, size = 48 }: { name: string; color: string; size?: number }) {
   const initials = name.trim()
     ? name.trim().split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("")
     : "?";
@@ -37,33 +34,35 @@ function Avatar({ name, color, size = 40 }: { name: string; color: string; size?
   );
 }
 
-// ─── Section wrapper ──────────────────────────────────────────────────────────
+// ─── Section ──────────────────────────────────────────────────────────────────
 
-function Section({ title, icon: Icon, children }: { title: string; icon: React.ElementType; children: React.ReactNode }) {
+function Section({ title, icon: Icon, children }: {
+  title: string; icon: React.ElementType; children: React.ReactNode;
+}) {
   return (
     <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl overflow-hidden">
       <div className="flex items-center gap-2 px-4 py-3 border-b border-[#2a2a2a]">
         <Icon size={14} className="text-[#6366f1]" />
         <span className="text-sm font-medium text-white">{title}</span>
       </div>
-      <div className="p-4 space-y-4">{children}</div>
+      <div className="p-4 space-y-5">{children}</div>
     </div>
   );
 }
 
-function Row({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-4 min-h-[36px]">
-      <div className="min-w-0">
-        <p className="text-sm text-white">{label}</p>
+    <div className="space-y-1.5">
+      <div>
+        <p className="text-sm text-white font-medium">{label}</p>
         {hint && <p className="text-[11px] text-[#4a4a4a] mt-0.5">{hint}</p>}
       </div>
-      <div className="flex-shrink-0">{children}</div>
+      {children}
     </div>
   );
 }
 
-// ─── CSV helpers (importação de finanças) ─────────────────────────────────────
+// ─── CSV helpers ──────────────────────────────────────────────────────────────
 
 const CATEGORY_MAP: Record<string, AnyCategory> = {
   moradia: "housing", housing: "housing", habitação: "housing", aluguel: "housing",
@@ -81,12 +80,10 @@ const CATEGORY_MAP: Record<string, AnyCategory> = {
   presente: "gift", gift: "gift",
   outra_renda: "other_income", other_income: "other_income",
 };
-
 const TYPE_MAP: Record<string, TransactionType> = {
   despesa: "expense", saída: "expense", saida: "expense", expense: "expense",
   receita: "income", entrada: "income", income: "income",
 };
-
 const CATEGORY_LABEL: Record<AnyCategory, string> = {
   housing: "moradia", food: "alimentacao", transport: "transporte", health: "saude",
   entertainment: "lazer", education: "educacao", shopping: "compras",
@@ -94,7 +91,6 @@ const CATEGORY_LABEL: Record<AnyCategory, string> = {
   salary: "salario", freelance: "freelance", investment_return: "retorno",
   gift: "presente", other_income: "outra_renda",
 };
-
 function normalizeStr(s: string) {
   return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
@@ -108,51 +104,50 @@ export default function ConfiguracoesPage() {
     walletAddress, setWalletAddress,
     height, setHeight,
     theme, setTheme,
+    language, setLanguage,
   } = useSettingsStore();
 
   const { transactions, addTransaction } = useFinancasStore();
   const { success, error: toastError } = useToast();
+  const t = useT(language);
 
-  // Perfil edit state
-  const [editName, setEditName] = useState(displayName);
-  const [editingName, setEditingName] = useState(false);
-
-  // Wallet edit
-  const [editWallet, setEditWallet] = useState(walletAddress);
-  const [editingWallet, setEditingWallet] = useState(false);
-
-  // Height edit
-  const [editHeight, setEditHeight] = useState(String(height || ""));
-  const [editingHeight, setEditingHeight] = useState(false);
+  // Form state — campos diretos, sem click-to-edit
+  const [nameVal, setNameVal]     = useState(displayName);
+  const [heightVal, setHeightVal] = useState(height > 0 ? String(height) : "");
+  const [walletVal, setWalletVal] = useState(walletAddress);
 
   // CSV import
   const fileRef = useRef<HTMLInputElement>(null);
-  const [importRows, setImportRows] = useState<{ valid: boolean; date?: string; description?: string; amount?: number; type?: TransactionType; category?: AnyCategory; raw: string; errors: string[] }[]>([]);
+  const [importRows, setImportRows] = useState<{
+    valid: boolean; date?: string; description?: string;
+    amount?: number; type?: TransactionType; category?: AnyCategory;
+    raw: string; errors: string[];
+  }[]>([]);
   const [importFileName, setImportFileName] = useState("");
 
-  // Export state
+  // Export
   const [exportRange, setExportRange] = useState<"month" | "3months" | "year" | "all">("month");
 
-  // Danger zone confirm
+  // Danger zone
   const [confirmReset, setConfirmReset] = useState(false);
 
-  // ── Profile save ──────────────────────────────────────────────────────────
-  function saveName() {
-    setDisplayName(editName);
-    setEditingName(false);
-    success("Nome atualizado!");
-  }
+  const inputClass = "w-full bg-[#141414] border border-[#2a2a2a] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#3a3a3a] outline-none focus:border-[#6366f1] transition-colors";
 
-  function saveWallet() {
-    setWalletAddress(editWallet);
-    setEditingWallet(false);
-    success("Wallet atualizada!");
+  // ── Saves ─────────────────────────────────────────────────────────────────
+  function saveName() {
+    if (!nameVal.trim()) return;
+    setDisplayName(nameVal);
+    success(t("nameUpdated"));
   }
 
   function saveHeight() {
-    const h = parseFloat(editHeight);
-    if (!isNaN(h) && h > 0) { setHeight(h); success("Altura salva!"); }
-    setEditingHeight(false);
+    const h = parseFloat(heightVal);
+    if (!isNaN(h) && h > 0) { setHeight(h); success(t("heightSaved")); }
+  }
+
+  function saveWallet() {
+    setWalletAddress(walletVal);
+    success(t("walletSaved"));
   }
 
   // ── CSV import ────────────────────────────────────────────────────────────
@@ -166,30 +161,22 @@ export default function ConfiguracoesPage() {
       const lines = text.split(/\r?\n/).filter((l) => l.trim());
       const delim = lines[0]?.includes(";") ? ";" : ",";
       const startIdx = normalizeStr((lines[0] ?? "").split(delim)[0]) === "data" ? 1 : 0;
-
-      const rows = lines.slice(startIdx).map((raw, idx) => {
+      const rows = lines.slice(startIdx).map((raw) => {
         const cols = raw.split(delim).map((c) => c.trim().replace(/^["']|["']$/g, ""));
         const [dateRaw, typeRaw, categoryRaw, descRaw, amountRaw] = cols;
         const errors: string[] = [];
-
         const parsed = dateRaw ? parseISO(dateRaw) : null;
         const date = parsed && isValid(parsed) ? format(parsed, "yyyy-MM-dd") : undefined;
         if (!date) errors.push("data inválida");
-
         const type = TYPE_MAP[normalizeStr(typeRaw ?? "")];
-        if (!type) errors.push(`tipo desconhecido: "${typeRaw}"`);
-
+        if (!type) errors.push(`tipo: "${typeRaw}"`);
         const category = CATEGORY_MAP[normalizeStr(categoryRaw ?? "")];
-        if (!category) errors.push(`categoria desconhecida: "${categoryRaw}"`);
-
+        if (!category) errors.push(`categoria: "${categoryRaw}"`);
         if (!descRaw?.trim()) errors.push("descrição ausente");
-
         const amount = parseFloat((amountRaw ?? "").replace("R$", "").replace(/\s/g, "").replace(",", "."));
         if (isNaN(amount) || amount <= 0) errors.push("valor inválido");
-
         return { raw, valid: errors.length === 0, date, type, category, description: descRaw?.trim(), amount: isNaN(amount) ? undefined : amount, errors };
       }).filter((r) => r.raw.trim());
-
       setImportRows(rows);
     };
     reader.readAsText(file, "UTF-8");
@@ -199,301 +186,290 @@ export default function ConfiguracoesPage() {
   function doImport() {
     const toImport = importRows.filter((r) => r.valid);
     if (toImport.length === 0) { toastError("Nenhum lançamento válido."); return; }
-    toImport.forEach((r) => {
-      addTransaction({ type: r.type!, category: r.category!, description: r.description!, amount: r.amount!, date: r.date!, recurring: false });
-    });
+    toImport.forEach((r) => addTransaction({
+      type: r.type!, category: r.category!, description: r.description!,
+      amount: r.amount!, date: r.date!, recurring: false,
+    }));
     success(`${toImport.length} lançamentos importados!`);
-    setImportRows([]);
-    setImportFileName("");
+    setImportRows([]); setImportFileName("");
   }
 
   // ── CSV export ────────────────────────────────────────────────────────────
   function doExport() {
     const now = new Date();
-    const thisMonth = format(now, "yyyy-MM");
     const filtered = transactions.filter((t) => {
-      if (exportRange === "month") return t.date.startsWith(thisMonth);
+      if (exportRange === "month") return t.date.startsWith(format(now, "yyyy-MM"));
       if (exportRange === "3months") return (now.getTime() - new Date(t.date).getTime()) / 86400000 <= 92;
       if (exportRange === "year") return t.date.startsWith(format(now, "yyyy"));
       return true;
     }).sort((a, b) => a.date.localeCompare(b.date));
-
     if (filtered.length === 0) { toastError("Nenhuma transação no período."); return; }
-
     const header = "data,tipo,categoria,descricao,valor,recorrente";
-    const lines = filtered.map((t) => {
-      const tipo = t.type === "income" ? "receita" : "despesa";
-      const cat = CATEGORY_LABEL[t.category] ?? t.category;
-      return `${t.date},${tipo},${cat},"${t.description.replace(/"/g, '""')}",${t.amount.toFixed(2)},${t.recurring ? "sim" : ""}`;
-    });
-
+    const lines = filtered.map((tx) =>
+      `${tx.date},${tx.type === "income" ? "receita" : "despesa"},${CATEGORY_LABEL[tx.category] ?? tx.category},"${tx.description.replace(/"/g, '""')}",${tx.amount.toFixed(2)},${tx.recurring ? "sim" : ""}`
+    );
     const blob = new Blob(["\uFEFF" + [header, ...lines].join("\n")], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url;
-    a.download = `segna-financas-${format(now, "yyyy-MM-dd")}.csv`;
-    a.click();
+    a.href = url; a.download = `segna-financas-${format(now, "yyyy-MM-dd")}.csv`; a.click();
     URL.revokeObjectURL(url);
     success(`${filtered.length} lançamentos exportados!`);
   }
 
-  const inputClass = "bg-[#141414] border border-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-white placeholder-[#3a3a3a] outline-none focus:border-[#6366f1] transition-colors";
+  const validCount = importRows.filter((r) => r.valid).length;
+  const invalidCount = importRows.filter((r) => !r.valid).length;
 
   return (
-    <div className="space-y-5 max-w-2xl">
+    <div className="space-y-5 max-w-xl">
       {/* Header */}
       <div>
-        <h1 className="text-xl font-semibold text-white">Configurações</h1>
-        <p className="text-sm text-[#6b7280]">Perfil, aparência e gerenciamento de dados</p>
+        <h1 className="text-xl font-semibold text-white">{t("settingsTitle")}</h1>
+        <p className="text-sm text-[#6b7280]">{t("settingsDesc")}</p>
       </div>
 
       {/* ── PERFIL ─────────────────────────────────────────────────────────── */}
-      <Section title="Perfil" icon={User}>
+      <Section title={t("sectionProfile")} icon={User}>
         {/* Avatar preview */}
-        <div className="flex items-center gap-4">
-          <Avatar name={displayName || "?"} color={avatarColor} size={52} />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white">{displayName || <span className="text-[#4a4a4a]">Sem nome</span>}</p>
-            <p className="text-xs text-[#4a4a4a]">Seus dados ficam salvos localmente + nuvem</p>
+        <div className="flex items-center gap-4 pb-1">
+          <Avatar name={nameVal || displayName || "?"} color={avatarColor} size={52} />
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-white truncate">{displayName || <span className="text-[#4a4a4a] font-normal">—</span>}</p>
+            <p className="text-[11px] text-[#4a4a4a]">Segna Personal OS</p>
           </div>
         </div>
 
-        {/* Nome */}
-        <Row label="Nome de exibição" hint="Aparece no perfil e boas-vindas">
-          {editingName ? (
-            <div className="flex items-center gap-2">
-              <input
-                autoFocus
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") saveName(); if (e.key === "Escape") setEditingName(false); }}
-                className={`${inputClass} w-40 text-xs`}
-                placeholder="Seu nome"
-              />
-              <button onClick={saveName} className="text-[#22c55e] hover:text-[#16a34a] cursor-pointer"><Check size={15} /></button>
-              <button onClick={() => setEditingName(false)} className="text-[#4a4a4a] hover:text-[#6b7280] cursor-pointer"><X size={15} /></button>
-            </div>
-          ) : (
+        <Field label={t("labelName")} hint={t("hintName")}>
+          <div className="flex gap-2">
+            <input
+              value={nameVal}
+              onChange={(e) => setNameVal(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && saveName()}
+              className={inputClass}
+              placeholder={t("namePlaceholder")}
+            />
             <button
-              onClick={() => { setEditName(displayName); setEditingName(true); }}
-              className="flex items-center gap-1.5 text-xs text-[#6366f1] hover:text-[#a78bfa] cursor-pointer transition-colors"
+              onClick={saveName}
+              disabled={!nameVal.trim() || nameVal.trim() === displayName}
+              className="px-3 py-2 bg-[#6366f1] hover:bg-[#5254cc] disabled:opacity-30 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer flex-shrink-0"
             >
-              {displayName || "Definir nome"} <ChevronRight size={13} />
+              {t("save")}
             </button>
-          )}
-        </Row>
+          </div>
+        </Field>
 
-        {/* Cor do avatar */}
-        <Row label="Cor do avatar">
-          <div className="flex items-center gap-1.5">
+        <Field label={t("labelAvatarColor")}>
+          <div className="flex items-center gap-2">
             {AVATAR_COLORS.map((c) => (
               <button
                 key={c}
                 onClick={() => setAvatarColor(c)}
-                className="w-6 h-6 rounded-full transition-transform hover:scale-110 cursor-pointer flex items-center justify-center"
-                style={{ background: c }}
+                className="w-7 h-7 rounded-full transition-transform hover:scale-110 cursor-pointer flex items-center justify-center flex-shrink-0 ring-offset-[#1a1a1a]"
+                style={{ background: c, outline: avatarColor === c ? `2px solid ${c}` : "none", outlineOffset: "2px" }}
               >
-                {avatarColor === c && <Check size={12} className="text-white" strokeWidth={3} />}
+                {avatarColor === c && <Check size={13} className="text-white" strokeWidth={3} />}
               </button>
             ))}
           </div>
-        </Row>
+        </Field>
       </Section>
 
       {/* ── APARÊNCIA ──────────────────────────────────────────────────────── */}
-      <Section title="Aparência" icon={Palette}>
-        <Row label="Tema" hint="Claro em breve — app usa tema escuro por padrão">
-          <div className="flex items-center gap-1">
+      <Section title={t("sectionAppearance")} icon={Palette}>
+        <Field label={t("labelTheme")} hint={t("hintTheme")}>
+          <div className="flex gap-2">
             {([
-              { value: "dark",  label: "Escuro", Icon: Moon },
-              { value: "light", label: "Claro",  Icon: Sun },
-              { value: "auto",  label: "Auto",   Icon: Monitor },
-            ] as const).map(({ value, label, Icon }) => (
+              { value: "dark"  as const, label: t("themeDark"),  Icon: Moon },
+              { value: "light" as const, label: t("themeLight"), Icon: Sun },
+              { value: "auto"  as const, label: t("themeAuto"),  Icon: Monitor },
+            ]).map(({ value, label, Icon }) => (
               <button
                 key={value}
                 onClick={() => setTheme(value)}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-medium transition-colors cursor-pointer border ${
                   theme === value
-                    ? "bg-[#6366f1] text-white"
-                    : "bg-[#141414] text-[#6b7280] hover:text-white border border-[#2a2a2a]"
+                    ? "bg-[#6366f1] text-white border-[#6366f1]"
+                    : "bg-[#141414] text-[#6b7280] hover:text-white border-[#2a2a2a] hover:border-[#3a3a3a]"
                 }`}
               >
-                <Icon size={12} /> {label}
+                <Icon size={13} /> {label}
               </button>
             ))}
           </div>
-        </Row>
+        </Field>
+
+        <Field label={t("labelLanguage")}>
+          <div className="flex gap-2">
+            {([
+              { value: "pt" as const, label: t("langPT"), flag: "🇧🇷" },
+              { value: "en" as const, label: t("langEN"), flag: "🇺🇸" },
+            ]).map(({ value, label, flag }) => (
+              <button
+                key={value}
+                onClick={() => setLanguage(value)}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-medium transition-colors cursor-pointer border ${
+                  language === value
+                    ? "bg-[#6366f1] text-white border-[#6366f1]"
+                    : "bg-[#141414] text-[#6b7280] hover:text-white border-[#2a2a2a] hover:border-[#3a3a3a]"
+                }`}
+              >
+                <span>{flag}</span> {label}
+              </button>
+            ))}
+          </div>
+        </Field>
       </Section>
 
       {/* ── CORPORAL ───────────────────────────────────────────────────────── */}
-      <Section title="Métricas Corporais" icon={Scale}>
-        <Row label="Altura" hint="Usada para calcular o IMC na página Corporal">
-          {editingHeight ? (
-            <div className="flex items-center gap-2">
-              <input
-                autoFocus
-                type="number"
-                value={editHeight}
-                onChange={(e) => setEditHeight(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") saveHeight(); if (e.key === "Escape") setEditingHeight(false); }}
-                className={`${inputClass} w-20 text-xs`}
-                placeholder="cm"
-              />
-              <span className="text-xs text-[#6b7280]">cm</span>
-              <button onClick={saveHeight} className="text-[#22c55e] hover:text-[#16a34a] cursor-pointer"><Check size={15} /></button>
-              <button onClick={() => setEditingHeight(false)} className="text-[#4a4a4a] hover:text-[#6b7280] cursor-pointer"><X size={15} /></button>
-            </div>
-          ) : (
+      <Section title={t("sectionBody")} icon={Scale}>
+        <Field label={t("labelHeight")} hint={t("hintHeight")}>
+          <div className="flex gap-2 items-center">
+            <input
+              type="number"
+              min={50} max={250} step={1}
+              value={heightVal}
+              onChange={(e) => setHeightVal(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && saveHeight()}
+              className={`${inputClass} flex-1`}
+              placeholder={t("heightPlaceholder")}
+            />
+            <span className="text-sm text-[#6b7280] flex-shrink-0">cm</span>
             <button
-              onClick={() => { setEditHeight(height > 0 ? String(height) : ""); setEditingHeight(true); }}
-              className="flex items-center gap-1.5 text-xs text-[#6366f1] hover:text-[#a78bfa] cursor-pointer transition-colors"
+              onClick={saveHeight}
+              disabled={!heightVal || parseFloat(heightVal) === height}
+              className="px-3 py-2 bg-[#6366f1] hover:bg-[#5254cc] disabled:opacity-30 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer flex-shrink-0"
             >
-              {height > 0 ? `${height} cm` : "Definir altura"} <ChevronRight size={13} />
+              {t("save")}
             </button>
+          </div>
+          {height > 0 && (
+            <p className="text-xs text-[#4a4a4a]">Atual: <span className="text-white">{height} cm</span></p>
           )}
-        </Row>
+        </Field>
       </Section>
 
       {/* ── DeFi / WALLET ──────────────────────────────────────────────────── */}
-      <Section title="DeFi / Wallet" icon={Wallet}>
-        <Row label="Endereço EVM" hint="Usado para sincronizar pools de liquidez automaticamente">
-          {editingWallet ? (
-            <div className="flex flex-col gap-2 w-full">
-              <input
-                autoFocus
-                value={editWallet}
-                onChange={(e) => setEditWallet(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") saveWallet(); if (e.key === "Escape") setEditingWallet(false); }}
-                className={`${inputClass} font-mono text-xs w-full`}
-                placeholder="0x..."
-              />
-              <div className="flex gap-2">
-                <button onClick={saveWallet} className="flex items-center gap-1 text-xs text-[#22c55e] hover:text-[#16a34a] cursor-pointer"><Check size={13} /> Salvar</button>
-                <button onClick={() => setEditingWallet(false)} className="text-xs text-[#4a4a4a] hover:text-[#6b7280] cursor-pointer">Cancelar</button>
-              </div>
-            </div>
-          ) : (
+      <Section title={t("sectionWallet")} icon={Wallet}>
+        <Field label={t("labelWalletAddress")} hint={t("hintWallet")}>
+          <div className="flex gap-2">
+            <input
+              value={walletVal}
+              onChange={(e) => setWalletVal(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && saveWallet()}
+              className={`${inputClass} font-mono text-xs flex-1`}
+              placeholder={t("walletPlaceholder")}
+            />
             <button
-              onClick={() => { setEditWallet(walletAddress); setEditingWallet(true); }}
-              className="flex items-center gap-1.5 text-xs text-[#6366f1] hover:text-[#a78bfa] cursor-pointer transition-colors max-w-[200px]"
+              onClick={saveWallet}
+              disabled={walletVal.trim() === walletAddress}
+              className="px-3 py-2 bg-[#6366f1] hover:bg-[#5254cc] disabled:opacity-30 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer flex-shrink-0"
             >
-              <span className="font-mono truncate">
-                {walletAddress || "Configurar wallet"}
-              </span>
-              <ChevronRight size={13} className="flex-shrink-0" />
+              {t("save")}
             </button>
+          </div>
+          {walletAddress && (
+            <p className="text-[11px] text-[#4a4a4a] font-mono truncate">{walletAddress}</p>
           )}
-        </Row>
+        </Field>
       </Section>
 
       {/* ── IMPORTAR / EXPORTAR ────────────────────────────────────────────── */}
-      <Section title="Importar / Exportar Finanças" icon={Download}>
+      <Section title={t("sectionData")} icon={Download}>
         {/* Import */}
-        <div className="space-y-3">
-          <p className="text-xs font-medium text-[#9ca3af]">Importar CSV</p>
+        <Field label={t("importCSV")}>
           <input ref={fileRef} type="file" accept=".csv,.txt" className="hidden" onChange={handleFile} />
           <button
             onClick={() => fileRef.current?.click()}
             className="w-full border border-dashed border-[#3a3a3a] hover:border-[#6366f1] rounded-lg p-3 flex items-center gap-3 cursor-pointer transition-colors group"
           >
             <Upload size={16} className="text-[#4a4a4a] group-hover:text-[#6366f1] transition-colors flex-shrink-0" />
-            <span className="text-xs text-[#6b7280] group-hover:text-[#9ca3af] transition-colors">
-              {importFileName || "Clique para selecionar arquivo CSV"}
+            <span className="text-xs text-[#6b7280] group-hover:text-[#9ca3af] transition-colors truncate">
+              {importFileName || t("chooseFile")}
             </span>
           </button>
-
           {importRows.length > 0 && (
-            <div className="space-y-2">
+            <div className="space-y-2 mt-2">
               <div className="flex items-center gap-3 text-xs">
-                <span className="text-[#22c55e]">{importRows.filter((r) => r.valid).length} válidos</span>
-                {importRows.filter((r) => !r.valid).length > 0 && (
-                  <span className="text-[#ef4444]">{importRows.filter((r) => !r.valid).length} inválidos</span>
-                )}
+                <span className="text-[#22c55e]">{validCount} {t("valid")}</span>
+                {invalidCount > 0 && <span className="text-[#ef4444]">{invalidCount} {t("invalid")}</span>}
               </div>
-              <div className="max-h-32 overflow-y-auto space-y-1">
-                {importRows.slice(0, 8).map((row, i) => (
+              <div className="max-h-28 overflow-y-auto space-y-1">
+                {importRows.slice(0, 6).map((row, i) => (
                   <div key={i} className={`text-[11px] px-2 py-1 rounded flex items-center justify-between gap-2 ${
                     row.valid ? "bg-[#22c55e]/8 text-[#9ca3af]" : "bg-[#ef4444]/8 text-[#ef4444]"
                   }`}>
-                    {row.valid ? (
-                      <><span className="truncate">{row.date} · {row.description}</span><span className="font-medium flex-shrink-0">{formatBRL(row.amount ?? 0)}</span></>
-                    ) : (
-                      <span className="truncate">{row.errors[0]} — {row.raw.slice(0, 40)}</span>
-                    )}
+                    {row.valid
+                      ? <><span className="truncate">{row.date} · {row.description}</span><span className="flex-shrink-0 font-medium">{formatBRL(row.amount ?? 0)}</span></>
+                      : <span className="truncate">{row.errors[0]}</span>
+                    }
                   </div>
                 ))}
               </div>
               <button
                 onClick={doImport}
-                disabled={importRows.filter((r) => r.valid).length === 0}
+                disabled={validCount === 0}
                 className="w-full py-2 bg-[#6366f1] hover:bg-[#5254cc] disabled:opacity-30 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer"
               >
-                Importar {importRows.filter((r) => r.valid).length} lançamentos
+                {t("importBtn")} {validCount} lançamentos
               </button>
             </div>
           )}
-        </div>
+        </Field>
 
-        <div className="border-t border-[#2a2a2a] pt-3 space-y-3">
-          <p className="text-xs font-medium text-[#9ca3af]">Exportar CSV</p>
-          <div className="flex flex-wrap gap-1.5">
-            {(["month", "3months", "year", "all"] as const).map((r) => (
-              <button
-                key={r}
-                onClick={() => setExportRange(r)}
-                className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
-                  exportRange === r ? "bg-[#6366f1] text-white" : "bg-[#141414] text-[#6b7280] hover:text-white border border-[#2a2a2a]"
-                }`}
-              >
-                {r === "month" ? "Este mês" : r === "3months" ? "3 meses" : r === "year" ? "Este ano" : "Todos"}
-              </button>
-            ))}
-          </div>
-          <button
-            onClick={doExport}
-            className="flex items-center gap-2 px-3 py-2 bg-[#141414] border border-[#2a2a2a] hover:border-[#3a3a3a] rounded-lg text-xs text-white font-medium transition-colors cursor-pointer"
-          >
-            <Download size={13} className="text-[#6366f1]" />
-            Baixar CSV
-          </button>
+        <div className="border-t border-[#2a2a2a] pt-4 space-y-3">
+          <Field label={t("exportCSV")}>
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {(["month", "3months", "year", "all"] as const).map((r) => (
+                <button key={r} onClick={() => setExportRange(r)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer border ${
+                    exportRange === r ? "bg-[#6366f1] text-white border-[#6366f1]" : "bg-[#141414] text-[#6b7280] hover:text-white border-[#2a2a2a]"
+                  }`}
+                >
+                  {r === "month" ? t("periodMonth") : r === "3months" ? t("period3Months") : r === "year" ? t("periodYear") : t("periodAll")}
+                </button>
+              ))}
+            </div>
+            <button onClick={doExport}
+              className="flex items-center gap-2 px-3 py-2 bg-[#141414] border border-[#2a2a2a] hover:border-[#3a3a3a] rounded-lg text-xs text-white font-medium transition-colors cursor-pointer"
+            >
+              <Download size={13} className="text-[#6366f1]" />
+              {t("exportBtn")}
+            </button>
+          </Field>
         </div>
       </Section>
 
       {/* ── ZONA DE PERIGO ─────────────────────────────────────────────────── */}
-      <Section title="Zona de Perigo" icon={Trash2}>
-        <Row label="Redefinir configurações" hint="Apaga nome, avatar, altura e wallet. Não afeta transações.">
+      <Section title={t("sectionDanger")} icon={Trash2}>
+        <Field label={t("labelResetSettings")} hint={t("hintResetSettings")}>
           {confirmReset ? (
             <div className="flex items-center gap-2">
-              <span className="text-xs text-[#ef4444]">Confirmar?</span>
+              <span className="text-xs text-[#ef4444]">{t("confirm")}</span>
               <button
                 onClick={() => {
-                  setDisplayName("");
+                  setDisplayName(""); setNameVal("");
                   setAvatarColor("#6366f1");
-                  setWalletAddress("");
-                  setHeight(0);
+                  setWalletAddress(""); setWalletVal("");
+                  setHeight(0); setHeightVal("");
                   setConfirmReset(false);
-                  success("Configurações redefinidas.");
+                  success(t("settingsReset"));
                 }}
-                className="text-xs px-2 py-1 bg-[#ef4444]/15 text-[#ef4444] rounded cursor-pointer hover:bg-[#ef4444]/25 transition-colors"
+                className="text-xs px-2.5 py-1.5 bg-[#ef4444]/15 text-[#ef4444] rounded-lg cursor-pointer hover:bg-[#ef4444]/25 transition-colors"
               >
-                Sim, redefinir
+                {t("yesReset")}
               </button>
-              <button
-                onClick={() => setConfirmReset(false)}
-                className="text-xs text-[#4a4a4a] hover:text-[#6b7280] cursor-pointer"
-              >
-                Cancelar
+              <button onClick={() => setConfirmReset(false)} className="text-xs text-[#4a4a4a] hover:text-[#6b7280] cursor-pointer">
+                {t("cancel")}
               </button>
             </div>
           ) : (
             <button
               onClick={() => setConfirmReset(true)}
-              className="flex items-center gap-1.5 text-xs text-[#ef4444]/70 hover:text-[#ef4444] cursor-pointer transition-colors"
+              className="flex items-center gap-1.5 text-xs text-[#ef4444]/60 hover:text-[#ef4444] cursor-pointer transition-colors"
             >
-              <Trash2 size={13} /> Redefinir
+              <Trash2 size={13} /> {t("reset")}
             </button>
           )}
-        </Row>
+        </Field>
       </Section>
     </div>
   );
