@@ -40,6 +40,8 @@ const translations = {
     hintHeight:          "Usada para calcular o IMC",
     labelWalletAddress:  "Endereço EVM",
     hintWallet:          "Para sincronizar pools de liquidez",
+    labelZerionKey:      "Zerion API Key",
+    hintZerionKey:       "Necessária para sincronizar posições DeFi",
     labelResetSettings:  "Redefinir configurações",
     hintResetSettings:   "Apaga nome, avatar, altura e wallet",
 
@@ -115,6 +117,8 @@ const translations = {
     hintHeight:          "Used to calculate BMI",
     labelWalletAddress:  "EVM Address",
     hintWallet:          "To sync liquidity pools",
+    labelZerionKey:      "Zerion API Key",
+    hintZerionKey:       "Required to sync DeFi positions",
     labelResetSettings:  "Reset settings",
     hintResetSettings:   "Clears name, avatar, height and wallet",
 

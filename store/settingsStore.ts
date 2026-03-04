@@ -12,6 +12,7 @@ interface SettingsState {
 
   // Configurações corporais
   walletAddress: string;
+  zerionApiKey:  string; // Zerion API free key — dashboard.zerion.io
   height: number; // cm — para cálculo de IMC
 
   // Aparência
@@ -22,6 +23,7 @@ interface SettingsState {
   setDisplayName:   (name: string)   => void;
   setAvatarColor:   (color: string)  => void;
   setWalletAddress: (addr: string)   => void;
+  setZerionApiKey:  (key: string)    => void;
   setHeight:        (h: number)      => void;
   setTheme:         (t: AppTheme)    => void;
   setLanguage:      (l: AppLanguage) => void;
@@ -37,6 +39,7 @@ function scheduleSync() {
       displayName:   s.displayName,
       avatarColor:   s.avatarColor,
       walletAddress: s.walletAddress,
+      zerionApiKey:  s.zerionApiKey,
       height:        s.height,
       theme:         s.theme,
       language:      s.language,
@@ -50,16 +53,18 @@ export const useSettingsStore = create<SettingsState>()(
       displayName:   "",
       avatarColor:   "#6366f1",
       walletAddress: "",
+      zerionApiKey:  "",
       height:        0,
       theme:         "dark",
       language:      "pt",
 
-      setDisplayName:   (name) => { set({ displayName: name.trim() });    scheduleSync(); },
-      setAvatarColor:   (color) => { set({ avatarColor: color });          scheduleSync(); },
+      setDisplayName:   (name) => { set({ displayName: name.trim() });   scheduleSync(); },
+      setAvatarColor:   (color) => { set({ avatarColor: color });         scheduleSync(); },
       setWalletAddress: (addr) => { set({ walletAddress: addr.trim() }); scheduleSync(); },
-      setHeight:        (h)    => { set({ height: h });                    scheduleSync(); },
-      setTheme:         (t)    => { set({ theme: t });                     scheduleSync(); },
-      setLanguage:      (l)    => { set({ language: l });                  scheduleSync(); },
+      setZerionApiKey:  (key)  => { set({ zerionApiKey: key.trim() });   scheduleSync(); },
+      setHeight:        (h)    => { set({ height: h });                   scheduleSync(); },
+      setTheme:         (t)    => { set({ theme: t });                    scheduleSync(); },
+      setLanguage:      (l)    => { set({ language: l });                 scheduleSync(); },
 
       loadFromDB: async () => {
         const data = await loadStoreData("settings");
@@ -68,6 +73,7 @@ export const useSettingsStore = create<SettingsState>()(
           displayName:   (data.displayName   as string)      ?? "",
           avatarColor:   (data.avatarColor   as string)      ?? "#6366f1",
           walletAddress: (data.walletAddress as string)      ?? "",
+          zerionApiKey:  (data.zerionApiKey  as string)      ?? "",
           height:        (data.height        as number)      ?? 0,
           theme:         (data.theme         as AppTheme)    ?? "dark",
           language:      (data.language      as AppLanguage) ?? "pt",

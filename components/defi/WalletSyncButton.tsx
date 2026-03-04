@@ -12,7 +12,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Wallet, RefreshCw, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Wallet, RefreshCw, AlertCircle, CheckCircle2, ExternalLink, Key } from "lucide-react";
 import { formatUSD } from "@/lib/format";
 import type { DetectedPool } from "@/app/api/wallet-sync/route";
 
@@ -39,17 +39,18 @@ function NetworkBadge({ network }: { network: string }) {
 }
 
 export function WalletSyncButton() {
-  const { walletAddress, setWalletAddress } = useSettingsStore();
+  const { walletAddress, setWalletAddress, zerionApiKey, setZerionApiKey } = useSettingsStore();
   const addPool = useDefiStore((s) => s.addPool);
   const { success, error: toastError } = useToast();
 
+  const isConfigured = !!(walletAddress && zerionApiKey);
+
   const [open, setOpen] = useState(false);
-  const [view, setView] = useState<View>(() =>
-    walletAddress ? "ready" : "setup"
-  );
+  const [view, setView] = useState<View>(() => isConfigured ? "ready" : "setup");
 
   // Setup form state
   const [inputAddress, setInputAddress] = useState(walletAddress);
+  const [inputKey, setInputKey]         = useState(zerionApiKey);
 
   // Sync results
   const [detected, setDetected] = useState<DetectedPool[]>([]);
@@ -59,8 +60,10 @@ export function WalletSyncButton() {
   function handleOpenChange(v: boolean) {
     setOpen(v);
     if (v) {
-      setView(walletAddress ? "ready" : "setup");
+      const configured = !!(walletAddress && zerionApiKey);
+      setView(configured ? "ready" : "setup");
       setInputAddress(walletAddress);
+      setInputKey(zerionApiKey);
       setDetected([]);
       setSelected(new Set());
       setSyncError(null);
@@ -68,8 +71,9 @@ export function WalletSyncButton() {
   }
 
   function saveSetup() {
-    if (!inputAddress.trim()) return;
+    if (!inputAddress.trim() || !inputKey.trim()) return;
     setWalletAddress(inputAddress);
+    setZerionApiKey(inputKey);
     setView("ready");
   }
 
@@ -77,9 +81,11 @@ export function WalletSyncButton() {
     setView("syncing");
     setSyncError(null);
     try {
-      const res = await fetch(
-        `/api/wallet-sync?address=${encodeURIComponent(walletAddress)}`
-      );
+      const params = new URLSearchParams({
+        address: walletAddress,
+        key:     zerionApiKey,
+      });
+      const res = await fetch(`/api/wallet-sync?${params}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? `Erro ${res.status}`);
       setDetected(data.pools ?? []);
@@ -121,6 +127,8 @@ export function WalletSyncButton() {
     setTimeout(() => setOpen(false), 1200);
   }
 
+  void toastError; // suppress unused warning
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
@@ -145,29 +153,53 @@ export function WalletSyncButton() {
         {/* ── SETUP ── */}
         {view === "setup" && (
           <div className="space-y-4 mt-1">
-            <p className="text-xs text-[#6b7280]">
-              Conecte sua wallet EVM para importar pools de liquidez automaticamente.
-              Sem necessidade de API key — gratuito.
-            </p>
-
-            <div className="space-y-1">
-              <label className="text-xs text-[#6b7280]">Endereço da wallet (EVM)</label>
-              <input
-                type="text"
-                value={inputAddress}
-                onChange={(e) => setInputAddress(e.target.value)}
-                placeholder="0x..."
-                className="w-full px-3 py-2 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg text-sm text-white placeholder-[#3a3a3a] outline-none focus:border-[#3a3a3a] font-mono text-xs"
-              />
+            {/* Zerion info */}
+            <div className="bg-[#6366f1]/10 border border-[#6366f1]/25 rounded-lg p-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <Key size={12} className="text-[#a78bfa] flex-shrink-0" />
+                <p className="text-xs font-medium text-[#a78bfa]">Requer API key gratuita da Zerion</p>
+              </div>
+              <p className="text-[11px] text-[#6b7280] leading-relaxed">
+                Crie sua conta grátis (300 calls/dia) e copie a API key.
+              </p>
+              <a
+                href="https://dashboard.zerion.io"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-[11px] text-[#6366f1] hover:text-[#a78bfa] transition-colors"
+              >
+                Acessar dashboard.zerion.io
+                <ExternalLink size={10} />
+              </a>
             </div>
 
-            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-3 text-[11px] text-[#6b7280]">
-              Suporta Ethereum, Polygon, Arbitrum, Base, Optimism, BSC e outras chains EVM.
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <label className="text-xs text-[#6b7280]">Endereço da wallet (EVM)</label>
+                <input
+                  type="text"
+                  value={inputAddress}
+                  onChange={(e) => setInputAddress(e.target.value)}
+                  placeholder="0x..."
+                  className="w-full px-3 py-2 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg text-sm text-white placeholder-[#3a3a3a] outline-none focus:border-[#3a3a3a] font-mono text-xs"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs text-[#6b7280]">Zerion API Key</label>
+                <input
+                  type="password"
+                  value={inputKey}
+                  onChange={(e) => setInputKey(e.target.value)}
+                  placeholder="zk_dev_..."
+                  className="w-full px-3 py-2 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg text-sm text-white placeholder-[#3a3a3a] outline-none focus:border-[#3a3a3a] font-mono text-xs"
+                />
+              </div>
             </div>
 
             <Button
               onClick={saveSetup}
-              disabled={!inputAddress.trim()}
+              disabled={!inputAddress.trim() || !inputKey.trim()}
               className="w-full bg-[#6366f1] hover:bg-[#5558e8] text-white text-sm font-semibold disabled:opacity-30 cursor-pointer"
             >
               Salvar e continuar
@@ -189,9 +221,15 @@ export function WalletSyncButton() {
                 </button>
               </div>
               <p className="text-xs text-white font-mono truncate">{walletAddress}</p>
-              <div className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#22c55e]" />
-                <span className="text-[10px] text-[#22c55e]">Wallet configurada</span>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#22c55e]" />
+                  <span className="text-[10px] text-[#22c55e]">Wallet configurada</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#6366f1]" />
+                  <span className="text-[10px] text-[#a78bfa]">Zerion API key salva</span>
+                </div>
               </div>
             </div>
 
@@ -211,7 +249,7 @@ export function WalletSyncButton() {
             </Button>
 
             <p className="text-[10px] text-[#3a3a3a] text-center">
-              Busca todas as pools de liquidez em todas as chains
+              Busca posições DeFi em todas as chains via Zerion
             </p>
           </div>
         )}
@@ -222,7 +260,7 @@ export function WalletSyncButton() {
             <div className="w-10 h-10 rounded-full border-2 border-[#6366f1]/30 border-t-[#6366f1] animate-spin" />
             <div className="text-center space-y-1">
               <p className="text-sm text-white font-medium">Buscando posições...</p>
-              <p className="text-xs text-[#4a4a4a]">Verificando 100+ protocolos e chains</p>
+              <p className="text-xs text-[#4a4a4a]">Verificando protocolos DeFi em todas as chains</p>
             </div>
           </div>
         )}
@@ -232,14 +270,14 @@ export function WalletSyncButton() {
           <div className="space-y-3 mt-1">
             {detected.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 gap-2">
-                <p className="text-sm text-[#6b7280]">Nenhuma pool de liquidez encontrada</p>
+                <p className="text-sm text-[#6b7280]">Nenhuma posição DeFi encontrada</p>
                 <p className="text-xs text-[#3a3a3a]">Verifique o endereço e tente novamente</p>
               </div>
             ) : (
               <>
                 <div className="flex items-center justify-between">
                   <p className="text-xs text-[#9ca3af]">
-                    {detected.length} {detected.length === 1 ? "pool encontrada" : "pools encontradas"}
+                    {detected.length} {detected.length === 1 ? "posição encontrada" : "posições encontradas"}
                   </p>
                   <div className="flex gap-2">
                     <button
@@ -301,7 +339,7 @@ export function WalletSyncButton() {
                   disabled={selected.size === 0}
                   className="w-full bg-[#6366f1] hover:bg-[#5558e8] text-white text-sm font-semibold disabled:opacity-30 cursor-pointer"
                 >
-                  Importar {selected.size} {selected.size === 1 ? "pool" : "pools"}
+                  Importar {selected.size} {selected.size === 1 ? "posição" : "posições"}
                 </Button>
               </>
             )}
@@ -314,7 +352,7 @@ export function WalletSyncButton() {
             <div className="w-10 h-10 rounded-full bg-[#22c55e]/10 flex items-center justify-center">
               <CheckCircle2 size={20} className="text-[#22c55e]" />
             </div>
-            <p className="text-sm text-white font-medium">Pools importadas!</p>
+            <p className="text-sm text-white font-medium">Posições importadas!</p>
           </div>
         )}
       </DialogContent>

@@ -102,6 +102,7 @@ export default function ConfiguracoesPage() {
     displayName, setDisplayName,
     avatarColor, setAvatarColor,
     walletAddress, setWalletAddress,
+    zerionApiKey, setZerionApiKey,
     height, setHeight,
     theme, setTheme,
     language, setLanguage,
@@ -112,9 +113,10 @@ export default function ConfiguracoesPage() {
   const t = useT(language);
 
   // Form state — campos diretos, sem click-to-edit
-  const [nameVal, setNameVal]     = useState(displayName);
-  const [heightVal, setHeightVal] = useState(height > 0 ? String(height) : "");
-  const [walletVal, setWalletVal] = useState(walletAddress);
+  const [nameVal, setNameVal]       = useState(displayName);
+  const [heightVal, setHeightVal]   = useState(height > 0 ? String(height) : "");
+  const [walletVal, setWalletVal]   = useState(walletAddress);
+  const [zerionVal, setZerionVal]   = useState(zerionApiKey);
 
   // CSV import
   const fileRef = useRef<HTMLInputElement>(null);
@@ -148,6 +150,11 @@ export default function ConfiguracoesPage() {
   function saveWallet() {
     setWalletAddress(walletVal);
     success(t("walletSaved"));
+  }
+
+  function saveZerion() {
+    setZerionApiKey(zerionVal);
+    success(t("saved"));
   }
 
   // ── CSV import ────────────────────────────────────────────────────────────
@@ -368,6 +375,41 @@ export default function ConfiguracoesPage() {
           </div>
           {walletAddress && (
             <p className="text-[11px] text-[#4a4a4a] font-mono truncate">{walletAddress}</p>
+          )}
+        </Field>
+
+        <Field label={t("labelZerionKey")} hint={t("hintZerionKey")}>
+          <div className="flex gap-2">
+            <input
+              type="password"
+              value={zerionVal}
+              onChange={(e) => setZerionVal(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && saveZerion()}
+              className={`${inputClass} font-mono text-xs flex-1`}
+              placeholder="zk_dev_..."
+            />
+            <button
+              onClick={saveZerion}
+              disabled={zerionVal.trim() === zerionApiKey}
+              className="px-3 py-2 bg-[#6366f1] hover:bg-[#5254cc] disabled:opacity-30 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer flex-shrink-0"
+            >
+              {t("save")}
+            </button>
+          </div>
+          <p className="text-[11px] text-[#4a4a4a]">
+            Grátis em{" "}
+            <a
+              href="https://dashboard.zerion.io"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#6366f1] hover:text-[#a78bfa] transition-colors"
+            >
+              dashboard.zerion.io
+            </a>
+            {" "}— 300 calls/dia
+          </p>
+          {zerionApiKey && (
+            <p className="text-[11px] text-[#22c55e]">● Zerion API key configurada</p>
           )}
         </Field>
       </Section>
