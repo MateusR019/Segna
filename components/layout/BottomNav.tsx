@@ -7,29 +7,33 @@ import {
   WifiOff, MoreHorizontal, StickyNote, Scale, CalendarDays, PiggyBank, X, Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-// 4 itens principais + botão "Mais"
-const mainItems = [
-  { href: "/dashboard", label: "Home",     icon: LayoutDashboard },
-  { href: "/tarefas",   label: "Tarefas",  icon: ClipboardList },
-  { href: "/habitos",   label: "Hábitos",  icon: CheckSquare },
-  { href: "/financas",  label: "Finanças", icon: TrendingUp },
-] as const;
-
-// Itens extras que ficam no drawer "Mais"
-const extraItems = [
-  { href: "/defi",            label: "DeFi",           icon: Coins },
-  { href: "/notas",           label: "Notas",          icon: StickyNote },
-  { href: "/corporal",        label: "Corporal",       icon: Scale },
-  { href: "/investimentos",   label: "Investimentos",  icon: PiggyBank },
-  { href: "/revisao",         label: "Revisão",        icon: CalendarDays },
-  { href: "/configuracoes",   label: "Config.",        icon: Settings },
-];
+import { useSettingsStore } from "@/store/settingsStore";
+import { useT } from "@/lib/i18n";
 
 export function BottomNav() {
   const pathname = usePathname();
   const [offline, setOffline] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const language  = useSettingsStore((s) => s.language);
+  const t         = useT(language);
+
+  // 4 main items + "More" button
+  const mainItems = [
+    { href: "/dashboard", label: t("dashboard"), icon: LayoutDashboard },
+    { href: "/tarefas",   label: t("tasks"),     icon: ClipboardList },
+    { href: "/habitos",   label: t("habits"),    icon: CheckSquare },
+    { href: "/financas",  label: t("finances"),  icon: TrendingUp },
+  ];
+
+  // Extra items in the "More" drawer
+  const extraItems = [
+    { href: "/defi",           label: t("defi"),        icon: Coins },
+    { href: "/notas",          label: t("notes"),       icon: StickyNote },
+    { href: "/corporal",       label: t("corporal"),    icon: Scale },
+    { href: "/investimentos",  label: t("investments"), icon: PiggyBank },
+    { href: "/revisao",        label: t("review"),      icon: CalendarDays },
+    { href: "/configuracoes",  label: t("settings"),    icon: Settings },
+  ];
 
   // Fecha o drawer ao navegar
   useEffect(() => { setMoreOpen(false); }, [pathname]);
@@ -66,7 +70,7 @@ export function BottomNav() {
       >
         {/* Handle + título */}
         <div className="flex items-center justify-between px-5 pt-4 pb-2">
-          <span className="text-xs font-medium text-[#6b7280] uppercase tracking-wider">Mais seções</span>
+          <span className="text-xs font-medium text-[#6b7280] uppercase tracking-wider">{t("moreSections")}</span>
           <button
             onClick={() => setMoreOpen(false)}
             className="p-1.5 rounded-lg text-[#4a4a4a] hover:text-white hover:bg-[#2a2a2a] transition-colors cursor-pointer"
@@ -100,7 +104,7 @@ export function BottomNav() {
       {offline && (
         <div className="md:hidden fixed bottom-[60px] left-0 right-0 z-50 flex items-center justify-center gap-1.5 bg-[#f59e0b]/10 border-t border-[#f59e0b]/20 py-1.5">
           <WifiOff size={11} className="text-[#f59e0b]" />
-          <span className="text-[11px] text-[#f59e0b] font-medium">Sem conexão — dados salvos localmente</span>
+          <span className="text-[11px] text-[#f59e0b] font-medium">{t("offline")}</span>
         </div>
       )}
 
@@ -175,7 +179,7 @@ export function BottomNav() {
             "text-[10px] leading-none font-medium transition-colors",
             (moreOpen || moreActive) ? "text-[#a78bfa]" : "text-[#4a4a4a]"
           )}>
-            Mais
+            {t("more")}
           </span>
         </button>
       </nav>

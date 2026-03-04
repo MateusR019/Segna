@@ -9,18 +9,7 @@ import {
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import { useSettingsStore } from "@/store/settingsStore";
-
-const navItems = [
-  { href: "/dashboard", label: "Dashboard",  icon: LayoutDashboard },
-  { href: "/tarefas",   label: "Tarefas",    icon: ClipboardList },
-  { href: "/financas",  label: "Finanças",   icon: TrendingUp },
-  { href: "/habitos",   label: "Hábitos",    icon: CheckSquare },
-  { href: "/defi",      label: "DeFi",       icon: Coins },
-  { href: "/notas",     label: "Notas",      icon: StickyNote },
-  { href: "/revisao",   label: "Revisão",    icon: CalendarDays },
-  { href: "/corporal",      label: "Corporal",     icon: Scale },
-  { href: "/investimentos", label: "Investimentos", icon: PiggyBank },
-] as const;
+import { useT } from "@/lib/i18n";
 
 function ProfileAvatar({ name, color }: { name: string; color: string }) {
   const initials = name.trim()
@@ -37,10 +26,24 @@ function ProfileAvatar({ name, color }: { name: string; color: string }) {
 }
 
 export function AppSidebar() {
-  const pathname = usePathname();
-  const router   = useRouter();
+  const pathname    = usePathname();
+  const router      = useRouter();
   const displayName = useSettingsStore((s) => s.displayName);
   const avatarColor = useSettingsStore((s) => s.avatarColor);
+  const language    = useSettingsStore((s) => s.language);
+  const t           = useT(language);
+
+  const navItems = [
+    { href: "/dashboard",    label: t("dashboard"),    icon: LayoutDashboard },
+    { href: "/tarefas",      label: t("tasks"),        icon: ClipboardList },
+    { href: "/financas",     label: t("finances"),     icon: TrendingUp },
+    { href: "/habitos",      label: t("habits"),       icon: CheckSquare },
+    { href: "/defi",         label: t("defi"),         icon: Coins },
+    { href: "/notas",        label: t("notes"),        icon: StickyNote },
+    { href: "/revisao",      label: t("review"),       icon: CalendarDays },
+    { href: "/corporal",     label: t("corporal"),     icon: Scale },
+    { href: "/investimentos",label: t("investments"),  icon: PiggyBank },
+  ];
 
   async function handleSignOut() {
     await supabase.auth.signOut();
@@ -117,8 +120,8 @@ export function AppSidebar() {
         >
           <ProfileAvatar name={displayName} color={avatarColor} />
           <div className="flex-1 min-w-0">
-            <p className="text-sm leading-none truncate">{displayName || "Perfil"}</p>
-            <p className="text-[10px] text-[#4a4a4a] mt-0.5">Configurações</p>
+            <p className="text-sm leading-none truncate">{displayName || t("profile")}</p>
+            <p className="text-[10px] text-[#4a4a4a] mt-0.5">{t("settings")}</p>
           </div>
           <Settings size={12} className="text-[#3a3a3a] flex-shrink-0" />
         </Link>
@@ -139,7 +142,7 @@ export function AppSidebar() {
               pathname.startsWith("/ajuda") ? "text-[#a78bfa]" : "text-[#4a4a4a]"
             )}
           />
-          Como funciona?
+          {t("help")}
         </Link>
 
         <button
@@ -147,7 +150,7 @@ export function AppSidebar() {
           className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-150 text-[#6b7280] hover:text-[#ef4444] hover:bg-[#161616] cursor-pointer btn-press"
         >
           <LogOut size={15} className="flex-shrink-0" />
-          Sair da conta
+          {t("signOut")}
         </button>
         <p className="text-[10px] text-[#3a3a3a] px-3">v1.0.0 · Segna</p>
       </div>

@@ -14,7 +14,10 @@ export interface DetectedPool {
 // Zapper public GraphQL API (sem API key necessária)
 const ZAPPER_GRAPHQL = "https://public.zapper.xyz/graphql";
 
-// Query corrigida usando portfolioV2 + appBalances (schema atual do Zapper)
+// Query usando portfolioV2 + appBalances — schema corrigido (Zapper 2025)
+// Diferença crítica:
+//   ContractPositionBalance.tokens → array de TokenWithMetaType { metaType, token { ...AbstractToken } }
+//   AppTokenPositionBalance.tokens → array de AbstractToken direto (sem wrapper, sem metaType)
 const PORTFOLIO_QUERY = `
   query PortfolioV2($addresses: [Address!]!) {
     portfolioV2(addresses: $addresses) {
@@ -40,12 +43,10 @@ const PORTFOLIO_QUERY = `
                       tokens {
                         metaType
                         token {
-                          ... on BaseTokenPositionBalance {
-                            symbol
-                            balance
-                            balanceUSD
-                            price
-                          }
+                          symbol
+                          balance
+                          balanceUSD
+                          price
                         }
                       }
                     }
@@ -55,15 +56,10 @@ const PORTFOLIO_QUERY = `
                       price
                       balance
                       tokens {
-                        metaType
-                        token {
-                          ... on BaseTokenPositionBalance {
-                            symbol
-                            balance
-                            balanceUSD
-                            price
-                          }
-                        }
+                        symbol
+                        balance
+                        balanceUSD
+                        price
                       }
                     }
                   }
@@ -149,12 +145,16 @@ export async function GET(req: NextRequest) {
         const posBalance = Number(pos?.balanceUSD ?? 0);
         if (posBalance <= 0) continue;
 
-        // Extrai tokens da posição (suporta ContractPositionBalance e AppTokenPositionBalance)
+        // Extrai tokens da posição
+        // ContractPositionBalance: tokens = [{ metaType, token: { symbol, balance, ... } }]
+        // AppTokenPositionBalance:  tokens = [{ symbol, balance, ... }] (AbstractToken direto)
         const tokenEntries = (pos.tokens as Record<string, unknown>[]) ?? [];
 
         const rawTokens: { symbol: string; amount: number; priceUSD: number }[] = [];
         for (const entry of tokenEntries) {
-          const t = (entry.token ?? entry) as Record<string, unknown>;
+          // Se tiver campo "token" dentro, é o wrapper TokenWithMetaType (ContractPosition)
+          // Caso contrário é AbstractToken direto (AppToken)
+          const t = (entry.token != null ? entry.token : entry) as Record<string, unknown>;
           const sym = String(t?.symbol ?? "?").toUpperCase();
           const balance = Number(t?.balance ?? 0);
           const price = Number(t?.price ?? 0);

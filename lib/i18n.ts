@@ -15,6 +15,10 @@ const translations = {
     settings:     "Configurações",
     help:         "Como funciona?",
     signOut:      "Sair da conta",
+    more:         "Mais",
+    moreSections: "Mais seções",
+    profile:      "Perfil",
+    offline:      "Sem conexão — dados salvos localmente",
 
     // Settings page
     settingsTitle:       "Configurações",
@@ -86,6 +90,10 @@ const translations = {
     settings:     "Settings",
     help:         "How it works?",
     signOut:      "Sign out",
+    more:         "More",
+    moreSections: "More sections",
+    profile:      "Profile",
+    offline:      "No connection — data saved locally",
 
     // Settings page
     settingsTitle:       "Settings",
