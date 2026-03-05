@@ -51,7 +51,8 @@ console.log(`\n🔗 Projeto linkado: ${linkedRef}`);
 console.log("🚀 Aplicando migrations...\n");
 
 try {
-  execSync("npx supabase db push", {
+  // --yes: não pede confirmação interativa
+  execSync("npx supabase db push --yes", {
     stdio: "inherit",
     cwd: ROOT,
   });

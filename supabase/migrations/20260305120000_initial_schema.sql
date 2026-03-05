@@ -14,36 +14,49 @@ ALTER TABLE user_data
   ADD COLUMN IF NOT EXISTS data JSONB NOT NULL DEFAULT '{}';
 
 -- ─── Migração de colunas legadas → data JSONB ────────────────────────────────
+-- Usa SQL dinâmico para só referenciar colunas que de fato existem.
+-- `investimentos` sempre foi JSONB — nunca foi coluna separada, por isso não está na lista.
 DO $$
+DECLARE
+  col      TEXT;
+  col_list TEXT[] := ARRAY['financas','habitos','notas','defi','settings','tarefas','mood','corporal'];
+  build_json TEXT := '';
+  sep        TEXT := '';
+  found_any  BOOLEAN := FALSE;
 BEGIN
-  IF EXISTS (
+  -- Sai cedo se o esquema antigo já não existe
+  IF NOT EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_name = 'user_data' AND column_name = 'financas'
   ) THEN
-    UPDATE user_data
-    SET data = jsonb_build_object(
-      'financas',      COALESCE(financas,     '{}'),
-      'habitos',       COALESCE(habitos,       '{}'),
-      'notas',         COALESCE(notas,         '{}'),
-      'defi',          COALESCE(defi,          '{}'),
-      'settings',      COALESCE(settings,      '{}'),
-      'tarefas',       COALESCE(tarefas,       '{}'),
-      'mood',          COALESCE(mood,          '{}'),
-      'corporal',      COALESCE(corporal,      '{}'),
-      'investimentos', COALESCE(investimentos, '{}')
-    )
-    WHERE data = '{}';
-
-    ALTER TABLE user_data DROP COLUMN IF EXISTS financas;
-    ALTER TABLE user_data DROP COLUMN IF EXISTS habitos;
-    ALTER TABLE user_data DROP COLUMN IF EXISTS notas;
-    ALTER TABLE user_data DROP COLUMN IF EXISTS defi;
-    ALTER TABLE user_data DROP COLUMN IF EXISTS settings;
-    ALTER TABLE user_data DROP COLUMN IF EXISTS tarefas;
-    ALTER TABLE user_data DROP COLUMN IF EXISTS mood;
-    ALTER TABLE user_data DROP COLUMN IF EXISTS corporal;
-    ALTER TABLE user_data DROP COLUMN IF EXISTS investimentos;
+    RETURN;
   END IF;
+
+  -- Constrói jsonb_build_object apenas com colunas que existem
+  FOREACH col IN ARRAY col_list LOOP
+    IF EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_name = 'user_data' AND column_name = col
+    ) THEN
+      build_json := build_json || sep
+        || quote_literal(col) || ', COALESCE('
+        || quote_ident(col)   || ', ''{}''::jsonb)';
+      sep       := ', ';
+      found_any := TRUE;
+    END IF;
+  END LOOP;
+
+  -- Faz UPDATE apenas se encontrou colunas legadas
+  IF found_any THEN
+    EXECUTE 'UPDATE user_data SET data = jsonb_build_object('
+      || build_json
+      || ') WHERE data = ''{}''::jsonb';
+  END IF;
+
+  -- Remove colunas legadas (IF EXISTS garante idempotência)
+  FOREACH col IN ARRAY col_list LOOP
+    EXECUTE 'ALTER TABLE user_data DROP COLUMN IF EXISTS ' || quote_ident(col);
+  END LOOP;
 END $$;
 
 -- ─── RPC: upsert atômico por store ───────────────────────────────────────────
