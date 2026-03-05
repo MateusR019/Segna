@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Plus, Trash2, Check, X, Activity, Scale, TrendingDown, TrendingUp } from "lucide-react";
+import { Plus, Trash2, Check, X, Activity, Scale, TrendingDown, TrendingUp, Pencil, AlertTriangle } from "lucide-react";
 import { useCorporalStore } from "@/store/corporalStore";
 import { useSettingsStore } from "@/store/settingsStore";
 import { useHydrated } from "@/hooks/useHydrated";
@@ -48,7 +48,6 @@ function AddMetricForm({ onClose }: { onClose: () => void }) {
     >
       <p className="text-sm font-medium text-white">Nova medição</p>
 
-      {/* Campos principais — Data + Peso */}
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
           <label className="text-[10px] font-medium text-[#4a4a4a] uppercase tracking-wide">Data</label>
@@ -57,18 +56,13 @@ function AddMetricForm({ onClose }: { onClose: () => void }) {
         <div className="space-y-1.5">
           <label className="text-[10px] font-medium text-[#4a4a4a] uppercase tracking-wide">Peso (kg)</label>
           <input
-            type="number"
-            step="0.1"
-            value={weight}
+            type="number" step="0.1" value={weight}
             onChange={(e) => setWeight(e.target.value)}
-            placeholder="ex: 75.5"
-            className={inputClass}
-            autoFocus
+            placeholder="ex: 75.5" className={inputClass} autoFocus
           />
         </div>
       </div>
 
-      {/* Toggle campos extras */}
       <button
         type="button"
         onClick={() => setShowExtras((v) => !v)}
@@ -78,7 +72,6 @@ function AddMetricForm({ onClose }: { onClose: () => void }) {
         {showExtras ? "Ocultar" : "Adicionar"} cintura, gordura e músculo
       </button>
 
-      {/* Campos extras */}
       {showExtras && (
         <div className="grid grid-cols-2 gap-3 pt-1">
           <div className="space-y-1.5">
@@ -105,12 +98,10 @@ function AddMetricForm({ onClose }: { onClose: () => void }) {
           Cancelar
         </button>
         <button
-          type="submit"
-          disabled={!hasValue}
+          type="submit" disabled={!hasValue}
           className="flex items-center gap-1.5 px-3 py-1.5 bg-[#6366f1] hover:bg-[#5254cc] disabled:opacity-30 disabled:cursor-not-allowed text-white text-xs font-medium rounded-lg transition-colors cursor-pointer"
         >
-          <Plus size={12} />
-          Salvar
+          <Plus size={12} /> Salvar
         </button>
       </div>
     </form>
@@ -147,11 +138,8 @@ function MetricChart({ metrics, field, color, unit }: MetricChartProps) {
   const maxV = Math.max(...values);
   const range = maxV - minV || 0.5;
 
-  const W = 300;
-  const H = 80;
-  const pad = 8;
-  const iw = W - pad * 2;
-  const ih = H - pad * 2;
+  const W = 300; const H = 80; const pad = 8;
+  const iw = W - pad * 2; const ih = H - pad * 2;
 
   const pts = filtered.map((m, i) => {
     const x = pad + (i / (filtered.length - 1)) * iw;
@@ -186,15 +174,43 @@ function MetricChart({ metrics, field, color, unit }: MetricChartProps) {
 
 function getImcClass(imc: number): { label: string; color: string } {
   if (imc < 18.5) return { label: "Abaixo do peso", color: "#f59e0b" };
-  if (imc < 25)   return { label: "Peso normal", color: "#22c55e" };
-  if (imc < 30)   return { label: "Sobrepeso", color: "#f97316" };
+  if (imc < 25)   return { label: "Peso normal",    color: "#22c55e" };
+  if (imc < 30)   return { label: "Sobrepeso",      color: "#f97316" };
   return { label: "Obesidade", color: "#ef4444" };
 }
 
-// ─── Metric Row ───────────────────────────────────────────────────────────────
+// ─── Metric Row (com edição inline) ──────────────────────────────────────────
 
-function MetricRow({ metric, onRemove }: { metric: BodyMetric; onRemove: () => void }) {
-  const [confirmDelete, setConfirmDelete] = useState(false);
+function MetricRow({
+  metric,
+  onRemove,
+  onEdit,
+}: {
+  metric: BodyMetric;
+  onRemove: () => void;
+  onEdit: (updates: Partial<Omit<BodyMetric, "id" | "createdAt">>) => void;
+}) {
+  const [mode, setMode] = useState<"view" | "edit" | "delete">("view");
+
+  // Edit state
+  const [date,       setDate]       = useState(metric.date);
+  const [weight,     setWeight]     = useState(metric.weight !== undefined ? String(metric.weight) : "");
+  const [waist,      setWaist]      = useState(metric.waist !== undefined ? String(metric.waist) : "");
+  const [bodyFat,    setBodyFat]    = useState(metric.bodyFat !== undefined ? String(metric.bodyFat) : "");
+  const [muscleMass, setMuscleMass] = useState(metric.muscleMass !== undefined ? String(metric.muscleMass) : "");
+  const [note,       setNoteVal]    = useState(metric.note ?? "");
+
+  function confirmEdit() {
+    onEdit({
+      date,
+      weight:     weight     ? parseFloat(weight)     : undefined,
+      waist:      waist      ? parseFloat(waist)      : undefined,
+      bodyFat:    bodyFat    ? parseFloat(bodyFat)    : undefined,
+      muscleMass: muscleMass ? parseFloat(muscleMass) : undefined,
+      note:       note.trim() || undefined,
+    });
+    setMode("view");
+  }
 
   const chips = [
     metric.weight !== undefined && `${metric.weight} kg`,
@@ -203,8 +219,52 @@ function MetricRow({ metric, onRemove }: { metric: BodyMetric; onRemove: () => v
     metric.muscleMass !== undefined && `${metric.muscleMass}% músculo`,
   ].filter(Boolean) as string[];
 
+  const inputSm = "bg-[#0f0f0f] border border-[#2a2a2a] rounded px-2 py-1 text-xs text-white outline-none focus:border-[#6366f1] transition-colors w-full";
+
+  if (mode === "edit") {
+    return (
+      <div className="py-2.5 border-b border-[#1f1f1f] last:border-0 space-y-2">
+        <div className="grid grid-cols-3 gap-2">
+          <div className="space-y-0.5">
+            <label className="text-[10px] text-[#4a4a4a]">Data</label>
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputSm} />
+          </div>
+          <div className="space-y-0.5">
+            <label className="text-[10px] text-[#4a4a4a]">Peso (kg)</label>
+            <input type="number" step="0.1" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="—" className={inputSm} />
+          </div>
+          <div className="space-y-0.5">
+            <label className="text-[10px] text-[#4a4a4a]">Cintura (cm)</label>
+            <input type="number" step="0.1" value={waist} onChange={(e) => setWaist(e.target.value)} placeholder="—" className={inputSm} />
+          </div>
+          <div className="space-y-0.5">
+            <label className="text-[10px] text-[#4a4a4a]">Gordura (%)</label>
+            <input type="number" step="0.1" value={bodyFat} onChange={(e) => setBodyFat(e.target.value)} placeholder="—" className={inputSm} />
+          </div>
+          <div className="space-y-0.5">
+            <label className="text-[10px] text-[#4a4a4a]">Músculo (%)</label>
+            <input type="number" step="0.1" value={muscleMass} onChange={(e) => setMuscleMass(e.target.value)} placeholder="—" className={inputSm} />
+          </div>
+          <div className="space-y-0.5">
+            <label className="text-[10px] text-[#4a4a4a]">Nota</label>
+            <input type="text" value={note} onChange={(e) => setNoteVal(e.target.value)} placeholder="—" className={inputSm} />
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button onClick={confirmEdit} className="flex items-center gap-1 text-xs text-[#22c55e] hover:text-[#16a34a] cursor-pointer font-medium">
+            <Check size={11} /> Salvar
+          </button>
+          <button onClick={() => setMode("view")} className="text-xs text-[#4a4a4a] hover:text-[#6b7280] cursor-pointer">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="group flex items-start gap-3 py-2.5 border-b border-[#1f1f1f] last:border-0">
+      {/* Data */}
       <div className="flex-shrink-0 w-14">
         <p className="text-xs font-medium text-white">
           {format(new Date(metric.date + "T00:00:00"), "d MMM", { locale: ptBR })}
@@ -213,6 +273,8 @@ function MetricRow({ metric, onRemove }: { metric: BodyMetric; onRemove: () => v
           {format(new Date(metric.date + "T00:00:00"), "yyyy")}
         </p>
       </div>
+
+      {/* Chips */}
       <div className="flex-1 min-w-0 space-y-1">
         <div className="flex flex-wrap gap-1.5">
           {chips.map((chip) => (
@@ -223,20 +285,40 @@ function MetricRow({ metric, onRemove }: { metric: BodyMetric; onRemove: () => v
         </div>
         {metric.note && <p className="text-[11px] text-[#4a4a4a]">{metric.note}</p>}
       </div>
-      <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-        {confirmDelete ? (
-          <div className="flex items-center gap-1">
-            <button type="button" onClick={onRemove} className="text-[#ef4444] hover:text-[#dc2626] transition-colors cursor-pointer" aria-label="Confirmar">
-              <Check size={13} />
+
+      {/* Ações — sempre visíveis (discretas), destacam no hover */}
+      <div className="flex-shrink-0 flex items-center gap-1">
+        {mode === "delete" ? (
+          <>
+            <span className="text-[10px] text-[#ef4444] mr-1">Remover?</span>
+            <button type="button" onClick={onRemove} className="text-[#ef4444] hover:text-[#dc2626] transition-colors cursor-pointer p-1" aria-label="Confirmar">
+              <Check size={12} />
             </button>
-            <button type="button" onClick={() => setConfirmDelete(false)} className="text-[#4a4a4a] hover:text-[#6b7280] transition-colors cursor-pointer" aria-label="Cancelar">
-              <X size={13} />
+            <button type="button" onClick={() => setMode("view")} className="text-[#4a4a4a] hover:text-[#6b7280] transition-colors cursor-pointer p-1" aria-label="Cancelar">
+              <X size={12} />
             </button>
-          </div>
+          </>
         ) : (
-          <button type="button" onClick={() => setConfirmDelete(true)} className="text-[#3a3a3a] hover:text-[#ef4444] transition-colors cursor-pointer">
-            <Trash2 size={13} />
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={() => setMode("edit")}
+              className="p-1.5 rounded text-[#3a3a3a] hover:text-[#a78bfa] hover:bg-[#6366f1]/10 transition-all cursor-pointer"
+              aria-label="Editar"
+              title="Editar"
+            >
+              <Pencil size={12} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("delete")}
+              className="p-1.5 rounded text-[#3a3a3a] hover:text-[#ef4444] hover:bg-[#ef4444]/10 transition-all cursor-pointer"
+              aria-label="Excluir"
+              title="Excluir"
+            >
+              <Trash2 size={12} />
+            </button>
+          </>
         )}
       </div>
     </div>
@@ -271,35 +353,38 @@ const TAB_CONFIG: { key: Tab; label: string; field: MetricField; color: string; 
 
 export default function CorporalPage() {
   const hydrated = useHydrated();
-  const metrics = useCorporalStore((s) => s.metrics);
+  const metrics     = useCorporalStore((s) => s.metrics);
   const removeMetric = useCorporalStore((s) => s.removeMetric);
-  const height = useSettingsStore((s) => s.height);
+  const editMetric   = useCorporalStore((s) => s.editMetric);
+  const height    = useSettingsStore((s) => s.height);
   const setHeight = useSettingsStore((s) => s.setHeight);
-  const [showForm, setShowForm] = useState(false);
-  const [activeTab, setActiveTab] = useState<Tab>("weight");
+  const [showForm, setShowForm]     = useState(false);
+  const [activeTab, setActiveTab]   = useState<Tab>("weight");
   const [editHeight, setEditHeight] = useState(false);
   const [tempHeight, setTempHeight] = useState("");
 
   const latest = metrics[0];
   const weightMetrics = metrics.filter((m) => m.weight !== undefined);
-  const latestWeight = weightMetrics[0]?.weight;
-  const prevWeight = weightMetrics[1]?.weight;
-  const weightDiff = latestWeight !== undefined && prevWeight !== undefined ? latestWeight - prevWeight : null;
+  const latestWeight  = weightMetrics[0]?.weight;
+  const prevWeight    = weightMetrics[1]?.weight;
+  const weightDiff    = latestWeight !== undefined && prevWeight !== undefined ? latestWeight - prevWeight : null;
 
-  // IMC
+  // IMC — altura deve estar em cm (> 3), se < 3 provavelmente está em metros
+  const heightInMeters = height > 3 ? height / 100 : height; // tolera entrada em metros
+  const heightSeemsWrong = height > 0 && height < 3; // provavelmente digitou em metros
   const imc = latestWeight && height > 0
-    ? latestWeight / Math.pow(height / 100, 2)
+    ? latestWeight / Math.pow(heightInMeters, 2)
     : null;
   const imcClass = imc ? getImcClass(imc) : null;
 
   // Stats para a aba ativa
-  const activeConf = TAB_CONFIG.find((t) => t.key === activeTab)!;
+  const activeConf   = TAB_CONFIG.find((t) => t.key === activeTab)!;
   const activeSeries = metrics
     .filter((m) => m[activeConf.field] !== undefined)
     .map((m) => m[activeConf.field] as number);
-  const activeMin = activeSeries.length > 0 ? Math.min(...activeSeries) : null;
-  const activeMax = activeSeries.length > 0 ? Math.max(...activeSeries) : null;
-  const activeAvg = activeSeries.length > 0 ? activeSeries.reduce((a, b) => a + b, 0) / activeSeries.length : null;
+  const activeMin   = activeSeries.length > 0 ? Math.min(...activeSeries) : null;
+  const activeMax   = activeSeries.length > 0 ? Math.max(...activeSeries) : null;
+  const activeAvg   = activeSeries.length > 0 ? activeSeries.reduce((a, b) => a + b, 0) / activeSeries.length : null;
   const activeDelta = activeSeries.length >= 2 ? activeSeries[0] - activeSeries[activeSeries.length - 1] : null;
 
   function commitHeight() {
@@ -340,6 +425,21 @@ export default function CorporalPage() {
 
       {showForm && <AddMetricForm onClose={() => setShowForm(false)} />}
 
+      {/* Aviso de altura em metros */}
+      {heightSeemsWrong && (
+        <div className="flex items-start gap-2.5 bg-[#f59e0b]/10 border border-[#f59e0b]/25 rounded-xl p-3">
+          <AlertTriangle size={14} className="text-[#f59e0b] flex-shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-[#f59e0b]">
+              Altura parece estar em metros ({height} m)
+            </p>
+            <p className="text-[11px] text-[#6b7280]">
+              O campo espera centímetros. Clique em &quot;Definir altura&quot; abaixo e insira ex: <strong className="text-white">175</strong> (não 1.75).
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Última medição + IMC */}
       {latest && (
         <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-4">
@@ -351,7 +451,7 @@ export default function CorporalPage() {
             </span>
           </div>
 
-          {/* Peso — destaque principal */}
+          {/* Peso — destaque */}
           {latest.weight !== undefined && (
             <div className="flex items-end gap-3 mb-3">
               <p className="text-4xl font-bold text-white leading-none">{latest.weight}</p>
@@ -366,7 +466,7 @@ export default function CorporalPage() {
             </div>
           )}
 
-          {/* Extras — só aparecem se foram preenchidos */}
+          {/* Extras */}
           {(latest.waist !== undefined || latest.bodyFat !== undefined || latest.muscleMass !== undefined) && (
             <div className="flex flex-wrap gap-2 mb-3">
               {latest.waist !== undefined && (
@@ -393,9 +493,7 @@ export default function CorporalPage() {
               <span className="text-xs text-[#6b7280]">Altura:</span>
               {editHeight ? (
                 <input
-                  autoFocus
-                  type="number"
-                  value={tempHeight}
+                  autoFocus type="number" value={tempHeight}
                   onChange={(e) => setTempHeight(e.target.value)}
                   onBlur={commitHeight}
                   onKeyDown={(e) => { if (e.key === "Enter") commitHeight(); if (e.key === "Escape") setEditHeight(false); }}
@@ -411,7 +509,7 @@ export default function CorporalPage() {
                 </button>
               )}
             </div>
-            {imc && imcClass && (
+            {imc && imcClass && !heightSeemsWrong && (
               <div className="flex items-center gap-2">
                 <span className="text-xs text-[#6b7280]">IMC:</span>
                 <span className="text-xs font-semibold" style={{ color: imcClass.color }}>
@@ -444,7 +542,6 @@ export default function CorporalPage() {
             )}
           </div>
 
-          {/* Tabs */}
           <div className="flex gap-1 mb-3 bg-[#111111] rounded-lg p-1">
             {TAB_CONFIG.map((tab) => {
               const hasSeries = metrics.some((m) => m[tab.field] !== undefined);
@@ -465,19 +562,13 @@ export default function CorporalPage() {
             })}
           </div>
 
-          <MetricChart
-            metrics={metrics}
-            field={activeConf.field}
-            color={activeConf.color}
-            unit={activeConf.unit}
-          />
+          <MetricChart metrics={metrics} field={activeConf.field} color={activeConf.color} unit={activeConf.unit} />
 
-          {/* Stats da métrica ativa */}
           {activeSeries.length >= 2 && activeMin !== null && activeMax !== null && activeAvg !== null && (
             <div className="grid grid-cols-4 gap-2 mt-3 pt-3 border-t border-[#2a2a2a]">
               <StatCard label="Mínimo" value={`${activeMin.toFixed(1)} ${activeConf.unit}`} />
               <StatCard label="Máximo" value={`${activeMax.toFixed(1)} ${activeConf.unit}`} />
-              <StatCard label="Média" value={`${activeAvg.toFixed(1)} ${activeConf.unit}`} />
+              <StatCard label="Média"  value={`${activeAvg.toFixed(1)} ${activeConf.unit}`} />
               <StatCard
                 label="Variação"
                 value={`${activeDelta !== null && activeDelta > 0 ? "+" : ""}${activeDelta !== null ? activeDelta.toFixed(1) : "-"} ${activeConf.unit}`}
@@ -511,7 +602,12 @@ export default function CorporalPage() {
           </p>
           <div>
             {metrics.map((metric) => (
-              <MetricRow key={metric.id} metric={metric} onRemove={() => removeMetric(metric.id)} />
+              <MetricRow
+                key={metric.id}
+                metric={metric}
+                onRemove={() => removeMetric(metric.id)}
+                onEdit={(updates) => editMetric(metric.id, updates)}
+              />
             ))}
           </div>
         </div>
