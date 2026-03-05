@@ -8,8 +8,12 @@ import {
   Eye, EyeOff, LogIn, UserPlus, ArrowRight,
   DollarSign, TrendingUp, CheckSquare, FileText, Activity, Smile,
   Shield, Zap, Lock, Github, ExternalLink, Server, Cloud,
-  ChevronRight,
+  ChevronRight, Heart, Copy, Check, Star,
 } from "lucide-react";
+
+/* ─── Configuração de monetização ──────────────────────────────────────────── */
+// Atualize sua chave PIX aqui:
+const PIX_KEY = "mateusrogerio777@gmail.com";
 
 /* ─── Dados ──────────────────────────────────────────────────────────────────── */
 const features = [
@@ -31,6 +35,14 @@ const steps = [
 export default function LoginPage() {
   const router = useRouter();
   const [tab, setTab]           = useState<"signup" | "login">("signup");
+  const [pixCopied, setPixCopied] = useState(false);
+
+  function copyPix() {
+    navigator.clipboard.writeText(PIX_KEY).then(() => {
+      setPixCopied(true);
+      setTimeout(() => setPixCopied(false), 2500);
+    });
+  }
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw]     = useState(false);
@@ -192,6 +204,111 @@ export default function LoginPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════ PLANOS / DOAÇÃO ═════════════════════════ */}
+      <section className="px-6 sm:px-10 pb-24">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12 space-y-2">
+            <h2 className="text-2xl sm:text-3xl font-bold">Simples e transparente</h2>
+            <p className="text-[#6b7280] text-sm">O Segna é gratuito. Se ele te ajuda, considere apoiar o desenvolvimento.</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+
+            {/* Plano Grátis */}
+            <div className="rounded-2xl p-6 space-y-5 flex flex-col"
+              style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
+              <div>
+                <p className="text-xs text-[#6b7280] font-medium uppercase tracking-wider mb-1">Grátis</p>
+                <div className="flex items-end gap-1">
+                  <span className="text-3xl font-bold">R$ 0</span>
+                  <span className="text-[#6b7280] text-sm mb-0.5">/sempre</span>
+                </div>
+              </div>
+              <ul className="space-y-2.5 flex-1">
+                {["Todos os 6 módulos", "Sync na nuvem", "Offline-first (PWA)", "Sem limite de dados", "Atualizações incluídas"].map(f => (
+                  <li key={f} className="flex items-center gap-2 text-sm text-[#9ca3af]">
+                    <Check size={13} className="text-[#22c55e] flex-shrink-0" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={() => { setTab("signup"); document.getElementById("auth-form")?.scrollIntoView({ behavior: "smooth" }); }}
+                className="w-full py-2.5 rounded-xl text-sm font-medium text-white transition-all hover:opacity-80"
+                style={{ border: "1px solid rgba(255,255,255,0.12)" }}>
+                Começar grátis
+              </button>
+            </div>
+
+            {/* Apoiador */}
+            <div className="rounded-2xl p-6 space-y-5 flex flex-col relative"
+              style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(167,139,250,0.06) 100%)", border: "1px solid rgba(99,102,241,0.3)" }}>
+              {/* Destaque */}
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[11px] font-semibold"
+                style={{ background: "linear-gradient(90deg, #6366f1, #a78bfa)", color: "#fff" }}>
+                ✨ Recomendado
+              </div>
+              <div>
+                <p className="text-xs text-[#a78bfa] font-medium uppercase tracking-wider mb-1">Apoiador</p>
+                <div className="flex items-end gap-1">
+                  <span className="text-3xl font-bold">Qualquer</span>
+                </div>
+                <p className="text-[#6b7280] text-xs mt-0.5">valor que você quiser via PIX</p>
+              </div>
+              <ul className="space-y-2.5 flex-1">
+                {["Tudo do plano grátis", "Apoie o desenvolvimento", "Sem mensalidade obrigatória", "Contribuição única ou recorrente", "Com muito ☕ e gratidão"].map(f => (
+                  <li key={f} className="flex items-center gap-2 text-sm text-[#9ca3af]">
+                    <Heart size={13} className="text-[#a78bfa] flex-shrink-0" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <div className="space-y-2">
+                <div className="w-full px-3 py-2.5 rounded-xl text-xs text-center font-mono text-[#9ca3af] select-all"
+                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                  {PIX_KEY}
+                </div>
+                <button onClick={copyPix}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
+                  style={{ background: "linear-gradient(135deg, #6366f1, #5855e0)", color: "#fff" }}>
+                  {pixCopied ? <><Check size={14} /> Copiado!</> : <><Copy size={14} /> Copiar chave PIX</>}
+                </button>
+              </div>
+            </div>
+
+            {/* Pro — em breve */}
+            <div className="rounded-2xl p-6 space-y-5 flex flex-col opacity-60"
+              style={{ background: "rgba(255,255,255,0.01)", border: "1px dashed rgba(255,255,255,0.1)" }}>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="text-xs text-[#f59e0b] font-medium uppercase tracking-wider">Pro</p>
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-medium"
+                    style={{ background: "rgba(245,158,11,0.15)", color: "#f59e0b" }}>Em breve</span>
+                </div>
+                <div className="flex items-end gap-1">
+                  <span className="text-3xl font-bold">R$ ?</span>
+                  <span className="text-[#6b7280] text-sm mb-0.5">/mês</span>
+                </div>
+              </div>
+              <ul className="space-y-2.5 flex-1">
+                {["Tudo do plano grátis", "Dashboard de insights avançados", "Exportação de dados (CSV/PDF)", "Metas e relatórios mensais", "Suporte prioritário"].map(f => (
+                  <li key={f} className="flex items-center gap-2 text-sm text-[#6b7280]">
+                    <Star size={13} className="text-[#f59e0b] flex-shrink-0" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <button disabled
+                className="w-full py-2.5 rounded-xl text-sm font-medium text-[#4a4a4a] cursor-not-allowed"
+                style={{ border: "1px solid rgba(255,255,255,0.07)" }}>
+                Em breve
+              </button>
+            </div>
+
           </div>
         </div>
       </section>

@@ -9,7 +9,8 @@
     "lint": "eslint",
     "db:setup": "node scripts/db-setup.mjs",
     "db:push": "node scripts/db-push.mjs",
-    "db:new": "node scripts/db-new.mjs"
+    "db:new": "node scripts/db-new.mjs",
+    "db:users": "node scripts/check-users.mjs"
   },
   "dependencies": {
     "@ducanh2912/next-pwa": "^10.2.9",
