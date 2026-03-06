@@ -6,7 +6,6 @@ import { Trash2, ArrowDownLeft, ArrowUpRight, Pencil, Check, X, AlertTriangle } 
 import { formatBRL } from "@/lib/format";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { AnyCategory } from "@/types";
 import { useToast } from "@/hooks/useToast";
 
 const EXPENSE_CATEGORIES: { value: string; label: string }[] = [
@@ -54,7 +53,8 @@ interface EditDraft {
 }
 
 export function TransactionList() {
-  const { transactions, removeTransaction, editTransaction } = useFinancasStore();
+  const { transactions, removeTransaction, editTransaction,
+          customExpenseCategories, customIncomeCategories } = useFinancasStore();
   const { success } = useToast();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<EditDraft>({ description: "", amount: "", date: "", category: "" });
@@ -83,7 +83,7 @@ export function TransactionList() {
       description: draft.description.trim(),
       amount,
       date: draft.date,
-      category: draft.category as AnyCategory,
+      category: draft.category,
     });
     setEditingId(null);
     success("Transação atualizada!");
@@ -104,6 +104,7 @@ export function TransactionList() {
         const isIncome = t.type === "income";
         const isEditing = editingId === t.id;
         const categories = isIncome ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+        const customCats = isIncome ? customIncomeCategories : customExpenseCategories;
         const delay = `${Math.min(idx * 30, 300)}ms`;
 
         if (isEditing) {
@@ -160,6 +161,13 @@ export function TransactionList() {
                   {categories.map((c) => (
                     <option key={c.value} value={c.value}>{c.label}</option>
                   ))}
+                  {customCats.length > 0 && (
+                    <optgroup label="── Personalizadas ──" style={{ color: "#a78bfa" }}>
+                      {customCats.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </optgroup>
+                  )}
                 </select>
                 <div className="flex items-center gap-1 flex-shrink-0 ml-auto">
                   <Button
