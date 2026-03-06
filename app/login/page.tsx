@@ -667,6 +667,16 @@ export default function LoginPage() {
                     : <><UserPlus size={14} /> Criar conta grátis <ArrowRight size={14} className="ml-auto" /></>
                 }
               </button>
+
+              {/* Consent text — só no cadastro */}
+              {tab === "signup" && (
+                <p className="text-[10px] text-[#3a3a3a] text-center leading-relaxed">
+                  Ao criar conta você concorda com nossa{" "}
+                  <a href="/privacidade" className="text-[#6b7280] hover:text-[#a78bfa] underline underline-offset-2 transition-colors">
+                    Política de Privacidade
+                  </a>
+                </p>
+              )}
             </form>
           ) : (
             /* Formulário de recuperação de senha */
@@ -733,7 +743,7 @@ export default function LoginPage() {
               Open Source
             </a>
             <a href="/privacidade"
-              className="text-[#4a4a4a] hover:text-[#9ca3af] text-xs transition-colors">
+              className="text-[#6b7280] hover:text-[#a78bfa] text-xs transition-colors underline underline-offset-2">
               Privacidade
             </a>
           </div>

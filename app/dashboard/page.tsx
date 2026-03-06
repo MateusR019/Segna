@@ -13,6 +13,7 @@ import { ptBR } from "date-fns/locale";
 import {
   TrendingUp, TrendingDown, CheckSquare, Coins, StickyNote,
   ArrowRight, Flame, Wallet, CalendarDays, Target, BarChart3,
+  Plus, FileText, PenLine,
 } from "lucide-react";
 import { WeatherWidget } from "@/components/dashboard/WeatherWidget";
 import { BudgetAlertBanner } from "@/components/BudgetAlertBanner";
@@ -20,6 +21,7 @@ import { ExportDataButton } from "@/components/ExportDataButton";
 import { MoodWidget } from "@/components/dashboard/MoodWidget";
 import { DailyScore } from "@/components/dashboard/DailyScore";
 import InsightsPanel from "@/components/dashboard/InsightsPanel";
+import { TodayTasksWidget } from "@/components/dashboard/TodayTasksWidget";
 
 /** Strip checklist markdown syntax from note preview */
 function stripChecklist(text: string): string {
@@ -152,6 +154,30 @@ export default function DashboardPage() {
           <ExportDataButton />
           <WeatherWidget />
         </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-0.5">
+        {[
+          { href: "/financas", label: "Nova transação", icon: <Plus size={12} />, color: "#22c55e" },
+          { href: "/notas",    label: "Nova nota",       icon: <PenLine size={12} />, color: "#06b6d4" },
+          { href: "/tarefas",  label: "Nova tarefa",     icon: <FileText size={12} />, color: "#6366f1" },
+          { href: "/habitos",  label: "Ver hábitos",     icon: <CheckSquare size={12} />, color: "#a78bfa" },
+        ].map(({ href, label, icon, color }) => (
+          <Link
+            key={href}
+            href={href}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium whitespace-nowrap transition-all hover:opacity-80 flex-shrink-0"
+            style={{
+              background: color + "12",
+              borderColor: color + "30",
+              color,
+            }}
+          >
+            {icon}
+            {label}
+          </Link>
+        ))}
       </div>
 
       {/* Budget Alert */}
@@ -387,7 +413,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Lower sections */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Habits checklist today */}
         <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-4 space-y-3">
           <div className="flex items-center justify-between">
@@ -481,6 +507,9 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
+
+        {/* Today Tasks */}
+        <TodayTasksWidget />
 
         {/* Recent notes */}
         <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-4 space-y-3">
