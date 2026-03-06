@@ -243,7 +243,7 @@ export default function NotasPage() {
   ];
 
   return (
-    <div className="space-y-5 max-w-2xl">
+    <div className="space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -420,7 +420,7 @@ export default function NotasPage() {
           <p className="text-xs text-[#3a3a3a]">Escreva algo acima e salve.</p>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="columns-1 md:columns-2 xl:columns-3 gap-3 space-y-0">
           {visibleNotes.map((note) => {
             const tag = note.tagId ? tagMap[note.tagId] : undefined;
             const isEditing = editingId === note.id;
@@ -429,7 +429,7 @@ export default function NotasPage() {
             return (
               <div
                 key={note.id}
-                className={`flex items-start justify-between gap-3 rounded-xl px-4 py-3 transition-colors border card-hover ${
+                className={`break-inside-avoid mb-3 flex items-start justify-between gap-3 rounded-xl px-4 py-3 transition-colors border card-hover ${
                   note.pinned
                     ? "bg-[#1a1a1f] border-[#6366f1]/50 shadow-[0_0_0_1px_rgba(99,102,241,0.08)]"
                     : "bg-[#1a1a1a] border-[#2a2a2a]"
