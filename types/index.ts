@@ -109,6 +109,7 @@ export interface HabitNote {
   habitId: string;
   date: string; // "YYYY-MM-DD"
   text: string;
+  score?: number; // 1–10 score diário
 }
 
 // Habit detail page templates
@@ -271,11 +272,15 @@ export interface Investment {
   id: string;
   name: string;           // "Tesouro IPCA+ 2035", "Poupança"
   type: InvestmentType;
-  currentValue: number;   // valor atual de mercado (atualizado manualmente)
+  currentValue: number;   // valor atual de mercado (atualizado manualmente ou via API)
   yieldRate?: number;     // % ao ano estimado (para exibição)
   note?: string;
   color: string;
   createdAt: string;
+  // Campos exclusivos para cripto (preço auto-fetched)
+  symbol?: string;        // "BTC", "ETH", "SOL" — usado para buscar preço via CoinGecko
+  quantity?: number;      // quantidade de tokens (currentValue = price × quantity)
+  pricePerUnit?: number;  // preço atual por unidade em BRL (atualizado via API)
 }
 
 // ─── DeFi - Trade Log ────────────────────────────────────────────────────────

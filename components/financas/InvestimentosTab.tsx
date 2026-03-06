@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +27,8 @@ import {
   Trash2,
   ChevronDown,
   ChevronRight,
+  RefreshCw,
+  Zap,
 } from "lucide-react";
 import { useInvestimentosStore } from "@/store/investimentosStore";
 import { useFinancasStore } from "@/store/financasStore";
@@ -35,6 +37,7 @@ import { Investment, InvestmentType } from "@/types";
 import { formatBRL } from "@/lib/format";
 import { useHydrated } from "@/hooks/useHydrated";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SYMBOL_TO_ID } from "@/lib/cryptoSymbols";
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
 
@@ -63,11 +66,102 @@ const PALETTE = [
   "#8b5cf6", "#06b6d4", "#f97316", "#14b8a6",
 ];
 
+// ─── Hook: buscar preços cripto ────────────────────────────────────────────────
+
+function useCryptoInvestimentosPrices() {
+  const { investments, updateInvestment } = useInvestimentosStore();
+  const { success, error: toastError } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
+  const cryptoInvestments = investments.filter(
+    (inv) => inv.type === "cripto" && inv.symbol && inv.quantity
+  );
+
+  const fetchPrices = useCallback(
+    async (silent = false) => {
+      if (cryptoInvestments.length === 0) return;
+
+      if (!silent) setLoading(true);
+      setFetchError(null);
+
+      // Build geckoId → investmentId map
+      const idMap: Record<string, string> = {};
+      cryptoInvestments.forEach((inv) => {
+        const geckoId = SYMBOL_TO_ID[inv.symbol!.toUpperCase()];
+        if (geckoId) idMap[geckoId] = inv.id;
+      });
+
+      const geckoIds = Object.keys(idMap);
+      if (geckoIds.length === 0) {
+        if (!silent) setLoading(false);
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/crypto-prices?ids=${geckoIds.join(",")}`, {
+          cache: "no-store",
+        });
+
+        if (res.status === 429) throw new Error("rate_limit");
+        if (!res.ok) throw new Error("upstream");
+
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+
+        let updated = 0;
+        geckoIds.forEach((geckoId) => {
+          const brl: number | undefined = data[geckoId]?.brl;
+          const invId = idMap[geckoId];
+          const inv = investments.find((i) => i.id === invId);
+          if (brl && invId && inv?.quantity) {
+            updateInvestment(invId, {
+              pricePerUnit: brl,
+              currentValue: brl * inv.quantity,
+            });
+            updated++;
+          }
+        });
+
+        if (updated > 0) {
+          const time = new Date().toLocaleTimeString("pt-BR", {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+          setLastUpdated(time);
+          if (!silent) success(`${updated} preço(s) atualizado(s)!`);
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "";
+        if (msg === "rate_limit") {
+          setFetchError("Rate limit — aguarde 1 min");
+        } else if (!silent) {
+          setFetchError("Falha ao buscar preços");
+          toastError("Não foi possível buscar os preços");
+        }
+      } finally {
+        if (!silent) setLoading(false);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [investments, updateInvestment]
+  );
+
+  // Auto-fetch silencioso ao montar
+  useEffect(() => {
+    fetchPrices(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return { loading, lastUpdated, fetchError, fetchPrices, hasCrypto: cryptoInvestments.length > 0 };
+}
+
 // ─── AddInvestmentDialog ──────────────────────────────────────────────────────
 
 function AddInvestmentDialog() {
   const { addInvestment } = useInvestimentosStore();
-  const { success } = useToast();
+  const { success, error: toastError } = useToast();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [type, setType] = useState<InvestmentType>("renda-fixa");
@@ -76,10 +170,65 @@ function AddInvestmentDialog() {
   const [note, setNote] = useState("");
   const [color, setColor] = useState(PALETTE[0]);
 
+  // Cripto-specific
+  const [symbol, setSymbol] = useState("");
+  const [quantity, setQuantity] = useState("");
+  const [fetchingPrice, setFetchingPrice] = useState(false);
+  const [pricePerUnit, setPricePerUnit] = useState<number | null>(null);
+
+  const isCripto = type === "cripto";
+
+  async function handleFetchPrice() {
+    const sym = symbol.trim().toUpperCase();
+    if (!sym) return;
+    const geckoId = SYMBOL_TO_ID[sym];
+    if (!geckoId) {
+      toastError(`Símbolo "${sym}" não encontrado`);
+      return;
+    }
+    setFetchingPrice(true);
+    try {
+      const res = await fetch(`/api/crypto-prices?ids=${geckoId}`, { cache: "no-store" });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      const brl: number | undefined = data[geckoId]?.brl;
+      if (!brl) throw new Error();
+      setPricePerUnit(brl);
+      // Auto-fill currentValue if quantity is set
+      const qty = parseFloat(quantity.replace(",", "."));
+      if (!isNaN(qty) && qty > 0) {
+        setCurrentValue((brl * qty).toFixed(2).replace(".", ","));
+      }
+      success(`${sym}: ${formatBRL(brl)} por unidade`);
+    } catch {
+      toastError("Preço não encontrado");
+    } finally {
+      setFetchingPrice(false);
+    }
+  }
+
+  // Recalculate value when quantity changes (if price already fetched)
+  function handleQuantityChange(val: string) {
+    setQuantity(val);
+    if (pricePerUnit) {
+      const qty = parseFloat(val.replace(",", "."));
+      if (!isNaN(qty) && qty > 0) {
+        setCurrentValue((pricePerUnit * qty).toFixed(2).replace(".", ","));
+      }
+    }
+  }
+
+  function handleTypeChange(v: InvestmentType) {
+    setType(v);
+    // Reset cripto fields
+    setSymbol(""); setQuantity(""); setPricePerUnit(null);
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const value = parseFloat(currentValue.replace(",", "."));
     if (!name.trim() || isNaN(value) || value < 0) return;
+    const qty = isCripto ? parseFloat(quantity.replace(",", ".")) : undefined;
     addInvestment({
       name: name.trim(),
       type,
@@ -87,9 +236,15 @@ function AddInvestmentDialog() {
       yieldRate: yieldRate ? parseFloat(yieldRate.replace(",", ".")) : undefined,
       note: note.trim() || undefined,
       color,
+      ...(isCripto && symbol.trim() ? {
+        symbol: symbol.trim().toUpperCase(),
+        quantity: qty && !isNaN(qty) ? qty : undefined,
+        pricePerUnit: pricePerUnit ?? undefined,
+      } : {}),
     });
     setName(""); setType("renda-fixa"); setCurrentValue(""); setYieldRate("");
-    setNote(""); setColor(PALETTE[0]);
+    setNote(""); setColor(PALETTE[0]); setSymbol(""); setQuantity("");
+    setPricePerUnit(null);
     setOpen(false);
     success("Investimento adicionado!");
   }
@@ -112,7 +267,7 @@ function AddInvestmentDialog() {
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Ex: Tesouro IPCA+ 2035"
+              placeholder={isCripto ? "Ex: Bitcoin" : "Ex: Tesouro IPCA+ 2035"}
               className="bg-[#0f0f0f] border-[#2a2a2a]"
               required
             />
@@ -120,7 +275,7 @@ function AddInvestmentDialog() {
 
           <div className="space-y-1.5">
             <Label>Tipo</Label>
-            <Select value={type} onValueChange={(v) => setType(v as InvestmentType)}>
+            <Select value={type} onValueChange={(v) => handleTypeChange(v as InvestmentType)}>
               <SelectTrigger className="bg-[#0f0f0f] border-[#2a2a2a] w-full">
                 <SelectValue />
               </SelectTrigger>
@@ -132,9 +287,58 @@ function AddInvestmentDialog() {
             </Select>
           </div>
 
+          {/* Cripto fields */}
+          {isCripto && (
+            <div className="space-y-3 bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg p-3">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Zap size={12} className="text-[#a78bfa]" />
+                <span className="text-[11px] text-[#9ca3af] font-medium">
+                  Preço automático via CoinGecko
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Símbolo</Label>
+                  <div className="flex gap-1.5">
+                    <Input
+                      value={symbol}
+                      onChange={(e) => setSymbol(e.target.value.toUpperCase())}
+                      placeholder="BTC"
+                      className="bg-[#1a1a1a] border-[#2a2a2a] uppercase font-mono"
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={handleFetchPrice}
+                      disabled={!symbol.trim() || fetchingPrice}
+                      className="border-[#6366f1]/50 text-[#a78bfa] hover:bg-[#6366f1]/10 cursor-pointer flex-shrink-0 px-2"
+                    >
+                      <RefreshCw size={12} className={fetchingPrice ? "animate-spin" : ""} />
+                    </Button>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Quantidade</Label>
+                  <Input
+                    value={quantity}
+                    onChange={(e) => handleQuantityChange(e.target.value)}
+                    placeholder="0,001"
+                    className="bg-[#1a1a1a] border-[#2a2a2a]"
+                  />
+                </div>
+              </div>
+              {pricePerUnit && (
+                <p className="text-[10px] text-[#22c55e]">
+                  Preço atual: {formatBRL(pricePerUnit)}/unidade
+                </p>
+              )}
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Valor atual (R$)</Label>
+              <Label>{isCripto ? "Valor total (R$)" : "Valor atual (R$)"}</Label>
               <Input
                 value={currentValue}
                 onChange={(e) => setCurrentValue(e.target.value)}
@@ -143,15 +347,17 @@ function AddInvestmentDialog() {
                 required
               />
             </div>
-            <div className="space-y-1.5">
-              <Label>Rendimento % a.a.</Label>
-              <Input
-                value={yieldRate}
-                onChange={(e) => setYieldRate(e.target.value)}
-                placeholder="Ex: 12,5"
-                className="bg-[#0f0f0f] border-[#2a2a2a]"
-              />
-            </div>
+            {!isCripto && (
+              <div className="space-y-1.5">
+                <Label>Rendimento % a.a.</Label>
+                <Input
+                  value={yieldRate}
+                  onChange={(e) => setYieldRate(e.target.value)}
+                  placeholder="Ex: 12,5"
+                  className="bg-[#0f0f0f] border-[#2a2a2a]"
+                />
+              </div>
+            )}
           </div>
 
           <div className="space-y-1.5">
@@ -159,7 +365,7 @@ function AddInvestmentDialog() {
             <Input
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="Ex: Vence em Jan/2035"
+              placeholder={isCripto ? "Ex: Compra longo prazo" : "Ex: Vence em Jan/2035"}
               className="bg-[#0f0f0f] border-[#2a2a2a]"
             />
           </div>
@@ -201,7 +407,10 @@ function InvestmentCard({ inv }: { inv: Investment }) {
 
   const [editingValue, setEditingValue] = useState(false);
   const [tempValue, setTempValue] = useState("");
+  const [tempQuantity, setTempQuantity] = useState("");
   const [expanded, setExpanded] = useState(false);
+
+  const isCripto = inv.type === "cripto" && inv.symbol;
 
   const linked = transactions.filter((t) => t.investmentId === inv.id);
   const totalAported = linked
@@ -218,7 +427,11 @@ function InvestmentCard({ inv }: { inv: Investment }) {
   function commitEdit() {
     const parsed = parseFloat(tempValue.replace(",", "."));
     if (!isNaN(parsed) && parsed >= 0) {
-      updateInvestment(inv.id, { currentValue: parsed });
+      const qty = isCripto ? parseFloat(tempQuantity.replace(",", ".")) : undefined;
+      updateInvestment(inv.id, {
+        currentValue: parsed,
+        ...(isCripto && !isNaN(qty!) ? { quantity: qty } : {}),
+      });
       success("Valor atualizado!");
     }
     setEditingValue(false);
@@ -231,13 +444,24 @@ function InvestmentCard({ inv }: { inv: Investment }) {
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: inv.color }} />
           <div className="min-w-0">
-            <p className="text-sm font-medium text-white truncate">{inv.name}</p>
+            <div className="flex items-center gap-1.5">
+              <p className="text-sm font-medium text-white truncate">{inv.name}</p>
+              {isCripto && (
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#6366f1]/15 text-[#a78bfa] flex-shrink-0">
+                  {inv.symbol}
+                </span>
+              )}
+            </div>
             <p className="text-xs text-[#6b7280]">{TYPE_LABEL[inv.type]}</p>
           </div>
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
           <button
-            onClick={() => { setTempValue(String(inv.currentValue)); setEditingValue(true); }}
+            onClick={() => {
+              setTempValue(String(inv.currentValue));
+              setTempQuantity(String(inv.quantity ?? ""));
+              setEditingValue(true);
+            }}
             className="p-1.5 rounded-md text-[#4a4a4a] hover:text-white hover:bg-[#2a2a2a] transition-colors cursor-pointer"
           >
             <Pencil size={12} />
@@ -254,21 +478,46 @@ function InvestmentCard({ inv }: { inv: Investment }) {
       {/* Valor atual */}
       <div>
         {editingValue ? (
-          <Input
-            autoFocus
-            value={tempValue}
-            onChange={(e) => setTempValue(e.target.value)}
-            onBlur={commitEdit}
-            onKeyDown={(e) => { if (e.key === "Enter") commitEdit(); if (e.key === "Escape") setEditingValue(false); }}
-            className="bg-[#0f0f0f] border-[#6366f1] text-white text-lg font-semibold h-9"
-          />
+          <div className="space-y-2">
+            <Input
+              autoFocus
+              value={tempValue}
+              onChange={(e) => setTempValue(e.target.value)}
+              onBlur={commitEdit}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") commitEdit();
+                if (e.key === "Escape") setEditingValue(false);
+              }}
+              placeholder="Valor total (R$)"
+              className="bg-[#0f0f0f] border-[#6366f1] text-white text-lg font-semibold h-9"
+            />
+            {isCripto && (
+              <Input
+                value={tempQuantity}
+                onChange={(e) => setTempQuantity(e.target.value)}
+                placeholder="Quantidade"
+                className="bg-[#0f0f0f] border-[#2a2a2a] text-white text-sm h-8"
+              />
+            )}
+          </div>
         ) : (
-          <p
-            className="text-xl font-semibold text-white cursor-pointer hover:text-[#a78bfa] transition-colors"
-            onClick={() => { setTempValue(String(inv.currentValue)); setEditingValue(true); }}
+          <div
+            className="cursor-pointer"
+            onClick={() => {
+              setTempValue(String(inv.currentValue));
+              setTempQuantity(String(inv.quantity ?? ""));
+              setEditingValue(true);
+            }}
           >
-            {formatBRL(inv.currentValue)}
-          </p>
+            <p className="text-xl font-semibold text-white hover:text-[#a78bfa] transition-colors">
+              {formatBRL(inv.currentValue)}
+            </p>
+            {isCripto && inv.quantity && inv.pricePerUnit && (
+              <p className="text-[10px] text-[#6b7280] mt-0.5">
+                {inv.quantity} {inv.symbol} · {formatBRL(inv.pricePerUnit)}/un
+              </p>
+            )}
+          </div>
         )}
       </div>
 
@@ -350,6 +599,8 @@ export function InvestimentosTab() {
   const hydrated    = useHydrated();
   const investments = useInvestimentosStore((s) => s.investments);
   const transactions = useFinancasStore((s) => s.transactions);
+  const { loading, lastUpdated, fetchError, fetchPrices, hasCrypto } =
+    useCryptoInvestimentosPrices();
 
   const totalCurrentValue = investments.reduce((s, inv) => s + inv.currentValue, 0);
 
@@ -372,7 +623,35 @@ export function InvestimentosTab() {
       {/* Sub-header com botão */}
       <div className="flex items-center justify-between">
         <p className="text-xs text-[#6b7280]">Reservas e aportes</p>
-        <AddInvestmentDialog />
+        <div className="flex items-center gap-2">
+          {/* Refresh cripto — só aparece se houver investimentos cripto */}
+          {hasCrypto && (
+            <div className="flex items-center gap-2">
+              {lastUpdated && !fetchError && (
+                <span className="text-[10px] text-[#6b7280]">
+                  Preços: {lastUpdated}
+                </span>
+              )}
+              {fetchError && (
+                <span className="text-[10px] text-[#ef4444]">{fetchError}</span>
+              )}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => fetchPrices(false)}
+                disabled={loading}
+                className="h-7 text-[10px] border-[#2a2a2a] bg-transparent text-[#9ca3af] hover:text-white hover:border-[#3a3a3a] cursor-pointer px-2"
+              >
+                <RefreshCw
+                  size={11}
+                  className={`mr-1 ${loading ? "animate-spin" : ""}`}
+                />
+                {loading ? "Buscando…" : "Atualizar cripto"}
+              </Button>
+            </div>
+          )}
+          <AddInvestmentDialog />
+        </div>
       </div>
 
       {/* Summary cards */}

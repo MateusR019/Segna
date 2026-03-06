@@ -25,7 +25,7 @@ interface HabitosState {
   decrementCount: (habitId: string, date: string) => void;
   setFrequencyGoal: (habitId: string, timesPerWeek: number) => void;
   removeFrequencyGoal: (habitId: string) => void;
-  setHabitNote: (habitId: string, date: string, text: string) => void;
+  setHabitNote: (habitId: string, date: string, text: string, score?: number) => void;
   removeHabitNote: (habitId: string, date: string) => void;
   // Habit detail actions
   setTemplate: (habitId: string, template: HabitTemplate) => void;
@@ -203,15 +203,20 @@ export const useHabitosStore = create<HabitosState>()(
         scheduleSync();
       },
 
-      setHabitNote: (habitId, date, text) => {
-        set((state) => ({
-          habitNotes: [
-            ...state.habitNotes.filter(
-              (n) => !(n.habitId === habitId && n.date === date)
-            ),
-            ...(text.trim() ? [{ habitId, date, text: text.trim() }] : []),
-          ],
-        }));
+      setHabitNote: (habitId, date, text, score) => {
+        set((state) => {
+          const hasContent = text.trim() || score !== undefined;
+          return {
+            habitNotes: [
+              ...state.habitNotes.filter(
+                (n) => !(n.habitId === habitId && n.date === date)
+              ),
+              ...(hasContent
+                ? [{ habitId, date, text: text.trim(), ...(score !== undefined ? { score } : {}) }]
+                : []),
+            ],
+          };
+        });
         scheduleSync();
       },
 

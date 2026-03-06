@@ -26,7 +26,7 @@ export default function HabitoDetailPage() {
 
   if (!hydrated) {
     return (
-      <div className="space-y-4 max-w-2xl">
+      <div className="space-y-4">
         <Skeleton className="h-10 w-full bg-[#1a1a1a]" />
         <Skeleton className="h-9 w-48 bg-[#1a1a1a]" />
         <Skeleton className="h-64 w-full bg-[#1a1a1a]" />
@@ -49,7 +49,7 @@ export default function HabitoDetailPage() {
   }
 
   return (
-    <div className="space-y-5 max-w-2xl">
+    <div className="space-y-5">
       {/* Header */}
       <div className="flex items-center gap-3">
         <button

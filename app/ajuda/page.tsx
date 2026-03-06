@@ -6,7 +6,7 @@ import {
   BarChart2, Flame, Calendar, GripVertical, Tag, Pin, List,
   RefreshCw, TrendingDown, HelpCircle, Keyboard,
 } from "lucide-react";
-import { MigrateButton } from "@/components/MigrateButton";
+
 
 interface Section {
   id: string;
@@ -508,7 +508,7 @@ export default function AjudaPage() {
   const [activeSection, setActiveSection] = useState<string | null>(null);
 
   return (
-    <div className="space-y-5 max-w-2xl mx-auto">
+    <div className="space-y-5">
       {/* Header */}
       <div>
         <h1 className="text-xl font-semibold text-white">Como funciona?</h1>
@@ -579,9 +579,6 @@ export default function AjudaPage() {
           </div>
         ))}
       </div>
-
-      {/* Migrate */}
-      <MigrateButton />
 
       {/* Footer */}
       <div className="text-center py-4 text-xs text-[#3a3a3a]">

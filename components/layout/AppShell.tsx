@@ -9,7 +9,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/components/AuthProvider";
 
 /** Rotas que NÃO devem ter sidebar/nav (páginas públicas/marketing) */
-const PUBLIC_PATHS = ["/login"];
+const PUBLIC_PATHS = ["/login", "/reset-password"];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
