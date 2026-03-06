@@ -25,7 +25,8 @@ export type AnyCategory = ExpenseCategory | IncomeCategory;
 export interface Transaction {
   id: string;
   type: TransactionType;
-  category: string; // AnyCategory | categoria personalizada
+  category: string;      // AnyCategory | categoria personalizada
+  subcategory?: string;  // detalhamento livre (ex: "Mercado", "Delivery")
   description: string;
   amount: number;
   date: string; // "YYYY-MM-DD"

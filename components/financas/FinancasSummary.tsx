@@ -7,7 +7,7 @@ import {
 } from "@/store/financasStore";
 import { formatBRL } from "@/lib/format";
 import { ArrowDownLeft, ArrowUpRight, Scale } from "lucide-react";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
 
@@ -20,21 +20,26 @@ function AnimatedBRL({ value, color }: { value: number; color: string }) {
   );
 }
 
-export function FinancasSummary() {
-  const transactions = useFinancasStore((s) => s.transactions);
-  const thisMonth = format(new Date(), "yyyy-MM");
-  const monthTx = transactions.filter((t) => t.date.startsWith(thisMonth));
+interface Props {
+  /** "yyyy-MM" — se omitido usa o mês atual */
+  month?: string;
+}
 
-  const income = calcTotalIncome(monthTx);
+export function FinancasSummary({ month }: Props) {
+  const transactions  = useFinancasStore((s) => s.transactions);
+  const selectedMonth = month ?? format(new Date(), "yyyy-MM");
+  const monthTx       = transactions.filter((t) => t.date.startsWith(selectedMonth));
+
+  const income   = calcTotalIncome(monthTx);
   const expenses = calcTotalExpenses(monthTx);
-  const balance = calcBalance(monthTx);
+  const balance  = calcBalance(monthTx);
 
-  const monthLabel = format(new Date(), "MMMM", { locale: ptBR });
+  const monthLabel = format(parseISO(selectedMonth + "-01"), "MMMM", { locale: ptBR });
 
   const cards = [
-    { label: "Receitas", sublabel: monthLabel, value: income, color: "#22c55e", icon: ArrowDownLeft },
-    { label: "Despesas", sublabel: monthLabel, value: expenses, color: "#ef4444", icon: ArrowUpRight },
-    { label: "Saldo", sublabel: monthLabel, value: balance, color: balance >= 0 ? "#22c55e" : "#ef4444", icon: Scale },
+    { label: "Receitas", sublabel: monthLabel, value: income,   color: "#22c55e", icon: ArrowDownLeft },
+    { label: "Despesas", sublabel: monthLabel, value: expenses, color: "#ef4444", icon: ArrowUpRight  },
+    { label: "Saldo",    sublabel: monthLabel, value: balance,  color: balance >= 0 ? "#22c55e" : "#ef4444", icon: Scale },
   ];
 
   return (

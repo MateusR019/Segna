@@ -60,6 +60,7 @@ export function AddTransactionDialog({ trigger = "default" }: Props) {
   const [amount, setAmount]         = useState("");
   const [description, setDesc]      = useState("");
   const [category, setCategory]     = useState<string>("other");
+  const [subcategory, setSubcategory] = useState("");
   const [date, setDate]             = useState(new Date().toISOString().slice(0, 10));
   const [recurring, setRecurring]   = useState(false);
   const [investmentId, setInvestmentId] = useState<string>("none");
@@ -76,6 +77,7 @@ export function AddTransactionDialog({ trigger = "default" }: Props) {
   function handleTypeChange(t: TransactionType) {
     setType(t);
     setCategory(t === "income" ? "salary" : "other");
+    setSubcategory("");
     setInvestmentId("none");
     setShowNewCat(false);
     setNewCatInput("");
@@ -105,6 +107,7 @@ export function AddTransactionDialog({ trigger = "default" }: Props) {
     addTransaction({
       type,
       category,
+      subcategory: subcategory.trim() || undefined,
       description,
       amount: parsedAmount,
       date,
@@ -114,6 +117,7 @@ export function AddTransactionDialog({ trigger = "default" }: Props) {
     setAmount("");
     setDesc("");
     setCategory("other");
+    setSubcategory("");
     setRecurring(false);
     setInvestmentId("none");
     setOpen(false);
@@ -243,6 +247,21 @@ export function AddTransactionDialog({ trigger = "default" }: Props) {
                 </button>
               </div>
             )}
+          </div>
+
+          {/* Subcategoria */}
+          <div className="space-y-1.5">
+            <Label htmlFor="subcategory">
+              Subcategoria
+              <span className="text-[#6b7280] ml-1 font-normal text-[11px]">(opcional)</span>
+            </Label>
+            <Input
+              id="subcategory"
+              value={subcategory}
+              onChange={(e) => setSubcategory(e.target.value)}
+              placeholder={type === "income" ? "Ex: Salário CLT, 13°..." : "Ex: Mercado, Delivery, Uber..."}
+              className="bg-[#0f0f0f] border-[#2a2a2a] text-sm"
+            />
           </div>
 
           {/* Vínculo com investimento — só aparece para categorias de investimento */}

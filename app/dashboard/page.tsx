@@ -5,6 +5,7 @@ import { useFinancasStore, calcBalance, calcTotalIncome, calcTotalExpenses } fro
 import { useHabitosStore, calcStreak } from "@/store/habitosStore";
 import { useDefiStore } from "@/store/defiStore";
 import { useNotasStore } from "@/store/notasStore";
+import { useInvestimentosStore } from "@/store/investimentosStore";
 import { formatBRL } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format, getDaysInMonth, subDays, startOfWeek, endOfWeek } from "date-fns";
@@ -102,9 +103,13 @@ export default function DashboardPage() {
     .filter((p) => p.status === "active")
     .reduce((acc, p) => acc + p.currentValueUSD * (exchangeRate?.usdToBRL ?? 0), 0);
 
+  // ── Investments ──────────────────────────────────────────────
+  const investments     = useInvestimentosStore((s) => s.investments);
+  const investmentTotal = investments.reduce((s, inv) => s + inv.currentValue, 0);
+
   // ── Net Worth (patrimônio total acumulado) ────────────────────
   const totalFinancialBalance = calcBalance(transactions);
-  const netWorth = totalFinancialBalance + portfolioTotal + poolsBRL;
+  const netWorth = totalFinancialBalance + portfolioTotal + poolsBRL + investmentTotal;
 
   // ── Notes ────────────────────────────────────────────────────
   const recentNotes = notes.slice(0, 3);
@@ -182,6 +187,12 @@ export default function DashboardPage() {
             <div>
               <p className="text-[10px] text-[#4a4a4a]">Crypto</p>
               <p className="font-medium text-[#f59e0b]">{formatBRL(portfolioTotal)}</p>
+            </div>
+          )}
+          {investmentTotal > 0 && (
+            <div>
+              <p className="text-[10px] text-[#4a4a4a]">Investimentos</p>
+              <p className="font-medium text-[#6366f1]">{formatBRL(investmentTotal)}</p>
             </div>
           )}
           {poolsBRL > 0 && (

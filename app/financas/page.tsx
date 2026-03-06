@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FinancasSummary } from "@/components/financas/FinancasSummary";
@@ -17,10 +17,48 @@ import { RecurringManager } from "@/components/financas/RecurringManager";
 import { InvestimentosTab } from "@/components/financas/InvestimentosTab";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useFinancasStore } from "@/store/financasStore";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { format, parseISO, subMonths, addMonths } from "date-fns";
+import { ptBR } from "date-fns/locale";
+
+function MonthSelector({ month, onChange }: { month: string; onChange: (m: string) => void }) {
+  const isCurrentMonth = month === format(new Date(), "yyyy-MM");
+
+  function prev() {
+    onChange(format(subMonths(parseISO(month + "-01"), 1), "yyyy-MM"));
+  }
+  function next() {
+    if (!isCurrentMonth) onChange(format(addMonths(parseISO(month + "-01"), 1), "yyyy-MM"));
+  }
+
+  return (
+    <div className="flex items-center gap-1">
+      <button
+        onClick={prev}
+        className="p-1.5 rounded-lg text-[#6b7280] hover:text-white hover:bg-[#2a2a2a] transition-colors cursor-pointer"
+        title="Mês anterior"
+      >
+        <ChevronLeft size={14} />
+      </button>
+      <span className="text-sm font-medium text-white capitalize min-w-[110px] text-center">
+        {format(parseISO(month + "-01"), "MMMM yyyy", { locale: ptBR })}
+      </span>
+      <button
+        onClick={next}
+        disabled={isCurrentMonth}
+        className="p-1.5 rounded-lg text-[#6b7280] hover:text-white hover:bg-[#2a2a2a] transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-default"
+        title="Próximo mês"
+      >
+        <ChevronRight size={14} />
+      </button>
+    </div>
+  );
+}
 
 export default function FinancasPage() {
   const hydrated = useHydrated();
   const generateRecurring = useFinancasStore((s) => s.generateRecurring);
+  const [selectedMonth, setSelectedMonth] = useState(format(new Date(), "yyyy-MM"));
 
   useEffect(() => {
     if (hydrated) generateRecurring();
@@ -28,12 +66,14 @@ export default function FinancasPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-xl font-semibold text-white">Finanças</h1>
           <p className="text-sm text-[#6b7280]">Receitas, despesas e investimentos</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <MonthSelector month={selectedMonth} onChange={setSelectedMonth} />
           <ImportExportButton />
           <AddTransactionDialog />
         </div>
@@ -41,7 +81,7 @@ export default function FinancasPage() {
 
       {hydrated ? (
         <>
-          <FinancasSummary />
+          <FinancasSummary month={selectedMonth} />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <MonthlyBudget />
             <SavingsGoalWidget />
@@ -57,24 +97,12 @@ export default function FinancasPage() {
 
       <Tabs defaultValue="overview">
         <TabsList className="bg-[#1a1a1a] border border-[#2a2a2a] h-9 flex-wrap">
-          <TabsTrigger value="overview" className="text-xs cursor-pointer">
-            Visão Geral
-          </TabsTrigger>
-          <TabsTrigger value="transactions" className="text-xs cursor-pointer">
-            Transações
-          </TabsTrigger>
-          <TabsTrigger value="investimentos" className="text-xs cursor-pointer">
-            Investimentos
-          </TabsTrigger>
-          <TabsTrigger value="calendar" className="text-xs cursor-pointer">
-            Calendário
-          </TabsTrigger>
-          <TabsTrigger value="recurring" className="text-xs cursor-pointer">
-            Fixos
-          </TabsTrigger>
-          <TabsTrigger value="metas" className="text-xs cursor-pointer">
-            Metas
-          </TabsTrigger>
+          <TabsTrigger value="overview" className="text-xs cursor-pointer">Visão Geral</TabsTrigger>
+          <TabsTrigger value="transactions" className="text-xs cursor-pointer">Transações</TabsTrigger>
+          <TabsTrigger value="investimentos" className="text-xs cursor-pointer">Investimentos</TabsTrigger>
+          <TabsTrigger value="calendar" className="text-xs cursor-pointer">Calendário</TabsTrigger>
+          <TabsTrigger value="recurring" className="text-xs cursor-pointer">Fixos</TabsTrigger>
+          <TabsTrigger value="metas" className="text-xs cursor-pointer">Metas</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4 mt-4">
@@ -99,7 +127,7 @@ export default function FinancasPage() {
 
         <TabsContent value="transactions" className="mt-4">
           {hydrated ? (
-            <TransactionList />
+            <TransactionList initialMonth={selectedMonth} />
           ) : (
             <Skeleton className="h-64 bg-[#1a1a1a]" />
           )}
