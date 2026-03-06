@@ -96,14 +96,16 @@ export default function FinancasPage() {
       )}
 
       <Tabs defaultValue="overview">
-        <TabsList className="bg-[#1a1a1a] border border-[#2a2a2a] h-9 flex-wrap">
-          <TabsTrigger value="overview" className="text-xs cursor-pointer">Visão Geral</TabsTrigger>
-          <TabsTrigger value="transactions" className="text-xs cursor-pointer">Transações</TabsTrigger>
-          <TabsTrigger value="investimentos" className="text-xs cursor-pointer">Investimentos</TabsTrigger>
-          <TabsTrigger value="calendar" className="text-xs cursor-pointer">Calendário</TabsTrigger>
-          <TabsTrigger value="recurring" className="text-xs cursor-pointer">Fixos</TabsTrigger>
-          <TabsTrigger value="metas" className="text-xs cursor-pointer">Metas</TabsTrigger>
-        </TabsList>
+        <div className="w-full overflow-x-auto scrollbar-hide">
+          <TabsList className="bg-[#1a1a1a] border border-[#2a2a2a] h-9 flex-nowrap min-w-max">
+            <TabsTrigger value="overview" className="text-xs cursor-pointer whitespace-nowrap">Visão Geral</TabsTrigger>
+            <TabsTrigger value="transactions" className="text-xs cursor-pointer whitespace-nowrap">Transações</TabsTrigger>
+            <TabsTrigger value="investimentos" className="text-xs cursor-pointer whitespace-nowrap">Investimentos</TabsTrigger>
+            <TabsTrigger value="calendar" className="text-xs cursor-pointer whitespace-nowrap">Calendário</TabsTrigger>
+            <TabsTrigger value="recurring" className="text-xs cursor-pointer whitespace-nowrap">Fixos</TabsTrigger>
+            <TabsTrigger value="metas" className="text-xs cursor-pointer whitespace-nowrap">Metas</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="overview" className="space-y-4 mt-4">
           {hydrated ? (

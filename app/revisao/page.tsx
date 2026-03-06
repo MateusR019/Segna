@@ -16,6 +16,11 @@ import {
   ClipboardList,
   TrendingUp,
   Smile,
+  Pencil,
+  Save,
+  ChevronDown,
+  ChevronUp,
+  Zap,
 } from "lucide-react";
 import { useHabitosStore } from "@/store/habitosStore";
 import { useTarefasStore } from "@/store/tarefasStore";
@@ -30,6 +35,7 @@ import {
   MOOD_COLORS,
   MOOD_LABELS,
 } from "@/store/moodStore";
+import { useReviewsStore, WeeklyReviewAnswers } from "@/store/reviewsStore";
 import { useHydrated } from "@/hooks/useHydrated";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatBRL } from "@/lib/format";
@@ -198,6 +204,255 @@ function MoodChart({
   );
 }
 
+// ─── Guided Review Section ────────────────────────────────────────────────────
+
+const ENERGY_LABELS: Record<number, string> = {
+  1: "Esgotado",
+  2: "Cansado",
+  3: "Ok",
+  4: "Energético",
+  5: "No pico!",
+};
+
+const ENERGY_COLORS: Record<number, string> = {
+  1: "#ef4444",
+  2: "#f97316",
+  3: "#f59e0b",
+  4: "#22c55e",
+  5: "#a78bfa",
+};
+
+function GuidedReviewSection({ weekStart }: { weekStart: string }) {
+  const { saveReview, getReview, getLastReview } = useReviewsStore();
+  const existing = getReview(weekStart);
+  const lastReview = getLastReview(weekStart);
+
+  const [editing, setEditing] = useState(!existing);
+  const [showPrev, setShowPrev] = useState(false);
+
+  const [wentWell, setWentWell] = useState(existing?.answers.went_well ?? "");
+  const [challenges, setChallenges] = useState(existing?.answers.challenges ?? "");
+  const [priorities, setPriorities] = useState(existing?.answers.priorities ?? "");
+  const [energyLevel, setEnergyLevel] = useState(existing?.answers.energy_level ?? 3);
+  const [notes, setNotes] = useState(existing?.answers.notes ?? "");
+
+  function handleSave() {
+    const answers: WeeklyReviewAnswers = {
+      went_well: wentWell.trim(),
+      challenges: challenges.trim(),
+      priorities: priorities.trim(),
+      energy_level: energyLevel,
+      notes: notes.trim(),
+    };
+    saveReview(weekStart, answers);
+    setEditing(false);
+  }
+
+  function handleEdit() {
+    const rev = getReview(weekStart);
+    if (rev) {
+      setWentWell(rev.answers.went_well);
+      setChallenges(rev.answers.challenges);
+      setPriorities(rev.answers.priorities);
+      setEnergyLevel(rev.answers.energy_level);
+      setNotes(rev.answers.notes);
+    }
+    setEditing(true);
+  }
+
+  const textareaClass = "w-full bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-white placeholder-[#3a3a3a] resize-none focus:outline-none focus:border-[#4a4a4a] transition-colors";
+
+  return (
+    <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-4 space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-md bg-[#a78bfa]/10 flex items-center justify-center">
+            <Zap size={12} className="text-[#a78bfa]" />
+          </div>
+          <span className="text-sm font-medium text-white">Revisão Guiada</span>
+          {existing && !editing && (
+            <span className="text-[10px] text-[#22c55e] bg-[#22c55e]/10 px-1.5 py-0.5 rounded-md">
+              ✓ Concluída
+            </span>
+          )}
+        </div>
+        {existing && !editing && (
+          <button
+            type="button"
+            onClick={handleEdit}
+            className="p-1.5 text-[#4a4a4a] hover:text-white hover:bg-[#2a2a2a] rounded-md transition-colors cursor-pointer"
+          >
+            <Pencil size={12} />
+          </button>
+        )}
+      </div>
+
+      {/* Form or Read-only view */}
+      {editing ? (
+        <div className="space-y-4">
+          {/* O que foi bem */}
+          <div className="space-y-1.5">
+            <label className="text-xs text-[#9ca3af] font-medium">
+              ✅ O que foi bem essa semana?
+            </label>
+            <textarea
+              value={wentWell}
+              onChange={(e) => setWentWell(e.target.value)}
+              placeholder="Conquistas, progressos, momentos positivos..."
+              rows={2}
+              className={textareaClass}
+            />
+          </div>
+
+          {/* Desafios */}
+          <div className="space-y-1.5">
+            <label className="text-xs text-[#9ca3af] font-medium">
+              🧱 Quais foram os desafios?
+            </label>
+            <textarea
+              value={challenges}
+              onChange={(e) => setChallenges(e.target.value)}
+              placeholder="O que travou, dificuldades, o que não saiu como planejado..."
+              rows={2}
+              className={textareaClass}
+            />
+          </div>
+
+          {/* Prioridades */}
+          <div className="space-y-1.5">
+            <label className="text-xs text-[#9ca3af] font-medium">
+              🎯 3 prioridades para a próxima semana
+            </label>
+            <textarea
+              value={priorities}
+              onChange={(e) => setPriorities(e.target.value)}
+              placeholder="1. ...\n2. ...\n3. ..."
+              rows={3}
+              className={textareaClass}
+            />
+          </div>
+
+          {/* Nível de energia */}
+          <div className="space-y-2">
+            <label className="text-xs text-[#9ca3af] font-medium">
+              ⚡ Nível de energia essa semana
+            </label>
+            <div className="flex items-center gap-2">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setEnergyLevel(n)}
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer ${
+                    energyLevel === n
+                      ? "text-white border-transparent"
+                      : "bg-transparent border-[#2a2a2a] text-[#4a4a4a] hover:border-[#3a3a3a]"
+                  }`}
+                  style={energyLevel === n ? {
+                    background: ENERGY_COLORS[n] + "25",
+                    borderColor: ENERGY_COLORS[n] + "60",
+                    color: ENERGY_COLORS[n],
+                  } : {}}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+            <p className="text-[11px] text-[#6b7280]">
+              {ENERGY_LABELS[energyLevel]}
+            </p>
+          </div>
+
+          {/* Notas livres */}
+          <div className="space-y-1.5">
+            <label className="text-xs text-[#9ca3af] font-medium">
+              📝 Notas livres (opcional)
+            </label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Reflexões, ideias, lembretes para o futuro..."
+              rows={2}
+              className={textareaClass}
+            />
+          </div>
+
+          {/* Save button */}
+          <button
+            type="button"
+            onClick={handleSave}
+            className="flex items-center gap-2 bg-[#a78bfa] hover:bg-[#9061f9] text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer w-full justify-center"
+          >
+            <Save size={13} />
+            Salvar revisão
+          </button>
+        </div>
+      ) : existing ? (
+        <div className="space-y-3">
+          {existing.answers.went_well && (
+            <div>
+              <p className="text-[10px] text-[#4a4a4a] mb-1">✅ O que foi bem</p>
+              <p className="text-sm text-[#d1d5db] leading-relaxed">{existing.answers.went_well}</p>
+            </div>
+          )}
+          {existing.answers.challenges && (
+            <div>
+              <p className="text-[10px] text-[#4a4a4a] mb-1">🧱 Desafios</p>
+              <p className="text-sm text-[#d1d5db] leading-relaxed">{existing.answers.challenges}</p>
+            </div>
+          )}
+          {existing.answers.priorities && (
+            <div>
+              <p className="text-[10px] text-[#4a4a4a] mb-1">🎯 Prioridades da próxima semana</p>
+              <p className="text-sm text-[#d1d5db] leading-relaxed whitespace-pre-line">{existing.answers.priorities}</p>
+            </div>
+          )}
+          <div className="flex items-center gap-3">
+            <div>
+              <p className="text-[10px] text-[#4a4a4a] mb-0.5">⚡ Energia</p>
+              <span
+                className="text-xs font-medium px-2 py-0.5 rounded-md"
+                style={{
+                  background: ENERGY_COLORS[existing.answers.energy_level] + "20",
+                  color: ENERGY_COLORS[existing.answers.energy_level],
+                }}
+              >
+                {existing.answers.energy_level}/5 — {ENERGY_LABELS[existing.answers.energy_level]}
+              </span>
+            </div>
+          </div>
+          {existing.answers.notes && (
+            <div>
+              <p className="text-[10px] text-[#4a4a4a] mb-1">📝 Notas</p>
+              <p className="text-sm text-[#9ca3af] leading-relaxed">{existing.answers.notes}</p>
+            </div>
+          )}
+        </div>
+      ) : null}
+
+      {/* Previous week context */}
+      {lastReview && (
+        <div className="border-t border-[#1f1f1f] pt-3">
+          <button
+            type="button"
+            onClick={() => setShowPrev((v) => !v)}
+            className="flex items-center gap-1.5 text-[11px] text-[#4a4a4a] hover:text-[#9ca3af] transition-colors cursor-pointer"
+          >
+            {showPrev ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
+            Prioridades da semana anterior
+          </button>
+          {showPrev && lastReview.answers.priorities && (
+            <p className="text-xs text-[#6b7280] leading-relaxed mt-2 whitespace-pre-line pl-2 border-l border-[#2a2a2a]">
+              {lastReview.answers.priorities}
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function RevisaoPage() {
@@ -220,6 +475,7 @@ export default function RevisaoPage() {
     return `${s} — ${e}`;
   }, [start, end]);
 
+  const weekStart = format(start, "yyyy-MM-dd");
   const isCurrentWeek = weekOffset === 0;
   const weekKeys = days.map((d) => format(d, "yyyy-MM-dd"));
 
@@ -262,20 +518,19 @@ export default function RevisaoPage() {
     ? (Math.round(avgMood) as MoodLevel)
     : null;
 
-  // Task per-day breakdown
   const hasTasks = weekTasks.length > 0;
 
   if (!hydrated) {
     return (
       <div className="space-y-5">
         <Skeleton className="h-8 w-56 bg-[#1a1a1a]" />
+        <Skeleton className="h-48 bg-[#1a1a1a]" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[0, 1, 2, 3].map((i) => (
             <Skeleton key={i} className="h-20 bg-[#1a1a1a]" />
           ))}
         </div>
         <Skeleton className="h-48 bg-[#1a1a1a]" />
-        <Skeleton className="h-32 bg-[#1a1a1a]" />
       </div>
     );
   }
@@ -315,6 +570,9 @@ export default function RevisaoPage() {
           </button>
         </div>
       </div>
+
+      {/* ── GUIDED REVIEW ─────────────────────────────────────────────── */}
+      <GuidedReviewSection weekStart={weekStart} />
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -367,7 +625,7 @@ export default function RevisaoPage() {
             <TrendingUp size={13} className="text-[#22c55e]" />
           </div>
           <p
-            className="text-lg font-semibold truncate"
+            className="text-sm font-semibold leading-tight break-words"
             style={{ color: weekBalance >= 0 ? "#22c55e" : "#ef4444" }}
           >
             {formatBRL(weekBalance)}
@@ -444,20 +702,20 @@ export default function RevisaoPage() {
           </div>
           <div className="grid grid-cols-3 gap-4 text-center mb-4">
             <div>
-              <p className="text-base font-semibold text-[#22c55e]">
+              <p className="text-sm font-semibold text-[#22c55e] break-words">
                 {formatBRL(weekIncome)}
               </p>
               <p className="text-[11px] text-[#4a4a4a] mt-0.5">Receitas</p>
             </div>
             <div>
-              <p className="text-base font-semibold text-[#ef4444]">
+              <p className="text-sm font-semibold text-[#ef4444] break-words">
                 {formatBRL(weekExpenses)}
               </p>
               <p className="text-[11px] text-[#4a4a4a] mt-0.5">Despesas</p>
             </div>
             <div>
               <p
-                className="text-base font-semibold"
+                className="text-sm font-semibold break-words"
                 style={{ color: weekBalance >= 0 ? "#22c55e" : "#ef4444" }}
               >
                 {formatBRL(weekBalance)}
@@ -466,7 +724,6 @@ export default function RevisaoPage() {
             </div>
           </div>
 
-          {/* Bar visualization */}
           {(() => {
             const maxVal = Math.max(weekIncome, weekExpenses, 0.01);
             return (

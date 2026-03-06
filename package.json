@@ -13,6 +13,7 @@
     "db:users": "node scripts/check-users.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.78.0",
     "@ducanh2912/next-pwa": "^10.2.9",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.97.0",

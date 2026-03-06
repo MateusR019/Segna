@@ -29,6 +29,8 @@ import {
   ChevronRight,
   RefreshCw,
   Zap,
+  ArrowDownCircle,
+  ArrowUpCircle,
 } from "lucide-react";
 import { useInvestimentosStore } from "@/store/investimentosStore";
 import { useFinancasStore } from "@/store/financasStore";
@@ -398,6 +400,125 @@ function AddInvestmentDialog() {
   );
 }
 
+// ─── AporteDialog ─────────────────────────────────────────────────────────────
+
+function AporteDialog({ inv }: { inv: Investment }) {
+  const { addTransaction } = useFinancasStore();
+  const { success } = useToast();
+  const [open, setOpen] = useState(false);
+  const [operationType, setOperationType] = useState<"aporte" | "resgate">("aporte");
+  const [amount, setAmount] = useState("");
+  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [description, setDescription] = useState("");
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const value = parseFloat(amount.replace(",", "."));
+    if (isNaN(value) || value <= 0) return;
+
+    addTransaction({
+      type: operationType === "aporte" ? "expense" : "income",
+      amount: value,
+      description: description.trim() || (operationType === "aporte" ? `Aporte — ${inv.name}` : `Resgate — ${inv.name}`),
+      category: operationType === "aporte" ? "investments" : "investment_return",
+      date,
+      investmentId: inv.id,
+    });
+
+    setAmount("");
+    setDescription("");
+    setDate(new Date().toISOString().slice(0, 10));
+    setOpen(false);
+    success(operationType === "aporte" ? "Aporte registrado!" : "Resgate registrado!");
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <button
+          className="p-1.5 rounded-md text-[#4a4a4a] hover:text-[#22c55e] hover:bg-[#2a2a2a] transition-colors cursor-pointer"
+          title="Registrar aporte ou resgate"
+        >
+          <Plus size={12} />
+        </button>
+      </DialogTrigger>
+      <DialogContent className="bg-[#1a1a1a] border-[#2a2a2a] text-white max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Movimentação — {inv.name}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+          {/* Tipo: Aporte ou Resgate */}
+          <div className="grid grid-cols-2 gap-2">
+            {(["aporte", "resgate"] as const).map((op) => (
+              <button
+                key={op}
+                type="button"
+                onClick={() => setOperationType(op)}
+                className={`flex items-center justify-center gap-2 py-2.5 rounded-lg border text-sm font-medium transition-all cursor-pointer ${
+                  operationType === op
+                    ? op === "aporte"
+                      ? "bg-[#22c55e]/15 border-[#22c55e]/50 text-[#22c55e]"
+                      : "bg-[#ef4444]/15 border-[#ef4444]/50 text-[#ef4444]"
+                    : "bg-transparent border-[#2a2a2a] text-[#6b7280] hover:border-[#3a3a3a]"
+                }`}
+              >
+                {op === "aporte"
+                  ? <ArrowDownCircle size={14} />
+                  : <ArrowUpCircle size={14} />
+                }
+                {op === "aporte" ? "Aportar" : "Resgatar"}
+              </button>
+            ))}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Valor (R$)</Label>
+            <Input
+              autoFocus
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="0,00"
+              className="bg-[#0f0f0f] border-[#2a2a2a]"
+              required
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Data</Label>
+            <Input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="bg-[#0f0f0f] border-[#2a2a2a]"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Descrição (opcional)</Label>
+            <Input
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder={operationType === "aporte" ? `Aporte — ${inv.name}` : `Resgate — ${inv.name}`}
+              className="bg-[#0f0f0f] border-[#2a2a2a]"
+            />
+          </div>
+
+          <Button
+            type="submit"
+            className={`w-full font-medium cursor-pointer ${
+              operationType === "aporte"
+                ? "bg-[#22c55e] hover:bg-[#16a34a] text-black"
+                : "bg-[#ef4444] hover:bg-[#dc2626] text-white"
+            }`}
+          >
+            {operationType === "aporte" ? "Registrar Aporte" : "Registrar Resgate"}
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ─── InvestmentCard ───────────────────────────────────────────────────────────
 
 function InvestmentCard({ inv }: { inv: Investment }) {
@@ -456,6 +577,7 @@ function InvestmentCard({ inv }: { inv: Investment }) {
           </div>
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
+          <AporteDialog inv={inv} />
           <button
             onClick={() => {
               setTempValue(String(inv.currentValue));

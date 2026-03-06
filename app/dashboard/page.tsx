@@ -1,19 +1,21 @@
 "use client";
 import Link from "next/link";
+import { useEffect } from "react";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useFinancasStore, calcBalance, calcTotalIncome, calcTotalExpenses } from "@/store/financasStore";
 import { useHabitosStore, calcStreak } from "@/store/habitosStore";
 import { useDefiStore } from "@/store/defiStore";
 import { useNotasStore } from "@/store/notasStore";
 import { useInvestimentosStore } from "@/store/investimentosStore";
+import { usePatrimonioStore } from "@/store/patrimonioStore";
 import { formatBRL } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
-import { format, getDaysInMonth, subDays, startOfWeek, endOfWeek } from "date-fns";
+import { format, getDaysInMonth, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { PatrimonioSparkline } from "@/components/dashboard/PatrimonioSparkline";
 import {
   TrendingUp, TrendingDown, CheckSquare, Coins, StickyNote,
   ArrowRight, Flame, Wallet, CalendarDays, Target, BarChart3,
-  Plus, FileText, PenLine,
 } from "lucide-react";
 import { WeatherWidget } from "@/components/dashboard/WeatherWidget";
 import { BudgetAlertBanner } from "@/components/BudgetAlertBanner";
@@ -113,6 +115,24 @@ export default function DashboardPage() {
   const totalFinancialBalance = calcBalance(transactions);
   const netWorth = totalFinancialBalance + portfolioTotal + poolsBRL + investmentTotal;
 
+  // ── Patrimônio Histórico — auto-snapshot diário ───────────────
+  const { addSnapshot, hasSnapshotToday, getLastN } = usePatrimonioStore();
+  const patrimonioSnapshots = getLastN(16);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    if (hasSnapshotToday()) return;
+    addSnapshot({
+      date: todayKey,
+      total: netWorth,
+      financas: totalFinancialBalance,
+      cripto: portfolioTotal,
+      investimentos: investmentTotal,
+      pools: poolsBRL,
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated]);
+
   // ── Notes ────────────────────────────────────────────────────
   const recentNotes = notes.slice(0, 3);
   const tagMap = Object.fromEntries(tags.map((t) => [t.id, t]));
@@ -156,30 +176,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-0.5">
-        {[
-          { href: "/financas", label: "Nova transação", icon: <Plus size={12} />, color: "#22c55e" },
-          { href: "/notas",    label: "Nova nota",       icon: <PenLine size={12} />, color: "#06b6d4" },
-          { href: "/tarefas",  label: "Nova tarefa",     icon: <FileText size={12} />, color: "#6366f1" },
-          { href: "/habitos",  label: "Ver hábitos",     icon: <CheckSquare size={12} />, color: "#a78bfa" },
-        ].map(({ href, label, icon, color }) => (
-          <Link
-            key={href}
-            href={href}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium whitespace-nowrap transition-all hover:opacity-80 flex-shrink-0"
-            style={{
-              background: color + "12",
-              borderColor: color + "30",
-              color,
-            }}
-          >
-            {icon}
-            {label}
-          </Link>
-        ))}
-      </div>
-
       {/* Budget Alert */}
       <BudgetAlertBanner />
 
@@ -190,11 +186,26 @@ export default function DashboardPage() {
             <div className="w-6 h-6 rounded-md bg-[#6366f1]/10 flex items-center justify-center">
               <BarChart3 size={12} className="text-[#a78bfa]" />
             </div>
-            <span className="text-xs text-[#6b7280] font-medium">Patrimônio total acumulado</span>
+            <span className="text-xs text-[#6b7280] font-medium">Patrimônio total</span>
           </div>
-          <Link href="/financas" className="text-[10px] text-[#4a4a4a] hover:text-[#9ca3af] transition-colors flex items-center gap-1">
-            Detalhes <ArrowRight size={9} />
-          </Link>
+          <div className="flex items-center gap-2">
+            {patrimonioSnapshots.length >= 2 && (() => {
+              const prev = patrimonioSnapshots[patrimonioSnapshots.length - 2].total;
+              const diff = netWorth - prev;
+              const pct = prev !== 0 ? (diff / Math.abs(prev)) * 100 : 0;
+              const isPos = diff >= 0;
+              return (
+                <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-md ${
+                  isPos ? "bg-[#22c55e]/10 text-[#22c55e]" : "bg-[#ef4444]/10 text-[#ef4444]"
+                }`}>
+                  {isPos ? "+" : ""}{pct.toFixed(1)}%
+                </span>
+              );
+            })()}
+            <Link href="/financas" className="text-[10px] text-[#4a4a4a] hover:text-[#9ca3af] transition-colors flex items-center gap-1">
+              Detalhes <ArrowRight size={9} />
+            </Link>
+          </div>
         </div>
         <p
           className="text-2xl font-bold tracking-tight"
@@ -202,7 +213,10 @@ export default function DashboardPage() {
         >
           {formatBRL(netWorth)}
         </p>
-        <div className="flex items-center gap-4 mt-2.5 text-xs">
+        {patrimonioSnapshots.length >= 2 && (
+          <PatrimonioSparkline snapshots={patrimonioSnapshots} />
+        )}
+        <div className="flex items-center flex-wrap gap-x-4 gap-y-1.5 mt-2.5 text-xs">
           <div>
             <p className="text-[10px] text-[#4a4a4a]">Saldo financeiro</p>
             <p className="font-medium" style={{ color: totalFinancialBalance >= 0 ? "#22c55e" : "#ef4444" }}>
@@ -247,7 +261,7 @@ export default function DashboardPage() {
             />
           </div>
           <p
-            className="text-lg font-semibold truncate"
+            className="text-sm font-semibold leading-tight break-words"
             style={{ color: monthBalance >= 0 ? "#22c55e" : "#ef4444" }}
           >
             {formatBRL(monthBalance)}
@@ -302,9 +316,9 @@ export default function DashboardPage() {
               className="text-[#3a3a3a] group-hover:text-[#6b7280] transition-colors"
             />
           </div>
-          <p className="text-lg font-semibold text-white">
+          <p className="text-sm font-semibold text-white leading-tight">
             {completedToday}
-            <span className="text-sm font-normal text-[#4a4a4a]">
+            <span className="text-xs font-normal text-[#4a4a4a]">
               /{habitTotal}
             </span>
           </p>
@@ -334,7 +348,7 @@ export default function DashboardPage() {
               className="text-[#3a3a3a] group-hover:text-[#6b7280] transition-colors"
             />
           </div>
-          <p className="text-lg font-semibold text-white truncate">
+          <p className="text-sm font-semibold text-white leading-tight break-words">
             {formatBRL(portfolioTotal)}
           </p>
           <p className="text-[11px] text-[#4a4a4a] mt-0.5">
@@ -356,7 +370,7 @@ export default function DashboardPage() {
               className="text-[#3a3a3a] group-hover:text-[#6b7280] transition-colors"
             />
           </div>
-          <p className="text-lg font-semibold text-white">{notes.length}</p>
+          <p className="text-sm font-semibold text-white leading-tight">{notes.length}</p>
           <p className="text-[11px] text-[#4a4a4a] mt-0.5">
             {tags.length} {tags.length === 1 ? "tag" : "tags"}
           </p>
@@ -402,7 +416,7 @@ export default function DashboardPage() {
           {/* Week expenses */}
           <div className="text-center space-y-0.5">
             <p
-              className="text-xl font-bold truncate"
+              className="text-base font-bold leading-tight break-words"
               style={{ color: weekExpenses > 0 ? "#f59e0b" : "#3a3a3a" }}
             >
               {weekExpenses > 0 ? formatBRL(weekExpenses) : "—"}
