@@ -6,6 +6,10 @@ import { AppShell } from "@/components/layout/AppShell";
 
 const geist = Geist({ subsets: ["latin"] });
 
+const APP_URL = "https://segna.space";
+const DESCRIPTION =
+  "Dashboard pessoal para organizar finanças, hábitos, notas, cripto e muito mais. Open source e grátis.";
+
 export const viewport: Viewport = {
   themeColor: "#0f0f0f",
   width: "device-width",
@@ -16,9 +20,40 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Segna",
-  description: "Dashboard pessoal de finanças, hábitos, notas e cripto",
+  metadataBase: new URL(APP_URL),
+  title: {
+    default: "Segna — Dashboard Pessoal",
+    template: "%s · Segna",
+  },
+  description: DESCRIPTION,
+  keywords: [
+    "dashboard pessoal",
+    "finanças pessoais",
+    "controle de hábitos",
+    "cripto portfolio",
+    "notas",
+    "produtividade",
+    "open source",
+  ],
+  authors: [{ name: "Mateus", url: APP_URL }],
+  creator: "Mateus",
   manifest: "/manifest.json",
+
+  openGraph: {
+    type: "website",
+    locale: "pt_BR",
+    url: APP_URL,
+    siteName: "Segna",
+    title: "Segna — Dashboard Pessoal",
+    description: DESCRIPTION,
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: "Segna — Dashboard Pessoal",
+    description: DESCRIPTION,
+  },
+
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

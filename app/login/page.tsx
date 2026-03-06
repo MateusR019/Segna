@@ -732,6 +732,10 @@ export default function LoginPage() {
               <Github size={10} />
               Open Source
             </a>
+            <a href="/privacidade"
+              className="text-[#4a4a4a] hover:text-[#9ca3af] text-xs transition-colors">
+              Privacidade
+            </a>
           </div>
         </div>
       </footer>
