@@ -63,13 +63,14 @@ export default function LoginPage() {
       } else {
         const { error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
-        setMsg({ text: "Conta criada! Verifique seu e-mail para confirmar.", ok: true });
-        setTab("login");
+        // Auto-confirm ativo — entra direto após cadastro
+        await loadAllStores();
+        router.push("/dashboard");
+        router.refresh();
       }
     } catch (err: unknown) {
       const m = err instanceof Error ? err.message : "Erro ao autenticar";
       if (m.includes("Invalid login credentials")) setMsg({ text: "E-mail ou senha incorretos.", ok: false });
-      else if (m.includes("Email not confirmed"))  setMsg({ text: "Confirme seu e-mail antes de entrar.", ok: false });
       else if (m.includes("User already registered")) setMsg({ text: "E-mail já cadastrado. Faça login.", ok: false });
       else if (m.includes("Password should be at least")) setMsg({ text: "A senha deve ter pelo menos 6 caracteres.", ok: false });
       else setMsg({ text: m, ok: false });
