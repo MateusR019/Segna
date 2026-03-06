@@ -4,7 +4,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import {
   TrendingUp, CheckSquare, Coins, StickyNote, LayoutDashboard,
-  HelpCircle, LogOut, ClipboardList, CalendarDays, Scale, PiggyBank, Settings,
+  HelpCircle, LogOut, ClipboardList, CalendarDays, Scale, Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
@@ -42,7 +42,6 @@ export function AppSidebar() {
     { href: "/notas",        label: t("notes"),        icon: StickyNote },
     { href: "/revisao",      label: t("review"),       icon: CalendarDays },
     { href: "/corporal",     label: t("corporal"),     icon: Scale },
-    { href: "/investimentos",label: t("investments"),  icon: PiggyBank },
   ];
 
   async function handleSignOut() {
