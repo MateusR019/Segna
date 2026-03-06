@@ -4,6 +4,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useFinancasStore } from "@/store/financasStore";
 import { formatBRL } from "@/lib/format";
 
+/* Tooltip sem o ":" do Recharts padrão */
+function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<{ name: string; value: number }> }) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: "8px", padding: "8px 12px", fontSize: "12px" }}>
+      <p style={{ color: "#9ca3af", marginBottom: "3px" }}>{payload[0].name}</p>
+      <p style={{ color: "#f5f5f5", fontWeight: 600 }}>{formatBRL(payload[0].value)}</p>
+    </div>
+  );
+}
+
 const CATEGORY_COLORS: Record<string, string> = {
   housing: "#6366f1",
   food: "#22c55e",
@@ -15,6 +26,12 @@ const CATEGORY_COLORS: Record<string, string> = {
   investments: "#14b8a6",
   other: "#6b7280",
 };
+
+/* Paleta para categorias personalizadas */
+const CUSTOM_PALETTE = ["#f43f5e","#fb923c","#facc15","#a3e635","#34d399","#22d3ee","#818cf8","#e879f9","#fb7185","#38bdf8"];
+function customColor(name: string, index: number): string {
+  return CUSTOM_PALETTE[index % CUSTOM_PALETTE.length];
+}
 
 const CATEGORY_LABELS: Record<string, string> = {
   housing: "Moradia",
@@ -30,6 +47,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 export function ExpensePieChart() {
   const transactions = useFinancasStore((s) => s.transactions);
+  const customExpenseCategories = useFinancasStore((s) => s.customExpenseCategories);
 
   const grouped = transactions
     .filter((t) => t.type === "expense")
@@ -56,7 +74,13 @@ export function ExpensePieChart() {
     );
   }
 
-  const COLORS = entries.map(([key]) => CATEGORY_COLORS[key] ?? "#6b7280");
+  /* Monta mapa de cor para categorias custom (por ordem de criação) */
+  const customColorMap: Record<string, string> = {};
+  customExpenseCategories.forEach((name, i) => {
+    customColorMap[name] = customColor(name, i);
+  });
+
+  const COLORS = entries.map(([key]) => CATEGORY_COLORS[key] ?? customColorMap[key] ?? "#6b7280");
 
   const data = entries.map(([key, value]) => ({
     name: CATEGORY_LABELS[key] ?? key,
@@ -90,21 +114,7 @@ export function ExpensePieChart() {
                 />
               ))}
             </Pie>
-            <Tooltip
-              contentStyle={{
-                background: "#1a1a1a",
-                border: "1px solid #2a2a2a",
-                borderRadius: "6px",
-                color: "#f5f5f5",
-                fontSize: "12px",
-              }}
-              itemStyle={{ color: "#f5f5f5" }}
-              labelStyle={{ color: "#9ca3af" }}
-              formatter={(value: number | undefined) => [
-                formatBRL(value ?? 0),
-                "",
-              ]}
-            />
+            <Tooltip content={<CustomTooltip />} />
           </PieChart>
         </ResponsiveContainer>
 

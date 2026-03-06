@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { Transaction, CategoryGoal, MonthlyBudget, SavingsGoal, AnyCategory } from "@/types";
+import { Transaction, CategoryGoal, MonthlyBudget, SavingsGoal } from "@/types";
 import { format, addMonths } from "date-fns";
 import { loadStoreData, saveStoreData } from "@/lib/db";
 
@@ -9,6 +9,8 @@ interface FinancasState {
   goals: CategoryGoal[];
   budget: MonthlyBudget | null;
   savingsGoal: SavingsGoal | null;
+  customExpenseCategories: string[];
+  customIncomeCategories: string[];
 
   addTransaction: (t: Omit<Transaction, "id" | "createdAt">) => void;
   removeTransaction: (id: string) => void;
@@ -23,6 +25,9 @@ interface FinancasState {
 
   setSavingsGoal: (targetAmount: number) => void;
   clearSavingsGoal: () => void;
+
+  addCustomCategory: (type: "expense" | "income", name: string) => void;
+  removeCustomCategory: (type: "expense" | "income", name: string) => void;
 
   generateRecurring: () => void;
 
@@ -42,6 +47,8 @@ function scheduleSync() {
       goals: s.goals,
       budget: s.budget,
       savingsGoal: s.savingsGoal,
+      customExpenseCategories: s.customExpenseCategories,
+      customIncomeCategories:  s.customIncomeCategories,
     });
   }, 1000);
 }
@@ -55,6 +62,8 @@ export const useFinancasStore = create<FinancasState>()(
       goals: [],
       budget: null,
       savingsGoal: null,
+      customExpenseCategories: [],
+      customIncomeCategories: [],
 
       addTransaction: (t) => {
         set((state) => ({
@@ -126,6 +135,26 @@ export const useFinancasStore = create<FinancasState>()(
         scheduleSync();
       },
 
+      addCustomCategory: (type, name) => {
+        const trimmed = name.trim();
+        if (!trimmed) return;
+        const key = type === "expense" ? "customExpenseCategories" : "customIncomeCategories";
+        set((state) => {
+          const existing = state[key] as string[];
+          if (existing.includes(trimmed)) return state;
+          return { [key]: [...existing, trimmed] };
+        });
+        scheduleSync();
+      },
+
+      removeCustomCategory: (type, name) => {
+        const key = type === "expense" ? "customExpenseCategories" : "customIncomeCategories";
+        set((state) => ({
+          [key]: (state[key] as string[]).filter((c) => c !== name),
+        }));
+        scheduleSync();
+      },
+
       generateRecurring: () => {
         const { transactions } = get();
         const thisMonth = format(new Date(), "yyyy-MM");
@@ -165,10 +194,12 @@ export const useFinancasStore = create<FinancasState>()(
         const data = await loadStoreData("financas");
         if (!data) return;
         set({
-          transactions: (data.transactions as Transaction[]) ?? [],
-          goals:        (data.goals as CategoryGoal[])      ?? [],
-          budget:       (data.budget as MonthlyBudget)      ?? null,
-          savingsGoal:  (data.savingsGoal as SavingsGoal)   ?? null,
+          transactions:            (data.transactions as Transaction[]) ?? [],
+          goals:                   (data.goals as CategoryGoal[])       ?? [],
+          budget:                  (data.budget as MonthlyBudget)       ?? null,
+          savingsGoal:             (data.savingsGoal as SavingsGoal)    ?? null,
+          customExpenseCategories: (data.customExpenseCategories as string[]) ?? [],
+          customIncomeCategories:  (data.customIncomeCategories  as string[]) ?? [],
         });
       },
     }),
@@ -198,7 +229,7 @@ export function calcTotalExpenses(transactions: Transaction[]): number {
 
 export function calcCategorySpendThisMonth(
   transactions: Transaction[],
-  category: AnyCategory
+  category: string
 ): number {
   const thisMonth = format(new Date(), "yyyy-MM");
   return transactions

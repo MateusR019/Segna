@@ -48,7 +48,7 @@ const TYPE_MAP: Record<string, TransactionType> = {
 };
 
 // PT labels for export
-const CATEGORY_LABEL: Record<AnyCategory, string> = {
+const CATEGORY_LABEL: Record<string, string> = {
   housing: "moradia", food: "alimentacao", transport: "transporte", health: "saude",
   entertainment: "lazer", education: "educacao", shopping: "compras",
   investments: "investimentos", other: "outro",

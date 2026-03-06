@@ -84,7 +84,7 @@ const TYPE_MAP: Record<string, TransactionType> = {
   despesa: "expense", saída: "expense", saida: "expense", expense: "expense",
   receita: "income", entrada: "income", income: "income",
 };
-const CATEGORY_LABEL: Record<AnyCategory, string> = {
+const CATEGORY_LABEL: Record<string, string> = {
   housing: "moradia", food: "alimentacao", transport: "transporte", health: "saude",
   entertainment: "lazer", education: "educacao", shopping: "compras",
   investments: "investimentos", other: "outro",

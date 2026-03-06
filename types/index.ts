@@ -25,7 +25,7 @@ export type AnyCategory = ExpenseCategory | IncomeCategory;
 export interface Transaction {
   id: string;
   type: TransactionType;
-  category: AnyCategory;
+  category: string; // AnyCategory | categoria personalizada
   description: string;
   amount: number;
   date: string; // "YYYY-MM-DD"

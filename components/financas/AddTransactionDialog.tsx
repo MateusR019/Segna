@@ -17,11 +17,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Plus, Tag } from "lucide-react";
 import { useFinancasStore } from "@/store/financasStore";
 import { useInvestimentosStore } from "@/store/investimentosStore";
 import { useToast } from "@/hooks/useToast";
-import { AnyCategory, ExpenseCategory, IncomeCategory, TransactionType } from "@/types";
+import { ExpenseCategory, IncomeCategory, TransactionType } from "@/types";
 
 const EXPENSE_CATEGORIES: { value: ExpenseCategory; label: string }[] = [
   { value: "housing", label: "Moradia" },
@@ -48,18 +48,25 @@ interface Props {
 }
 
 export function AddTransactionDialog({ trigger = "default" }: Props) {
-  const addTransaction = useFinancasStore((s) => s.addTransaction);
-  const investments = useInvestimentosStore((s) => s.investments);
+  const addTransaction           = useFinancasStore((s) => s.addTransaction);
+  const addCustomCategory        = useFinancasStore((s) => s.addCustomCategory);
+  const customExpenseCategories  = useFinancasStore((s) => s.customExpenseCategories);
+  const customIncomeCategories   = useFinancasStore((s) => s.customIncomeCategories);
+  const investments              = useInvestimentosStore((s) => s.investments);
   const { success, error: toastError } = useToast();
-  const [open, setOpen] = useState(false);
-  const [type, setType] = useState<TransactionType>("expense");
-  const [amount, setAmount] = useState("");
-  const [description, setDesc] = useState("");
-  const [category, setCategory] = useState<AnyCategory>("other");
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
-  const [recurring, setRecurring] = useState(false);
-  const [investmentId, setInvestmentId] = useState<string>("none");
 
+  const [open, setOpen]             = useState(false);
+  const [type, setType]             = useState<TransactionType>("expense");
+  const [amount, setAmount]         = useState("");
+  const [description, setDesc]      = useState("");
+  const [category, setCategory]     = useState<string>("other");
+  const [date, setDate]             = useState(new Date().toISOString().slice(0, 10));
+  const [recurring, setRecurring]   = useState(false);
+  const [investmentId, setInvestmentId] = useState<string>("none");
+  const [newCatInput, setNewCatInput]   = useState("");
+  const [showNewCat, setShowNewCat]     = useState(false);
+
+  const customCats = type === "income" ? customIncomeCategories : customExpenseCategories;
   const categories = type === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
 
   const showInvestmentField =
@@ -70,11 +77,22 @@ export function AddTransactionDialog({ trigger = "default" }: Props) {
     setType(t);
     setCategory(t === "income" ? "salary" : "other");
     setInvestmentId("none");
+    setShowNewCat(false);
+    setNewCatInput("");
   }
 
-  function handleCategoryChange(v: AnyCategory) {
+  function handleCategoryChange(v: string) {
     setCategory(v);
     setInvestmentId("none");
+  }
+
+  function handleAddCustomCategory() {
+    const trimmed = newCatInput.trim();
+    if (!trimmed) return;
+    addCustomCategory(type, trimmed);
+    setCategory(trimmed);
+    setNewCatInput("");
+    setShowNewCat(false);
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -172,10 +190,7 @@ export function AddTransactionDialog({ trigger = "default" }: Props) {
 
           <div className="space-y-1.5">
             <Label>Categoria</Label>
-            <Select
-              value={category}
-              onValueChange={(v) => handleCategoryChange(v as AnyCategory)}
-            >
+            <Select value={category} onValueChange={handleCategoryChange}>
               <SelectTrigger className="bg-[#0f0f0f] border-[#2a2a2a] w-full">
                 <SelectValue />
               </SelectTrigger>
@@ -185,8 +200,49 @@ export function AddTransactionDialog({ trigger = "default" }: Props) {
                     {c.label}
                   </SelectItem>
                 ))}
+                {customCats.length > 0 && (
+                  <>
+                    <div className="mx-2 my-1 border-t border-[#2a2a2a]" />
+                    {customCats.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        <span className="flex items-center gap-1.5">
+                          <Tag size={11} className="text-[#a78bfa]" />
+                          {c}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </>
+                )}
               </SelectContent>
             </Select>
+
+            {/* Adicionar nova categoria inline */}
+            {!showNewCat ? (
+              <button type="button" onClick={() => setShowNewCat(true)}
+                className="text-xs text-[#6366f1] hover:text-[#a78bfa] transition-colors flex items-center gap-1 mt-1">
+                <Plus size={11} />
+                Nova categoria
+              </button>
+            ) : (
+              <div className="flex gap-2 mt-1">
+                <Input
+                  value={newCatInput}
+                  onChange={(e) => setNewCatInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddCustomCategory(); } }}
+                  placeholder="Ex: Pets, Academia..."
+                  className="bg-[#0f0f0f] border-[#2a2a2a] text-sm h-8"
+                  autoFocus
+                />
+                <button type="button" onClick={handleAddCustomCategory}
+                  className="px-3 h-8 rounded-md text-xs font-medium bg-[#6366f1] text-white hover:bg-[#5855e0] transition-colors flex-shrink-0">
+                  Criar
+                </button>
+                <button type="button" onClick={() => { setShowNewCat(false); setNewCatInput(""); }}
+                  className="px-2 h-8 rounded-md text-xs text-[#6b7280] hover:text-white transition-colors flex-shrink-0">
+                  ✕
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Vínculo com investimento — só aparece para categorias de investimento */}
