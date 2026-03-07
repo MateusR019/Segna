@@ -13,13 +13,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { format, getDaysInMonth, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { PatrimonioSparkline } from "@/components/dashboard/PatrimonioSparkline";
+import { useSettingsStore } from "@/store/settingsStore";
+import { useT } from "@/lib/i18n";
 import {
   TrendingUp, TrendingDown, CheckSquare, Coins, StickyNote,
   ArrowRight, Flame, Wallet, CalendarDays, Target, BarChart3,
 } from "lucide-react";
 import { WeatherWidget } from "@/components/dashboard/WeatherWidget";
 import { BudgetAlertBanner } from "@/components/BudgetAlertBanner";
-import { ExportDataButton } from "@/components/ExportDataButton";
 import { MoodWidget } from "@/components/dashboard/MoodWidget";
 import { DailyScore } from "@/components/dashboard/DailyScore";
 import InsightsPanel from "@/components/dashboard/InsightsPanel";
@@ -36,6 +37,8 @@ function stripChecklist(text: string): string {
 
 export default function DashboardPage() {
   const hydrated = useHydrated();
+  const language = useSettingsStore((s) => s.language);
+  const t = useT(language);
 
   const transactions = useFinancasStore((s) => s.transactions);
   const budget = useFinancasStore((s) => s.budget);
@@ -171,7 +174,6 @@ export default function DashboardPage() {
           <p className="text-sm text-[#6b7280] capitalize">{todayLabel}</p>
         </div>
         <div className="flex items-center gap-2">
-          <ExportDataButton />
           <WeatherWidget />
         </div>
       </div>
@@ -186,7 +188,7 @@ export default function DashboardPage() {
             <div className="w-6 h-6 rounded-md bg-[#6366f1]/10 flex items-center justify-center">
               <BarChart3 size={12} className="text-[#a78bfa]" />
             </div>
-            <span className="text-xs text-[#6b7280] font-medium">Patrimônio total</span>
+            <span className="text-xs text-[#6b7280] font-medium">{t("netWorthTitle")}</span>
           </div>
           <div className="flex items-center gap-2">
             {patrimonioSnapshots.length >= 2 && (() => {
@@ -203,7 +205,7 @@ export default function DashboardPage() {
               );
             })()}
             <Link href="/financas" className="text-[10px] text-[#4a4a4a] hover:text-[#9ca3af] transition-colors flex items-center gap-1">
-              Detalhes <ArrowRight size={9} />
+              {t("detailsLink")} <ArrowRight size={9} />
             </Link>
           </div>
         </div>
@@ -218,7 +220,7 @@ export default function DashboardPage() {
         )}
         <div className="flex items-center flex-wrap gap-x-4 gap-y-1.5 mt-2.5 text-xs">
           <div>
-            <p className="text-[10px] text-[#4a4a4a]">Saldo financeiro</p>
+            <p className="text-[10px] text-[#4a4a4a]">{t("financialBalance")}</p>
             <p className="font-medium" style={{ color: totalFinancialBalance >= 0 ? "#22c55e" : "#ef4444" }}>
               {formatBRL(totalFinancialBalance)}
             </p>
@@ -266,7 +268,7 @@ export default function DashboardPage() {
           >
             {formatBRL(monthBalance)}
           </p>
-          <p className="text-[11px] text-[#4a4a4a] mt-0.5">Saldo do mês</p>
+          <p className="text-[11px] text-[#4a4a4a] mt-0.5">{t("monthBalance")}</p>
           {showProjection && (
             <p
               className="text-[10px] mt-0.5"
@@ -322,7 +324,7 @@ export default function DashboardPage() {
               /{habitTotal}
             </span>
           </p>
-          <p className="text-[11px] text-[#4a4a4a] mt-0.5">Hábitos hoje</p>
+          <p className="text-[11px] text-[#4a4a4a] mt-0.5">{t("habitsToday")}</p>
           <div className="mt-2 h-1 bg-[#2a2a2a] rounded-full overflow-hidden">
             <div
               className="h-full rounded-full bar-animated"
@@ -381,13 +383,13 @@ export default function DashboardPage() {
       <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-4">
         <div className="flex items-center gap-2 mb-3">
           <CalendarDays size={14} className="text-[#6366f1]" />
-          <span className="text-sm font-medium text-white">Últimos 7 dias</span>
+          <span className="text-sm font-medium text-white">{t("last7days")}</span>
         </div>
         <div className="grid grid-cols-3 gap-3">
           {/* Habit completions this week */}
           <div className="text-center space-y-0.5">
             <p className="text-xl font-bold text-[#a78bfa]">{weekHabitCompletions}</p>
-            <p className="text-[11px] text-[#4a4a4a]">conclusões de hábitos</p>
+            <p className="text-[11px] text-[#4a4a4a]">{t("habitCompletions")}</p>
           </div>
           {/* Best habit */}
           <div className="text-center space-y-0.5">
@@ -403,13 +405,13 @@ export default function DashboardPage() {
                   </p>
                 </div>
                 <p className="text-[11px] text-[#4a4a4a]">
-                  {bestHabitThisWeek.weekCount}× — melhor hábito
+                  {bestHabitThisWeek.weekCount}× — {t("bestHabit")}
                 </p>
               </>
             ) : (
               <>
                 <p className="text-xl font-bold text-[#3a3a3a]">—</p>
-                <p className="text-[11px] text-[#3a3a3a]">melhor hábito</p>
+                <p className="text-[11px] text-[#3a3a3a]">{t("bestHabit")}</p>
               </>
             )}
           </div>
@@ -421,7 +423,7 @@ export default function DashboardPage() {
             >
               {weekExpenses > 0 ? formatBRL(weekExpenses) : "—"}
             </p>
-            <p className="text-[11px] text-[#4a4a4a]">em despesas</p>
+            <p className="text-[11px] text-[#4a4a4a]">{t("inExpenses")}</p>
           </div>
         </div>
       </div>
@@ -434,24 +436,24 @@ export default function DashboardPage() {
             <div className="flex items-center gap-2">
               <CheckSquare size={14} className="text-[#a78bfa]" />
               <span className="text-sm font-medium text-white">
-                Hábitos de hoje
+                {t("todaysHabits")}
               </span>
             </div>
             <Link
               href="/habitos"
               className="text-xs text-[#4a4a4a] hover:text-[#9ca3af] flex items-center gap-1 transition-colors"
             >
-              Ver todos <ArrowRight size={10} />
+              {t("viewAll")} <ArrowRight size={10} />
             </Link>
           </div>
           {activeHabits.length === 0 ? (
             <div className="py-6 text-center space-y-1.5">
-              <p className="text-sm text-[#4a4a4a]">Nenhum hábito cadastrado</p>
+              <p className="text-sm text-[#4a4a4a]">{t("noHabitsYet")}</p>
               <Link
                 href="/habitos"
                 className="text-xs text-[#6366f1] hover:text-[#a78bfa] transition-colors"
               >
-                Criar meu primeiro hábito →
+                {t("createFirstHabit")}
               </Link>
             </div>
           ) : (
@@ -531,24 +533,24 @@ export default function DashboardPage() {
             <div className="flex items-center gap-2">
               <StickyNote size={14} className="text-[#06b6d4]" />
               <span className="text-sm font-medium text-white">
-                Notas recentes
+                {t("recentNotes")}
               </span>
             </div>
             <Link
               href="/notas"
               className="text-xs text-[#4a4a4a] hover:text-[#9ca3af] flex items-center gap-1 transition-colors"
             >
-              Ver todas <ArrowRight size={10} />
+              {t("viewAllFem")} <ArrowRight size={10} />
             </Link>
           </div>
           {recentNotes.length === 0 ? (
             <div className="py-6 text-center space-y-1.5">
-              <p className="text-sm text-[#4a4a4a]">Nenhuma nota ainda</p>
+              <p className="text-sm text-[#4a4a4a]">{t("noNotesYetShort")}</p>
               <Link
                 href="/notas"
                 className="text-xs text-[#06b6d4] hover:text-[#22d3ee] transition-colors"
               >
-                Criar primeira nota →
+                {t("createFirstNote")}
               </Link>
             </div>
           ) : (
@@ -592,7 +594,7 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2 mb-3">
             <Flame size={14} className="text-[#f59e0b]" />
             <span className="text-sm font-medium text-white">
-              Maiores streaks
+              {t("topStreaks")}
             </span>
           </div>
           <div className="flex flex-wrap gap-3">

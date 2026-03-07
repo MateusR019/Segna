@@ -109,6 +109,24 @@
 /* Bottom nav backdrop */
 .light nav[class*="bg-[#0a0a0a]"] { background-color: rgba(255,255,255,0.97) !important; }
 
+/* ─── Dark-page: login/landing always stays dark in all themes ─── */
+.dark-page                                    { background-color: #070710 !important; color: #ffffff !important; }
+.light .dark-page [class*="text-white"]       { color: #ffffff !important; }
+.light .dark-page [class*="text-[#f5f5f5]"]  { color: #f5f5f5 !important; }
+.light .dark-page [class*="text-[#e5e5e5]"]  { color: #e5e5e5 !important; }
+.light .dark-page [class*="text-[#d1d5db]"]  { color: #d1d5db !important; }
+.light .dark-page [class*="text-[#9ca3af]"]  { color: #9ca3af !important; }
+.light .dark-page [class*="text-[#6b7280]"]  { color: #6b7280 !important; }
+.light .dark-page [class*="text-[#4a4a4a]"]  { color: #4a4a4a !important; }
+.light .dark-page [class*="text-[#3a3a3a]"]  { color: #3a3a3a !important; }
+.light .dark-page [class*="bg-[#0f0f0f]"]    { background-color: #0f0f0f !important; }
+.light .dark-page [class*="bg-[#111111]"]    { background-color: #111111 !important; }
+.light .dark-page [class*="bg-[#1a1a1a]"]    { background-color: #1a1a1a !important; }
+.light .dark-page [class*="bg-[#1f1f1f]"]    { background-color: #1f1f1f !important; }
+.light .dark-page [class*="bg-[#2a2a2a]"]    { background-color: #2a2a2a !important; }
+.light .dark-page [class*="border-[#2a2a2a]"] { border-color: #2a2a2a !important; }
+.light .dark-page [class*="border-[#3a3a3a]"] { border-color: #3a3a3a !important; }
+
 /* Skeleton shimmer → claro */
 .light .skeleton-shimmer {
   background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%) !important;

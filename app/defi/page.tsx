@@ -21,12 +21,14 @@ export default function DefiPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-xl font-semibold text-white">DeFi / Crypto</h1>
           <ExchangeRateWidget />
         </div>
-        <AddTokenDialog />
+        <div className="flex-shrink-0">
+          <AddTokenDialog />
+        </div>
       </div>
 
       {hydrated ? (

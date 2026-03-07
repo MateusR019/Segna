@@ -11,12 +11,13 @@ import { CategoryGoals } from "@/components/financas/CategoryGoals";
 import { MonthlyReport } from "@/components/financas/MonthlyReport";
 import { MonthlyBudget } from "@/components/financas/MonthlyBudget";
 import { SavingsGoalWidget } from "@/components/financas/SavingsGoalWidget";
-import { ImportExportButton } from "@/components/financas/ImportExportButton";
 import { SpendingCalendar } from "@/components/financas/SpendingCalendar";
 import { RecurringManager } from "@/components/financas/RecurringManager";
 import { InvestimentosTab } from "@/components/financas/InvestimentosTab";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useFinancasStore } from "@/store/financasStore";
+import { useSettingsStore } from "@/store/settingsStore";
+import { useT } from "@/lib/i18n";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { format, parseISO, subMonths, addMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -58,6 +59,8 @@ function MonthSelector({ month, onChange }: { month: string; onChange: (m: strin
 export default function FinancasPage() {
   const hydrated = useHydrated();
   const generateRecurring = useFinancasStore((s) => s.generateRecurring);
+  const language = useSettingsStore((s) => s.language);
+  const t = useT(language);
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), "yyyy-MM"));
 
   useEffect(() => {
@@ -69,12 +72,11 @@ export default function FinancasPage() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-white">Finanças</h1>
-          <p className="text-sm text-[#6b7280]">Receitas, despesas e investimentos</p>
+          <h1 className="text-xl font-semibold text-white">{t("financasTitle")}</h1>
+          <p className="text-sm text-[#6b7280]">{t("financasDesc")}</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <MonthSelector month={selectedMonth} onChange={setSelectedMonth} />
-          <ImportExportButton />
           <AddTransactionDialog />
         </div>
       </div>
@@ -98,12 +100,12 @@ export default function FinancasPage() {
       <Tabs defaultValue="overview">
         <div className="w-full overflow-x-auto scrollbar-hide">
           <TabsList className="bg-[#1a1a1a] border border-[#2a2a2a] h-9 flex-nowrap min-w-max">
-            <TabsTrigger value="overview" className="text-xs cursor-pointer whitespace-nowrap">Visão Geral</TabsTrigger>
-            <TabsTrigger value="transactions" className="text-xs cursor-pointer whitespace-nowrap">Transações</TabsTrigger>
-            <TabsTrigger value="investimentos" className="text-xs cursor-pointer whitespace-nowrap">Investimentos</TabsTrigger>
-            <TabsTrigger value="calendar" className="text-xs cursor-pointer whitespace-nowrap">Calendário</TabsTrigger>
-            <TabsTrigger value="recurring" className="text-xs cursor-pointer whitespace-nowrap">Fixos</TabsTrigger>
-            <TabsTrigger value="metas" className="text-xs cursor-pointer whitespace-nowrap">Metas</TabsTrigger>
+            <TabsTrigger value="overview" className="text-xs cursor-pointer whitespace-nowrap">{t("finTabOverview")}</TabsTrigger>
+            <TabsTrigger value="transactions" className="text-xs cursor-pointer whitespace-nowrap">{t("finTabTransactions")}</TabsTrigger>
+            <TabsTrigger value="investimentos" className="text-xs cursor-pointer whitespace-nowrap">{t("finTabInvestments")}</TabsTrigger>
+            <TabsTrigger value="calendar" className="text-xs cursor-pointer whitespace-nowrap">{t("finTabCalendar")}</TabsTrigger>
+            <TabsTrigger value="recurring" className="text-xs cursor-pointer whitespace-nowrap">{t("finTabRecurring")}</TabsTrigger>
+            <TabsTrigger value="metas" className="text-xs cursor-pointer whitespace-nowrap">{t("finTabGoals")}</TabsTrigger>
           </TabsList>
         </div>
 
@@ -164,10 +166,6 @@ export default function FinancasPage() {
         </TabsContent>
       </Tabs>
 
-      {/* FAB mobile */}
-      <div className="md:hidden fixed bottom-20 right-4 z-40">
-        <AddTransactionDialog trigger="fab" />
-      </div>
     </div>
   );
 }

@@ -407,9 +407,32 @@ function AporteDialog({ inv }: { inv: Investment }) {
   const { success } = useToast();
   const [open, setOpen] = useState(false);
   const [operationType, setOperationType] = useState<"aporte" | "resgate">("aporte");
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState("");         // always BRL
+  const [cryptoQty, setCryptoQty] = useState("");  // native units (BTC, ETH, etc.)
+  const [useCryptoUnit, setUseCryptoUnit] = useState(false);
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [description, setDescription] = useState("");
+
+  const isCripto = inv.type === "cripto" && !!inv.symbol && !!inv.pricePerUnit;
+
+  function handleCryptoQtyChange(val: string) {
+    setCryptoQty(val);
+    const qty = parseFloat(val.replace(",", "."));
+    if (!isNaN(qty) && qty > 0 && inv.pricePerUnit) {
+      setAmount((qty * inv.pricePerUnit).toFixed(2).replace(".", ","));
+    } else {
+      setAmount("");
+    }
+  }
+
+  function handleClose(v: boolean) {
+    setOpen(v);
+    if (!v) {
+      setAmount(""); setCryptoQty(""); setDescription("");
+      setDate(new Date().toISOString().slice(0, 10));
+      setUseCryptoUnit(false);
+    }
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -425,15 +448,12 @@ function AporteDialog({ inv }: { inv: Investment }) {
       investmentId: inv.id,
     });
 
-    setAmount("");
-    setDescription("");
-    setDate(new Date().toISOString().slice(0, 10));
-    setOpen(false);
+    handleClose(false);
     success(operationType === "aporte" ? "Aporte registrado!" : "Resgate registrado!");
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogTrigger asChild>
         <button
           className="p-1.5 rounded-md text-[#4a4a4a] hover:text-[#22c55e] hover:bg-[#2a2a2a] transition-colors cursor-pointer"
@@ -471,17 +491,63 @@ function AporteDialog({ inv }: { inv: Investment }) {
             ))}
           </div>
 
-          <div className="space-y-1.5">
-            <Label>Valor (R$)</Label>
-            <Input
-              autoFocus
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="0,00"
-              className="bg-[#0f0f0f] border-[#2a2a2a]"
-              required
-            />
-          </div>
+          {/* Unidade — só para cripto com pricePerUnit */}
+          {isCripto && (
+            <div className="flex items-center gap-2 bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-3 py-2">
+              <span className="text-[11px] text-[#6b7280]">Inserir em:</span>
+              <div className="flex items-center gap-1 ml-auto">
+                <button
+                  type="button"
+                  onClick={() => { setUseCryptoUnit(false); setCryptoQty(""); }}
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all cursor-pointer ${
+                    !useCryptoUnit ? "bg-[#6366f1] text-white" : "text-[#6b7280] hover:text-white"
+                  }`}
+                >
+                  R$ BRL
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setUseCryptoUnit(true); setAmount(""); }}
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all cursor-pointer ${
+                    useCryptoUnit ? "bg-[#f59e0b] text-black" : "text-[#6b7280] hover:text-white"
+                  }`}
+                >
+                  {inv.symbol}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {useCryptoUnit && isCripto ? (
+            <div className="space-y-1.5">
+              <Label>Quantidade ({inv.symbol})</Label>
+              <Input
+                autoFocus
+                value={cryptoQty}
+                onChange={(e) => handleCryptoQtyChange(e.target.value)}
+                placeholder="0.001"
+                className="bg-[#0f0f0f] border-[#2a2a2a] font-mono"
+                required
+              />
+              {amount && inv.pricePerUnit && (
+                <p className="text-[11px] text-[#22c55e]">
+                  ≈ R$ {amount} · {formatBRL(inv.pricePerUnit)}/{inv.symbol}
+                </p>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              <Label>Valor (R$)</Label>
+              <Input
+                autoFocus={!useCryptoUnit}
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="0,00"
+                className="bg-[#0f0f0f] border-[#2a2a2a]"
+                required
+              />
+            </div>
+          )}
 
           <div className="space-y-1.5">
             <Label>Data</Label>

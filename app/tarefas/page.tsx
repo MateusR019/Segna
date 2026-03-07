@@ -5,6 +5,8 @@ import { ptBR } from "date-fns/locale";
 import { Plus, Trash2, Check, X, ClipboardList } from "lucide-react";
 import { useTarefasStore, getTodayTasks, calcCompletionRate } from "@/store/tarefasStore";
 import { useHydrated } from "@/hooks/useHydrated";
+import { useSettingsStore } from "@/store/settingsStore";
+import { useT } from "@/lib/i18n";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TaskPriority } from "@/types";
 
@@ -16,11 +18,7 @@ const PRIORITY_COLOR: Record<TaskPriority, string> = {
   low: "#6b7280",
 };
 
-const PRIORITY_LABEL: Record<TaskPriority, string> = {
-  high: "Alta",
-  medium: "Média",
-  low: "Baixa",
-};
+// PRIORITY_LABEL is now built dynamically inside components using t()
 
 const PRIORITY_ORDER: TaskPriority[] = ["high", "medium", "low"];
 
@@ -32,6 +30,13 @@ interface AddTaskFormProps {
 
 function AddTaskForm({ onClose }: AddTaskFormProps) {
   const addTask = useTarefasStore((s) => s.addTask);
+  const language = useSettingsStore((s) => s.language);
+  const t = useT(language);
+  const PRIORITY_LABEL: Record<TaskPriority, string> = {
+    high: t("priorityHigh"),
+    medium: t("priorityMedium"),
+    low: t("priorityLow"),
+  };
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState<TaskPriority>("medium");
   const [description, setDescription] = useState("");
@@ -59,20 +64,20 @@ function AddTaskForm({ onClose }: AddTaskFormProps) {
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Título da tarefa"
+          placeholder={t("taskTitle")}
           className="w-full bg-transparent border-b border-[#2a2a2a] pb-1.5 text-sm text-white placeholder-[#4a4a4a] outline-none focus:border-[#6366f1] transition-colors"
         />
         <input
           type="text"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Descrição (opcional)"
+          placeholder={t("taskDesc")}
           className="w-full bg-transparent border-b border-[#2a2a2a] pb-1.5 text-xs text-[#9ca3af] placeholder-[#3a3a3a] outline-none focus:border-[#4a4a4a] transition-colors"
         />
       </div>
 
       <div className="flex items-center gap-2">
-        <span className="text-xs text-[#4a4a4a] flex-shrink-0">Prioridade:</span>
+        <span className="text-xs text-[#4a4a4a] flex-shrink-0">{t("priority")}</span>
         <div className="flex gap-1.5">
           {PRIORITY_ORDER.map((p) => (
             <button
@@ -98,7 +103,7 @@ function AddTaskForm({ onClose }: AddTaskFormProps) {
           onClick={onClose}
           className="px-3 py-1.5 text-xs text-[#6b7280] hover:text-[#9ca3af] transition-colors cursor-pointer"
         >
-          Cancelar
+          {t("cancelBtn")}
         </button>
         <button
           type="submit"
@@ -106,7 +111,7 @@ function AddTaskForm({ onClose }: AddTaskFormProps) {
           className="flex items-center gap-1.5 px-3 py-1.5 bg-[#6366f1] hover:bg-[#5254cc] disabled:opacity-30 disabled:cursor-not-allowed text-white text-xs font-medium rounded-lg transition-colors cursor-pointer"
         >
           <Plus size={12} />
-          Adicionar
+          {t("addBtn")}
         </button>
       </div>
     </form>
@@ -126,6 +131,13 @@ interface TaskRowProps {
 }
 
 function TaskRow({ id, title, description, priority, completed, onToggle, onRemove }: TaskRowProps) {
+  const language = useSettingsStore((s) => s.language);
+  const t = useT(language);
+  const PRIORITY_LABEL: Record<TaskPriority, string> = {
+    high: t("priorityHigh"),
+    medium: t("priorityMedium"),
+    low: t("priorityLow"),
+  };
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   return (
@@ -229,6 +241,13 @@ function TaskRow({ id, title, description, priority, completed, onToggle, onRemo
 
 export default function TarefasPage() {
   const hydrated = useHydrated();
+  const language = useSettingsStore((s) => s.language);
+  const t = useT(language);
+  const PRIORITY_LABEL: Record<TaskPriority, string> = {
+    high: t("priorityHigh"),
+    medium: t("priorityMedium"),
+    low: t("priorityLow"),
+  };
   const tasks = useTarefasStore((s) => s.tasks);
   const toggleTask = useTarefasStore((s) => s.toggleTask);
   const removeTask = useTarefasStore((s) => s.removeTask);
@@ -269,7 +288,7 @@ export default function TarefasPage() {
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-white">Tarefas</h1>
+          <h1 className="text-xl font-semibold text-white">{t("tarefasTitle")}</h1>
           <p className="text-sm text-[#6b7280] capitalize">{todayLabel}</p>
         </div>
         <button
@@ -278,7 +297,7 @@ export default function TarefasPage() {
           className="flex items-center gap-1.5 px-3 py-1.5 bg-[#6366f1] hover:bg-[#5254cc] text-white text-sm font-medium rounded-lg transition-colors cursor-pointer flex-shrink-0"
         >
           <Plus size={14} />
-          Adicionar tarefa
+          {t("addTask")}
         </button>
       </div>
 
@@ -289,19 +308,19 @@ export default function TarefasPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-3">
           <p className="text-lg font-semibold text-white">{todayTasks.length}</p>
-          <p className="text-[11px] text-[#4a4a4a] mt-0.5">Total do dia</p>
+          <p className="text-[11px] text-[#4a4a4a] mt-0.5">{t("totalDay")}</p>
         </div>
         <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-3">
           <p className="text-lg font-semibold text-[#22c55e]">{completedTasks.length}</p>
-          <p className="text-[11px] text-[#4a4a4a] mt-0.5">Concluídas</p>
+          <p className="text-[11px] text-[#4a4a4a] mt-0.5">{t("completed")}</p>
         </div>
         <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-3">
           <p className="text-lg font-semibold text-[#f59e0b]">{pendingTasks.length}</p>
-          <p className="text-[11px] text-[#4a4a4a] mt-0.5">Pendentes</p>
+          <p className="text-[11px] text-[#4a4a4a] mt-0.5">{t("pending")}</p>
         </div>
         <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-3">
           <p className="text-lg font-semibold text-white">{completionRate}%</p>
-          <p className="text-[11px] text-[#4a4a4a] mt-0.5">Concluído</p>
+          <p className="text-[11px] text-[#4a4a4a] mt-0.5">{t("completion")}</p>
           <div className="mt-2 h-1 bg-[#2a2a2a] rounded-full overflow-hidden">
             <div
               className="h-full rounded-full transition-all duration-500"
@@ -323,7 +342,7 @@ export default function TarefasPage() {
             </div>
           </div>
           <div className="space-y-1">
-            <p className="text-sm text-[#4a4a4a]">Nenhuma tarefa para hoje</p>
+            <p className="text-sm text-[#4a4a4a]">{t("noTasksToday")}</p>
             <p className="text-xs text-[#3a3a3a]">Clique em "Adicionar tarefa" para começar</p>
           </div>
         </div>
@@ -333,7 +352,7 @@ export default function TarefasPage() {
           {pendingTasks.length > 0 && (
             <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-4">
               <p className="text-xs font-medium text-[#6b7280] uppercase tracking-wide mb-3">
-                Pendentes
+                {t("pending")}
               </p>
               <div className="space-y-0">
                 {PRIORITY_ORDER.map((priority) => {
@@ -376,7 +395,7 @@ export default function TarefasPage() {
           {completedTasks.length > 0 && (
             <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-4">
               <p className="text-xs font-medium text-[#6b7280] uppercase tracking-wide mb-3">
-                Concluídas ({completedTasks.length})
+                {t("completed")} ({completedTasks.length})
               </p>
               <div>
                 {completedTasks.map((task) => (

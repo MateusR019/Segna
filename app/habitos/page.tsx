@@ -8,16 +8,20 @@ import { HabitFrequencyGoals } from "@/components/habitos/HabitFrequencyGoals";
 import { HabitAdvancedStats } from "@/components/habitos/HabitAdvancedStats";
 import { AddHabitDialog } from "@/components/habitos/AddHabitDialog";
 import { useHydrated } from "@/hooks/useHydrated";
+import { useSettingsStore } from "@/store/settingsStore";
+import { useT } from "@/lib/i18n";
 
 export default function HabitosPage() {
   const hydrated = useHydrated();
+  const language = useSettingsStore((s) => s.language);
+  const t = useT(language);
 
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-white">Hábitos</h1>
-          <p className="text-sm text-[#6b7280]">Rastreamento diário de hábitos</p>
+          <h1 className="text-xl font-semibold text-white">{t("habitosTitle")}</h1>
+          <p className="text-sm text-[#6b7280]">{t("habitosDesc")}</p>
         </div>
         <AddHabitDialog />
       </div>

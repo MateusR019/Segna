@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Trash2, Eraser, Plus, Tag, X, Search, Check, Pencil, Pin } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useSettingsStore } from "@/store/settingsStore";
+import { useT } from "@/lib/i18n";
 
 const TAG_COLORS = [
   "#6366f1", "#ec4899", "#f59e0b", "#22c55e",
@@ -128,6 +130,8 @@ function ChecklistView({
 
 export default function NotasPage() {
   const hydrated = useHydrated();
+  const language = useSettingsStore((s) => s.language);
+  const t = useT(language);
   const { notes, tags, addNote, editNote, removeNote, clearAll, addTag, removeTag, togglePin } =
     useNotasStore();
   const { success, error: toastError } = useToast();
@@ -247,13 +251,13 @@ export default function NotasPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-white">Notas</h1>
-          <p className="text-sm text-[#6b7280]">Anote e vá embora</p>
+          <h1 className="text-xl font-semibold text-white">{t("notasTitle")}</h1>
+          <p className="text-sm text-[#6b7280]">{t("notasDesc")}</p>
         </div>
         {hydrated && notes.length > 0 && (
           <Button variant="ghost" size="sm" onClick={clearAll} className="text-xs text-[#6b7280] hover:text-[#ef4444] hover:bg-transparent cursor-pointer">
             <Eraser size={13} className="mr-1.5" />
-            Limpar tudo
+            {t("clearAll")}
           </Button>
         )}
       </div>
@@ -270,7 +274,7 @@ export default function NotasPage() {
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
-          placeholder="O que está na sua cabeça? (Ctrl+Enter para salvar, cole imagens)"
+          placeholder={t("noteInput")}
           rows={3}
           className="w-full bg-transparent text-sm text-white placeholder-[#4a4a4a] resize-none outline-none leading-relaxed"
         />
@@ -300,7 +304,7 @@ export default function NotasPage() {
               }`}
             >
               <Tag size={10} />
-              Sem tag
+              {t("noTag")}
             </button>
             {tags.map((tag) => (
               <button
@@ -325,7 +329,7 @@ export default function NotasPage() {
           </span>
           <Button size="sm" onClick={submit} disabled={!draft.trim()}
             className="bg-[#22c55e] hover:bg-[#16a34a] text-black font-medium text-xs cursor-pointer disabled:opacity-30">
-            Salvar
+            {t("saveNote")}
           </Button>
         </div>
       </div>
@@ -338,7 +342,7 @@ export default function NotasPage() {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar nas notas..."
+              placeholder={t("searchNotes")}
               className="pl-8 h-10 text-sm bg-[#1a1a1a] border-[#2a2a2a] placeholder:text-[#4a4a4a]"
             />
             {search && (
@@ -355,7 +359,7 @@ export default function NotasPage() {
                 filterTagId === "" ? "bg-[#2a2a2a] text-white" : "text-[#6b7280] hover:text-white hover:bg-[#1f1f1f]"
               }`}
             >
-              Todas ({notes.length})
+              {t("allNotes")} ({notes.length})
             </button>
             {tags.map((tag) => {
               const count = notes.filter((n) => n.tagId === tag.id).length;
@@ -386,7 +390,7 @@ export default function NotasPage() {
                 className="flex items-center gap-1 px-2 py-1 rounded text-xs text-[#3a3a3a] hover:text-[#6b7280] transition-colors cursor-pointer"
               >
                 <Plus size={11} />
-                Nova tag
+                {t("newTag")}
               </button>
             ) : (
               <form onSubmit={handleAddTag} className="flex items-center gap-1.5">
@@ -415,9 +419,9 @@ export default function NotasPage() {
       ) : visibleNotes.length === 0 ? (
         <div className="text-center py-16 space-y-1">
           <p className="text-sm text-[#4a4a4a]">
-            {search ? `Nenhuma nota para "${search}".` : filterTagId ? "Nenhuma nota com essa tag." : "Nenhuma nota ainda."}
+            {search ? `Nenhuma nota para "${search}".` : filterTagId ? "Nenhuma nota com essa tag." : t("noNotesYet")}
           </p>
-          <p className="text-xs text-[#3a3a3a]">Escreva algo acima e salve.</p>
+          <p className="text-xs text-[#3a3a3a]">{t("writeAbove")}</p>
         </div>
       ) : (
         <div className="columns-1 md:columns-2 xl:columns-3 gap-3 space-y-0">
