@@ -18,7 +18,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, AlertTriangle } from "lucide-react";
 import {
   useFinancasStore,
   calcCategorySpendThisMonth,
@@ -133,12 +133,22 @@ export function CategoryGoals() {
         ) : (
           goals.map((goal) => {
             const spent = calcCategorySpendThisMonth(transactions, goal.category);
-            const pct = Math.min((spent / goal.limitAmount) * 100, 100);
+            const rawPct = (spent / goal.limitAmount) * 100;
+            const pct = Math.min(rawPct, 100);
             const over = spent > goal.limitAmount;
+            const nearLimit = rawPct >= 80 && !over;
             const label =
               CATEGORIES.find((c) => c.value === goal.category)?.label ??
               goal.category;
             const color = CATEGORY_COLORS[goal.category] ?? "#6b7280";
+
+            // Cor da barra e texto
+            const barColor = over ? "#ef4444" : nearLimit ? "#f59e0b" : color;
+            const valueColor = over
+              ? "text-[#ef4444]"
+              : nearLimit
+              ? "text-[#f59e0b]"
+              : "text-[#9ca3af]";
 
             return (
               <div key={goal.id} className="space-y-1.5">
@@ -149,11 +159,15 @@ export function CategoryGoals() {
                       style={{ background: color }}
                     />
                     <span className="text-xs text-white">{label}</span>
+                    {(nearLimit || over) && (
+                      <AlertTriangle
+                        size={11}
+                        className={over ? "text-[#ef4444]" : "text-[#f59e0b]"}
+                      />
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <span
-                      className={`text-xs font-medium ${over ? "text-[#ef4444]" : "text-[#9ca3af]"}`}
-                    >
+                    <span className={`text-xs font-medium ${valueColor}`}>
                       {formatBRL(spent)} / {formatBRL(goal.limitAmount)}
                     </span>
                     <Button
@@ -170,14 +184,16 @@ export function CategoryGoals() {
                 <div className="h-1.5 bg-[#2a2a2a] rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all"
-                    style={{
-                      width: `${pct}%`,
-                      background: over ? "#ef4444" : color,
-                    }}
+                    style={{ width: `${pct}%`, background: barColor }}
                   />
                 </div>
+                {nearLimit && (
+                  <p className="text-[11px] text-[#f59e0b]">
+                    {formatBRL(goal.limitAmount - spent)} restante
+                  </p>
+                )}
                 {over && (
-                  <p className="text-xs text-[#ef4444]">
+                  <p className="text-[11px] text-[#ef4444]">
                     {formatBRL(spent - goal.limitAmount)} acima do limite
                   </p>
                 )}

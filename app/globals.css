@@ -127,6 +127,40 @@
 .light .dark-page [class*="border-[#2a2a2a]"] { border-color: #2a2a2a !important; }
 .light .dark-page [class*="border-[#3a3a3a]"] { border-color: #3a3a3a !important; }
 
+/* Additional dark backgrounds not in base list */
+.light [class*="bg-[#1d1d1d]"]  { background-color: #f3f4f6 !important; }
+.light [class*="bg-[#1e1e1e]"]  { background-color: #f3f4f6 !important; }
+.light [class*="bg-[#181818]"]  { background-color: #f9fafb !important; }
+.light [class*="bg-[#1f2937]"]  { background-color: #e5e7eb !important; }
+.light [class*="bg-[#4a4a4a]"]  { background-color: #9ca3af !important; }
+
+/* Additional dark borders */
+.light [class*="border-[#1a1a1a]"] { border-color: #e5e7eb !important; }
+.light [class*="border-[#5a5a5a]"] { border-color: #9ca3af !important; }
+
+/* Placeholder text — not caught by text-[#X] rules */
+.light [class*="placeholder-[#3a3a3a]"]::placeholder { color: #9ca3af !important; }
+.light [class*="placeholder-[#4a4a4a]"]::placeholder { color: #6b7280 !important; }
+.light [class*="placeholder-[#6b7280]"]::placeholder { color: #374151 !important; }
+
+/* Hover background states */
+.light [class*="hover:bg-[#1a1a1a]"]:hover { background-color: #f3f4f6 !important; }
+.light [class*="hover:bg-[#2a2a2a]"]:hover { background-color: #e5e7eb !important; }
+.light [class*="hover:bg-[#3a3a3a]"]:hover { background-color: #d1d5db !important; }
+
+/* Hover border states */
+.light [class*="hover:border-[#3a3a3a]"]:hover { border-color: #9ca3af !important; }
+.light [class*="hover:border-[#4a4a4a]"]:hover { border-color: #6b7280 !important; }
+
+/* Very dark text → readable on white */
+.light [class*="text-[#2a2a2a]"] { color: #4b5563 !important; }
+.light [class*="text-[#1f1f1f]"] { color: #111111 !important; }
+
+/* Scrollbar for light mode */
+.light ::-webkit-scrollbar-track  { background: #f3f4f6; }
+.light ::-webkit-scrollbar-thumb  { background: #d1d5db; }
+.light ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
 /* Skeleton shimmer → claro */
 .light .skeleton-shimmer {
   background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%) !important;

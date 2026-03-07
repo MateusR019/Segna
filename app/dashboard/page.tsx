@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect } from "react";
+import { motion } from "framer-motion";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useFinancasStore, calcBalance, calcTotalIncome, calcTotalExpenses } from "@/store/financasStore";
 import { useHabitosStore, calcStreak } from "@/store/habitosStore";
@@ -165,10 +166,16 @@ export default function DashboardPage() {
     );
   }
 
+  const fade = (delay = 0) => ({
+    initial: { opacity: 0, y: 14 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.28, ease: "easeOut" as const, delay },
+  });
+
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-start justify-between gap-3">
+      <motion.div {...fade(0)} className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-white">Dashboard</h1>
           <p className="text-sm text-[#6b7280] capitalize">{todayLabel}</p>
@@ -176,13 +183,13 @@ export default function DashboardPage() {
         <div className="flex items-center gap-2">
           <WeatherWidget />
         </div>
-      </div>
+      </motion.div>
 
       {/* Budget Alert */}
       <BudgetAlertBanner />
 
       {/* Net Worth */}
-      <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-4">
+      <motion.div {...fade(0.04)} className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-md bg-[#6366f1]/10 flex items-center justify-center">
@@ -244,10 +251,10 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
-      </div>
+      </motion.div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <motion.div {...fade(0.08)} className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {/* Balance */}
         <Link
           href="/financas"
@@ -377,10 +384,10 @@ export default function DashboardPage() {
             {tags.length} {tags.length === 1 ? "tag" : "tags"}
           </p>
         </Link>
-      </div>
+      </motion.div>
 
       {/* Weekly summary */}
-      <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-4">
+      <motion.div {...fade(0.12)} className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-4">
         <div className="flex items-center gap-2 mb-3">
           <CalendarDays size={14} className="text-[#6366f1]" />
           <span className="text-sm font-medium text-white">{t("last7days")}</span>
@@ -426,10 +433,10 @@ export default function DashboardPage() {
             <p className="text-[11px] text-[#4a4a4a]">{t("inExpenses")}</p>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Lower sections */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <motion.div {...fade(0.16)} className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Habits checklist today */}
         <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-4 space-y-3">
           <div className="flex items-center justify-between">
@@ -586,11 +593,11 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
-      </div>
+      </motion.div>
 
       {/* Streaks */}
       {topStreaks.length > 0 && (
-        <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-4">
+        <motion.div {...fade(0.2)} className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-4">
           <div className="flex items-center gap-2 mb-3">
             <Flame size={14} className="text-[#f59e0b]" />
             <span className="text-sm font-medium text-white">
@@ -616,19 +623,19 @@ export default function DashboardPage() {
               </Link>
             ))}
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* Score + Mood */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <motion.div {...fade(0.24)} className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <DailyScore />
         <MoodWidget />
-      </div>
+      </motion.div>
 
       {/* Insights */}
-      <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-4">
+      <motion.div {...fade(0.28)} className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-4">
         <InsightsPanel />
-      </div>
+      </motion.div>
 
     </div>
   );

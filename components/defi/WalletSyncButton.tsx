@@ -157,18 +157,22 @@ export function WalletSyncButton() {
             <div className="bg-[#6366f1]/10 border border-[#6366f1]/25 rounded-lg p-3 space-y-2">
               <div className="flex items-center gap-2">
                 <Key size={12} className="text-[#a78bfa] flex-shrink-0" />
-                <p className="text-xs font-medium text-[#a78bfa]">Requer API key gratuita da Zerion</p>
+                <p className="text-xs font-medium text-[#a78bfa]">API key gratuita da Zerion</p>
               </div>
-              <p className="text-[11px] text-[#6b7280] leading-relaxed">
-                Crie sua conta grátis (300 calls/dia) e copie a API key.
-              </p>
+              <ol className="text-[11px] text-[#6b7280] space-y-1 list-decimal list-inside leading-relaxed">
+                <li>Acesse <a href="https://dashboard.zerion.io" target="_blank" rel="noopener noreferrer" className="text-[#6366f1] hover:text-[#a78bfa] underline">dashboard.zerion.io</a></li>
+                <li>Crie conta grátis (sem cartão)</li>
+                <li>Vá em <strong className="text-[#9ca3af]">API Keys</strong> e gere uma chave</li>
+                <li>Cole a chave no campo abaixo</li>
+              </ol>
+              <p className="text-[10px] text-[#4a4a4a]">Plano gratuito: 3.000 requisições/dia</p>
               <a
                 href="https://dashboard.zerion.io"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-[11px] text-[#6366f1] hover:text-[#a78bfa] transition-colors"
+                className="inline-flex items-center gap-1 text-[11px] text-[#6366f1] hover:text-[#a78bfa] transition-colors font-medium"
               >
-                Acessar dashboard.zerion.io
+                Abrir Zerion Dashboard
                 <ExternalLink size={10} />
               </a>
             </div>

@@ -221,6 +221,8 @@ export interface WatchToken {
 
 export type TaskPriority = "low" | "medium" | "high";
 
+export type TaskRecurrence = "daily" | "weekly" | "monthly";
+
 export interface Task {
   id: string;
   title: string;
@@ -230,6 +232,8 @@ export interface Task {
   completedAt?: string;   // ISO string
   priority: TaskPriority;
   createdAt: string;
+  recurrence?: TaskRecurrence; // undefined = tarefa normal; definido = template recorrente
+  generatedFrom?: string;      // ID do template que gerou esta instância
 }
 
 // ─── Mood ─────────────────────────────────────────────────────────────────────

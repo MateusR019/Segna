@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { Task, TaskPriority } from "@/types";
-import { format } from "date-fns";
+import { format, getDay, getDate } from "date-fns";
 import { loadStoreData, saveStoreData } from "@/lib/db";
 
 interface TarefasState {
@@ -11,6 +11,7 @@ interface TarefasState {
   removeTask: (id: string) => void;
   toggleTask: (id: string) => void;
   editTask: (id: string, updates: Partial<Pick<Task, "title" | "description" | "priority" | "date">>) => void;
+  generateRecurring: (dateStr: string) => void;
 
   loadFromDB: () => Promise<void>;
 }
@@ -76,6 +77,54 @@ export const useTarefasStore = create<TarefasState>()(
         scheduleSync();
       },
 
+      generateRecurring: (dateStr: string) => {
+        set((state) => {
+          // Templates = tasks com recurrence definido e sem generatedFrom
+          const templates = state.tasks.filter(
+            (t) => t.recurrence && !t.generatedFrom
+          );
+          const newInstances: Task[] = [];
+
+          for (const tpl of templates) {
+            const tplDate = new Date(tpl.createdAt);
+            const targetDate = new Date(dateStr + "T12:00:00");
+
+            // Verifica se já existe instância para esta data
+            const alreadyExists = state.tasks.some(
+              (t) => t.generatedFrom === tpl.id && t.date === dateStr
+            );
+            if (alreadyExists) continue;
+
+            // Verifica se o dia corresponde à recorrência
+            let shouldGenerate = false;
+            if (tpl.recurrence === "daily") {
+              shouldGenerate = true;
+            } else if (tpl.recurrence === "weekly") {
+              shouldGenerate = getDay(targetDate) === getDay(tplDate);
+            } else if (tpl.recurrence === "monthly") {
+              shouldGenerate = getDate(targetDate) === getDate(tplDate);
+            }
+
+            if (shouldGenerate) {
+              newInstances.push({
+                ...tpl,
+                id: crypto.randomUUID(),
+                date: dateStr,
+                completed: false,
+                completedAt: undefined,
+                createdAt: new Date().toISOString(),
+                recurrence: undefined,
+                generatedFrom: tpl.id,
+              });
+            }
+          }
+
+          if (newInstances.length === 0) return state;
+          return { tasks: [...state.tasks, ...newInstances] };
+        });
+        scheduleSync();
+      },
+
       loadFromDB: async () => {
         const data = await loadStoreData("tarefas");
         if (!data) return;
@@ -91,9 +140,9 @@ export const useTarefasStore = create<TarefasState>()(
 
 // ─── Helpers exportados ──────────────────────────────────────────────────────
 
-/** Tarefas do dia (YYYY-MM-DD) */
+/** Tarefas do dia (YYYY-MM-DD) — exclui templates de recorrência */
 export function getTasksForDate(tasks: Task[], date: string): Task[] {
-  return tasks.filter((t) => t.date === date);
+  return tasks.filter((t) => t.date === date && !t.recurrence);
 }
 
 /** Tarefas do dia de hoje */

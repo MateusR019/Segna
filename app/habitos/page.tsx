@@ -1,4 +1,5 @@
 "use client";
+import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HabitosDayProgress } from "@/components/habitos/HabitosDayProgress";
 import { HabitosDailyChecklist } from "@/components/habitos/HabitosDailyChecklist";
@@ -11,6 +12,12 @@ import { useHydrated } from "@/hooks/useHydrated";
 import { useSettingsStore } from "@/store/settingsStore";
 import { useT } from "@/lib/i18n";
 
+const fade = (delay = 0) => ({
+  initial: { opacity: 0, y: 14 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.28, ease: "easeOut" as const, delay },
+});
+
 export default function HabitosPage() {
   const hydrated = useHydrated();
   const language = useSettingsStore((s) => s.language);
@@ -18,22 +25,22 @@ export default function HabitosPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      <motion.div {...fade(0)} className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold text-white">{t("habitosTitle")}</h1>
           <p className="text-sm text-[#6b7280]">{t("habitosDesc")}</p>
         </div>
         <AddHabitDialog />
-      </div>
+      </motion.div>
 
       {hydrated ? (
         <>
-          <HabitosDayProgress />
-          <HabitosDailyChecklist />
-          <HabitFrequencyGoals />
-          <HabitosWeeklyGrid />
-          <HabitHeatmap />
-          <HabitAdvancedStats />
+          <motion.div {...fade(0.05)}><HabitosDayProgress /></motion.div>
+          <motion.div {...fade(0.1)}><HabitosDailyChecklist /></motion.div>
+          <motion.div {...fade(0.15)}><HabitFrequencyGoals /></motion.div>
+          <motion.div {...fade(0.2)}><HabitosWeeklyGrid /></motion.div>
+          <motion.div {...fade(0.25)}><HabitHeatmap /></motion.div>
+          <motion.div {...fade(0.3)}><HabitAdvancedStats /></motion.div>
         </>
       ) : (
         <div className="space-y-4">

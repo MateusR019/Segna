@@ -404,6 +404,7 @@ function AddInvestmentDialog() {
 
 function AporteDialog({ inv }: { inv: Investment }) {
   const { addTransaction } = useFinancasStore();
+  const { updateInvestment } = useInvestimentosStore();
   const { success } = useToast();
   const [open, setOpen] = useState(false);
   const [operationType, setOperationType] = useState<"aporte" | "resgate">("aporte");
@@ -439,6 +440,7 @@ function AporteDialog({ inv }: { inv: Investment }) {
     const value = parseFloat(amount.replace(",", "."));
     if (isNaN(value) || value <= 0) return;
 
+    // 1. Registra a transação nas finanças
     addTransaction({
       type: operationType === "aporte" ? "expense" : "income",
       amount: value,
@@ -447,6 +449,28 @@ function AporteDialog({ inv }: { inv: Investment }) {
       date,
       investmentId: inv.id,
     });
+
+    // 2. Atualiza o saldo do investimento
+    if (isCripto && inv.pricePerUnit) {
+      // Para cripto: calcula a variação em quantidade e atualiza
+      const qtyChange = useCryptoUnit
+        ? parseFloat(cryptoQty.replace(",", ".")) || 0
+        : value / inv.pricePerUnit;
+      const currentQty = inv.quantity ?? 0;
+      const newQty = operationType === "aporte"
+        ? currentQty + qtyChange
+        : Math.max(0, currentQty - qtyChange);
+      updateInvestment(inv.id, {
+        quantity: newQty,
+        currentValue: newQty * inv.pricePerUnit,
+      });
+    } else {
+      // Para outros tipos: soma ou subtrai o valor em BRL
+      const newValue = operationType === "aporte"
+        ? inv.currentValue + value
+        : Math.max(0, inv.currentValue - value);
+      updateInvestment(inv.id, { currentValue: newValue });
+    }
 
     handleClose(false);
     success(operationType === "aporte" ? "Aporte registrado!" : "Resgate registrado!");

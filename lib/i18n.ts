@@ -148,6 +148,24 @@ const translations = {
     bestHabit:         "melhor hábito",
     inExpenses:        "em despesas",
     todaysHabits:      "Hábitos de hoje",
+
+    // ── Budget alerts ──
+    budgetNearLimit:   "Perto do limite",
+    budgetRemaining:   "restante",
+
+    // ── Streak at risk ──
+    streakAtRisk:      "em risco",
+
+    // ── Recurring tasks ──
+    repeat:            "Repetir",
+    repeatNone:        "Não repetir",
+    repeatDaily:       "Diário",
+    repeatWeekly:      "Semanal",
+    repeatMonthly:     "Mensal",
+    recurring:         "Recorrente",
+
+    // ── PDF ──
+    exportPDF:         "PDF",
   },
 
   en: {
@@ -297,6 +315,24 @@ const translations = {
     bestHabit:         "best habit",
     inExpenses:        "in expenses",
     todaysHabits:      "Today's habits",
+
+    // ── Budget alerts ──
+    budgetNearLimit:   "Near limit",
+    budgetRemaining:   "remaining",
+
+    // ── Streak at risk ──
+    streakAtRisk:      "at risk",
+
+    // ── Recurring tasks ──
+    repeat:            "Repeat",
+    repeatNone:        "Don't repeat",
+    repeatDaily:       "Daily",
+    repeatWeekly:      "Weekly",
+    repeatMonthly:     "Monthly",
+    recurring:         "Recurring",
+
+    // ── PDF ──
+    exportPDF:         "PDF",
   },
 } as const;
 

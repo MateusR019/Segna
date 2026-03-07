@@ -262,19 +262,30 @@ export function HabitosDailyChecklist() {
 
                 {/* Right: streak + edit + delete */}
                 <div className="flex items-center gap-1 flex-shrink-0">
-                  {streak > 0 && confirmDeleteId !== habit.id && (
-                    <div className="flex flex-col items-center gap-0.5 mr-1">
-                      <div className="flex items-center gap-0.5 text-xs text-[#f59e0b] font-semibold">
-                        <Flame size={12} />
-                        <span>{streak}</span>
+                  {streak > 0 && confirmDeleteId !== habit.id && (() => {
+                    const streakAtRisk = !done && !isNegative;
+                    return (
+                      <div className="flex flex-col items-center gap-0.5 mr-1">
+                        <div className={`flex items-center gap-0.5 text-xs font-semibold ${
+                          streakAtRisk ? "text-[#f97316] animate-pulse" : "text-[#f59e0b]"
+                        }`}>
+                          <Flame size={12} />
+                          <span>{streak}</span>
+                        </div>
+                        {streakAtRisk ? (
+                          <span className="text-[9px] text-[#f97316] font-medium leading-none">
+                            em risco
+                          </span>
+                        ) : (
+                          <HabitBestStreakBadge
+                            habitId={habit.id}
+                            completions={completions}
+                            currentStreak={streak}
+                          />
+                        )}
                       </div>
-                      <HabitBestStreakBadge
-                        habitId={habit.id}
-                        completions={completions}
-                        currentStreak={streak}
-                      />
-                    </div>
-                  )}
+                    );
+                  })()}
 
                   {confirmDeleteId === habit.id ? (
                     <div

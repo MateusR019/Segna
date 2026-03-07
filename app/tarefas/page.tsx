@@ -1,14 +1,14 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Plus, Trash2, Check, X, ClipboardList } from "lucide-react";
+import { Plus, Trash2, Check, X, ClipboardList, RefreshCcw } from "lucide-react";
 import { useTarefasStore, getTodayTasks, calcCompletionRate } from "@/store/tarefasStore";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useSettingsStore } from "@/store/settingsStore";
 import { useT } from "@/lib/i18n";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TaskPriority } from "@/types";
+import { TaskPriority, TaskRecurrence } from "@/types";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -40,6 +40,7 @@ function AddTaskForm({ onClose }: AddTaskFormProps) {
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState<TaskPriority>("medium");
   const [description, setDescription] = useState("");
+  const [recurrence, setRecurrence] = useState<TaskRecurrence | "">("");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -49,6 +50,7 @@ function AddTaskForm({ onClose }: AddTaskFormProps) {
       description: description.trim() || undefined,
       priority,
       date: format(new Date(), "yyyy-MM-dd"),
+      ...(recurrence ? { recurrence } : {}),
     });
     onClose();
   }
@@ -76,7 +78,7 @@ function AddTaskForm({ onClose }: AddTaskFormProps) {
         />
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <span className="text-xs text-[#4a4a4a] flex-shrink-0">{t("priority")}</span>
         <div className="flex gap-1.5">
           {PRIORITY_ORDER.map((p) => (
@@ -94,6 +96,21 @@ function AddTaskForm({ onClose }: AddTaskFormProps) {
               {PRIORITY_LABEL[p]}
             </button>
           ))}
+        </div>
+
+        {/* Recorrência */}
+        <div className="flex items-center gap-1.5 ml-auto">
+          <RefreshCcw size={11} className={recurrence ? "text-[#6366f1]" : "text-[#3a3a3a]"} />
+          <select
+            value={recurrence}
+            onChange={(e) => setRecurrence(e.target.value as TaskRecurrence | "")}
+            className="bg-transparent border border-[#2a2a2a] rounded text-xs text-[#6b7280] px-1.5 py-0.5 outline-none cursor-pointer hover:border-[#3a3a3a] focus:border-[#6366f1]"
+          >
+            <option value="">{t("repeatNone")}</option>
+            <option value="daily">{t("repeatDaily")}</option>
+            <option value="weekly">{t("repeatWeekly")}</option>
+            <option value="monthly">{t("repeatMonthly")}</option>
+          </select>
         </div>
       </div>
 
@@ -126,11 +143,12 @@ interface TaskRowProps {
   description?: string;
   priority: TaskPriority;
   completed: boolean;
+  isRecurring?: boolean;
   onToggle: () => void;
   onRemove: () => void;
 }
 
-function TaskRow({ id, title, description, priority, completed, onToggle, onRemove }: TaskRowProps) {
+function TaskRow({ id, title, description, priority, completed, isRecurring, onToggle, onRemove }: TaskRowProps) {
   const language = useSettingsStore((s) => s.language);
   const t = useT(language);
   const PRIORITY_LABEL: Record<TaskPriority, string> = {
@@ -178,12 +196,17 @@ function TaskRow({ id, title, description, priority, completed, onToggle, onRemo
 
       {/* Content */}
       <div className="flex-1 min-w-0 space-y-0.5">
-        <span
-          className={`text-sm leading-snug ${
-            completed ? "line-through text-[#4a4a4a]" : "text-[#e5e5e5]"
-          }`}
-        >
-          {title}
+        <span className="flex items-center gap-1.5 flex-wrap">
+          <span
+            className={`text-sm leading-snug ${
+              completed ? "line-through text-[#4a4a4a]" : "text-[#e5e5e5]"
+            }`}
+          >
+            {title}
+          </span>
+          {isRecurring && (
+            <RefreshCcw size={10} className="text-[#6366f1] flex-shrink-0" aria-label="Recorrente" />
+          )}
         </span>
         {description && (
           <p className="text-xs text-[#4a4a4a] leading-snug line-clamp-1">{description}</p>
@@ -251,8 +274,16 @@ export default function TarefasPage() {
   const tasks = useTarefasStore((s) => s.tasks);
   const toggleTask = useTarefasStore((s) => s.toggleTask);
   const removeTask = useTarefasStore((s) => s.removeTask);
+  const generateRecurring = useTarefasStore((s) => s.generateRecurring);
 
   const [showForm, setShowForm] = useState(false);
+
+  // Gera instâncias de tarefas recorrentes para hoje ao montar
+  useEffect(() => {
+    if (hydrated) {
+      generateRecurring(format(new Date(), "yyyy-MM-dd"));
+    }
+  }, [hydrated, generateRecurring]);
 
   const todayLabel = format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR });
   const todayTasks = getTodayTasks(tasks);
@@ -380,6 +411,7 @@ export default function TarefasPage() {
                           description={task.description}
                           priority={task.priority}
                           completed={task.completed}
+                          isRecurring={!!task.generatedFrom}
                           onToggle={() => toggleTask(task.id)}
                           onRemove={() => removeTask(task.id)}
                         />
@@ -406,6 +438,7 @@ export default function TarefasPage() {
                     description={task.description}
                     priority={task.priority}
                     completed={task.completed}
+                    isRecurring={!!task.generatedFrom}
                     onToggle={() => toggleTask(task.id)}
                     onRemove={() => removeTask(task.id)}
                   />
