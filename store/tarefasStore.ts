@@ -150,6 +150,22 @@ export function getTodayTasks(tasks: Task[]): Task[] {
   return getTasksForDate(tasks, format(new Date(), "yyyy-MM-dd"));
 }
 
+/** Tarefas de dias anteriores não concluídas (backlog) */
+export function getOverdueTasks(tasks: Task[]): Task[] {
+  const today = format(new Date(), "yyyy-MM-dd");
+  return tasks
+    .filter((t) => t.date < today && !t.completed && !t.recurrence)
+    .sort((a, b) => a.date.localeCompare(b.date)); // mais antigas primeiro
+}
+
+/** Quantos dias em atraso */
+export function daysOverdue(dateStr: string): number {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const taskDate = new Date(dateStr + "T00:00:00");
+  return Math.floor((today.getTime() - taskDate.getTime()) / (1000 * 60 * 60 * 24));
+}
+
 /** % de conclusão de um array de tarefas */
 export function calcCompletionRate(tasks: Task[]): number {
   if (tasks.length === 0) return 0;

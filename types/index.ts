@@ -6,7 +6,10 @@ export type ExpenseCategory =
   | "housing"
   | "food"
   | "transport"
+  | "fuel"
   | "health"
+  | "gym"
+  | "supplements"
   | "entertainment"
   | "education"
   | "shopping"
@@ -16,6 +19,7 @@ export type ExpenseCategory =
 export type IncomeCategory =
   | "salary"
   | "freelance"
+  | "gig"
   | "investment_return"
   | "gift"
   | "other_income";

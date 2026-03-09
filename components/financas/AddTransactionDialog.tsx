@@ -24,23 +24,27 @@ import { useToast } from "@/hooks/useToast";
 import { ExpenseCategory, IncomeCategory, TransactionType } from "@/types";
 
 const EXPENSE_CATEGORIES: { value: ExpenseCategory; label: string }[] = [
-  { value: "housing", label: "Moradia" },
-  { value: "food", label: "Alimentação" },
-  { value: "transport", label: "Transporte" },
-  { value: "health", label: "Saúde" },
-  { value: "entertainment", label: "Entretenimento" },
-  { value: "education", label: "Educação" },
-  { value: "shopping", label: "Compras" },
-  { value: "investments", label: "Investimentos" },
-  { value: "other", label: "Outros" },
+  { value: "housing",      label: "Moradia" },
+  { value: "food",         label: "Alimentação" },
+  { value: "transport",    label: "Transporte" },
+  { value: "fuel",         label: "Combustível" },
+  { value: "health",       label: "Saúde" },
+  { value: "gym",          label: "Academia / Treino" },
+  { value: "supplements",  label: "Suplementos" },
+  { value: "entertainment",label: "Entretenimento" },
+  { value: "education",    label: "Educação" },
+  { value: "shopping",     label: "Compras" },
+  { value: "investments",  label: "Investimentos" },
+  { value: "other",        label: "Outros" },
 ];
 
 const INCOME_CATEGORIES: { value: IncomeCategory; label: string }[] = [
-  { value: "salary", label: "Salário" },
-  { value: "freelance", label: "Bico / Freelance" },
+  { value: "salary",            label: "Salário / CLT" },
+  { value: "freelance",         label: "Bico / Freelance" },
+  { value: "gig",               label: "App / Corridas / Gig" },
   { value: "investment_return", label: "Rendimento" },
-  { value: "gift", label: "Presente / Doação" },
-  { value: "other_income", label: "Outra receita" },
+  { value: "gift",              label: "Presente / Doação" },
+  { value: "other_income",      label: "Outra receita" },
 ];
 
 interface Props {

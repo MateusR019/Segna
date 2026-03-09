@@ -16,15 +16,18 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  housing: "#6366f1",
-  food: "#22c55e",
-  transport: "#f59e0b",
-  health: "#ec4899",
-  entertainment: "#8b5cf6",
-  education: "#06b6d4",
-  shopping: "#f97316",
-  investments: "#14b8a6",
-  other: "#6b7280",
+  housing:      "#6366f1",
+  food:         "#22c55e",
+  transport:    "#f59e0b",
+  fuel:         "#fb923c",
+  health:       "#ec4899",
+  gym:          "#ef4444",
+  supplements:  "#a3e635",
+  entertainment:"#8b5cf6",
+  education:    "#06b6d4",
+  shopping:     "#f97316",
+  investments:  "#14b8a6",
+  other:        "#6b7280",
 };
 
 /* Paleta para categorias personalizadas */
@@ -34,15 +37,18 @@ function customColor(name: string, index: number): string {
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
-  housing: "Moradia",
-  food: "Alimentação",
-  transport: "Transporte",
-  health: "Saúde",
-  entertainment: "Entretenimento",
-  education: "Educação",
-  shopping: "Compras",
-  investments: "Investimentos",
-  other: "Outros",
+  housing:      "Moradia",
+  food:         "Alimentação",
+  transport:    "Transporte",
+  fuel:         "Combustível",
+  health:       "Saúde",
+  gym:          "Academia / Treino",
+  supplements:  "Suplementos",
+  entertainment:"Entretenimento",
+  education:    "Educação",
+  shopping:     "Compras",
+  investments:  "Investimentos",
+  other:        "Outros",
 };
 
 export function ExpensePieChart() {

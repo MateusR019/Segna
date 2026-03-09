@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Plus, Trash2, Check, X, ClipboardList, RefreshCcw } from "lucide-react";
-import { useTarefasStore, getTodayTasks, calcCompletionRate } from "@/store/tarefasStore";
+import { useTarefasStore, getTodayTasks, getOverdueTasks, daysOverdue, calcCompletionRate } from "@/store/tarefasStore";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useSettingsStore } from "@/store/settingsStore";
 import { useT } from "@/lib/i18n";
@@ -144,11 +144,12 @@ interface TaskRowProps {
   priority: TaskPriority;
   completed: boolean;
   isRecurring?: boolean;
+  daysLate?: number;
   onToggle: () => void;
   onRemove: () => void;
 }
 
-function TaskRow({ id, title, description, priority, completed, isRecurring, onToggle, onRemove }: TaskRowProps) {
+function TaskRow({ id, title, description, priority, completed, isRecurring, daysLate, onToggle, onRemove }: TaskRowProps) {
   const language = useSettingsStore((s) => s.language);
   const t = useT(language);
   const PRIORITY_LABEL: Record<TaskPriority, string> = {
@@ -213,16 +214,23 @@ function TaskRow({ id, title, description, priority, completed, isRecurring, onT
         )}
       </div>
 
-      {/* Priority badge */}
-      <span
-        className="flex-shrink-0 mt-0.5 text-xs font-medium px-1.5 py-0.5 rounded"
-        style={{
-          background: PRIORITY_COLOR[priority] + "18",
-          color: PRIORITY_COLOR[priority],
-        }}
-      >
-        {PRIORITY_LABEL[priority]}
-      </span>
+      {/* Badges */}
+      <div className="flex flex-col items-end gap-1 flex-shrink-0">
+        <span
+          className="mt-0.5 text-xs font-medium px-1.5 py-0.5 rounded"
+          style={{
+            background: PRIORITY_COLOR[priority] + "18",
+            color: PRIORITY_COLOR[priority],
+          }}
+        >
+          {PRIORITY_LABEL[priority]}
+        </span>
+        {daysLate !== undefined && daysLate > 0 && (
+          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[#f97316]/15 text-[#f97316]">
+            {daysLate}d atraso
+          </span>
+        )}
+      </div>
 
       {/* Delete */}
       <div className="flex-shrink-0 transition-opacity md:opacity-0 md:group-hover:opacity-100">
@@ -287,6 +295,7 @@ export default function TarefasPage() {
 
   const todayLabel = format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR });
   const todayTasks = getTodayTasks(tasks);
+  const overdueTasks = getOverdueTasks(tasks);
   const completedTasks = todayTasks.filter((t) => t.completed);
   const pendingTasks = todayTasks.filter((t) => !t.completed);
   const completionRate = calcCompletionRate(todayTasks);
@@ -363,6 +372,34 @@ export default function TarefasPage() {
           </div>
         </div>
       </div>
+
+      {/* Tarefas atrasadas (backlog) */}
+      {overdueTasks.length > 0 && (
+        <div className="bg-[#1a1a1a] border border-[#f97316]/30 rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-1.5 h-1.5 rounded-full bg-[#f97316] animate-pulse" />
+            <p className="text-xs font-medium text-[#f97316] uppercase tracking-wide">
+              Atrasadas ({overdueTasks.length})
+            </p>
+          </div>
+          <div className="space-y-0">
+            {overdueTasks.map((task) => (
+              <TaskRow
+                key={task.id}
+                id={task.id}
+                title={task.title}
+                description={task.description}
+                priority={task.priority}
+                completed={task.completed}
+                isRecurring={!!task.generatedFrom}
+                daysLate={daysOverdue(task.date)}
+                onToggle={() => toggleTask(task.id)}
+                onRemove={() => removeTask(task.id)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Task list */}
       {todayTasks.length === 0 ? (

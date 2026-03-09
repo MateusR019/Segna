@@ -10,10 +10,11 @@ import { format } from "date-fns";
 
 const CATEGORY_LABEL: Record<string, string> = {
   housing: "Moradia", food: "Alimentação", transport: "Transporte",
-  health: "Saúde", entertainment: "Lazer", education: "Educação",
+  fuel: "Combustível", health: "Saúde", gym: "Academia",
+  supplements: "Suplementos", entertainment: "Lazer", education: "Educação",
   shopping: "Compras", investments: "Investimentos", other: "Outro",
-  salary: "Salário", freelance: "Freelance", investment_return: "Retorno",
-  gift: "Presente", other_income: "Outra receita",
+  salary: "Salário / CLT", freelance: "Freelance", gig: "App / Corridas",
+  investment_return: "Retorno", gift: "Presente", other_income: "Outra receita",
 };
 
 export function RecurringManager() {

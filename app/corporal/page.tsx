@@ -510,7 +510,7 @@ export default function CorporalPage() {
               )}
             </div>
             {imc && imcClass && !heightSeemsWrong && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs text-[#6b7280]">IMC:</span>
                 <span className="text-xs font-semibold" style={{ color: imcClass.color }}>
                   {imc.toFixed(1)}
@@ -518,12 +518,28 @@ export default function CorporalPage() {
                 <span className="text-xs px-2 py-0.5 rounded-md font-medium" style={{ background: `${imcClass.color}20`, color: imcClass.color }}>
                   {imcClass.label}
                 </span>
+                {latest?.muscleMass !== undefined && latest.muscleMass >= 35 && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#6366f1]/15 text-[#a78bfa]">
+                    ⚡ atleta
+                  </span>
+                )}
               </div>
             )}
             {!imc && height === 0 && latestWeight && (
               <span className="text-xs text-[#6b7280]">Defina sua altura para calcular o IMC</span>
             )}
           </div>
+          {/* Aviso IMC atleta */}
+          {imc && !heightSeemsWrong && latest?.muscleMass !== undefined && latest.muscleMass >= 35 && (
+            <div className="mt-3 flex items-start gap-2 bg-[#6366f1]/8 border border-[#6366f1]/20 rounded-lg px-3 py-2.5">
+              <span className="text-[#a78bfa] text-sm flex-shrink-0">⚡</span>
+              <p className="text-xs text-[#9ca3af] leading-relaxed">
+                <span className="text-[#a78bfa] font-medium">IMC pode ser impreciso para atletas.</span>{" "}
+                Alta massa muscular eleva o IMC sem indicar excesso de gordura. Use o{" "}
+                <strong className="text-white">% de gordura</strong> como referência principal.
+              </p>
+            </div>
+          )}
         </div>
       )}
 
