@@ -16,7 +16,7 @@ interface HabitosState {
   workoutSchedule: Record<string, Partial<Record<WeekDayIndex, string>>>;
   annotations: Record<string, HabitAnnotation[]>;
 
-  addHabit: (h: Omit<Habit, "id" | "createdAt">) => void;
+  addHabit: (h: Omit<Habit, "id" | "createdAt"> & { timesPerWeek?: number }) => void;
   updateHabit: (id: string, updates: Partial<Omit<Habit, "id" | "createdAt">>) => void;
   removeHabit: (id: string) => void;
   reorderHabits: (orderedIds: string[]) => void;
@@ -67,16 +67,21 @@ export const useHabitosStore = create<HabitosState>()(
       annotations: {},
 
       addHabit: (h) => {
+        const { timesPerWeek, ...habitData } = h;
+        const newId = crypto.randomUUID();
         set((state) => ({
           habits: [
             ...state.habits,
             {
-              ...h,
-              id: crypto.randomUUID(),
+              ...habitData,
+              id: newId,
               createdAt: new Date().toISOString(),
               order: state.habits.length,
             },
           ],
+          frequencyGoals: timesPerWeek
+            ? [...state.frequencyGoals.filter((g) => g.habitId !== newId), { habitId: newId, timesPerWeek }]
+            : state.frequencyGoals,
         }));
         scheduleSync();
       },

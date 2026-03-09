@@ -164,6 +164,12 @@ const translations = {
     repeatMonthly:     "Mensal",
     recurring:         "Recorrente",
 
+    // ── Weekly goal (habits) ──
+    weeklyGoals:       "Metas semanais",
+    setGoal:           "Definir meta",
+    noWeeklyGoal:      "Sem meta",
+    perWeekShort:      "x/sem",
+
     // ── PDF ──
     exportPDF:         "PDF",
   },
@@ -330,6 +336,12 @@ const translations = {
     repeatWeekly:      "Weekly",
     repeatMonthly:     "Monthly",
     recurring:         "Recurring",
+
+    // ── Weekly goal (habits) ──
+    weeklyGoals:       "Weekly goals",
+    setGoal:           "Set goal",
+    noWeeklyGoal:      "No goal",
+    perWeekShort:      "x/wk",
 
     // ── PDF ──
     exportPDF:         "PDF",

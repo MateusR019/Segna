@@ -20,6 +20,8 @@ import { useHabitosStore } from "@/store/habitosStore";
 import { Habit, HabitTag, WeekDayIndex } from "@/types";
 import { PauseCircle, PlayCircle, Ban, Minus, Plus } from "lucide-react";
 
+const FREQ_OPTIONS = [2, 3, 4, 5, 6, 7];
+
 const PRESET_COLORS = [
   "#22c55e", "#ef4444", "#f59e0b", "#6366f1",
   "#ec4899", "#06b6d4", "#8b5cf6", "#f97316",
@@ -51,6 +53,9 @@ interface Props {
 
 export function EditHabitDialog({ habit, open, onClose }: Props) {
   const updateHabit = useHabitosStore((s) => s.updateHabit);
+  const frequencyGoals = useHabitosStore((s) => s.frequencyGoals);
+  const setFrequencyGoal = useHabitosStore((s) => s.setFrequencyGoal);
+  const removeFrequencyGoal = useHabitosStore((s) => s.removeFrequencyGoal);
 
   const [name, setName] = useState(habit.name);
   const [color, setColor] = useState(habit.color);
@@ -59,6 +64,8 @@ export function EditHabitDialog({ habit, open, onClose }: Props) {
   const [paused, setPaused] = useState(habit.paused ?? false);
   const [negative, setNegative] = useState(habit.negative ?? false);
   const [targetCount, setTargetCount] = useState(habit.targetCount ?? 1);
+  const existingGoal = frequencyGoals.find((g) => g.habitId === habit.id);
+  const [timesPerWeek, setTimesPerWeek] = useState<number | null>(existingGoal?.timesPerWeek ?? null);
 
   // Sync when habit changes
   useEffect(() => {
@@ -69,7 +76,9 @@ export function EditHabitDialog({ habit, open, onClose }: Props) {
     setPaused(habit.paused ?? false);
     setNegative(habit.negative ?? false);
     setTargetCount(habit.targetCount ?? 1);
-  }, [habit]);
+    const goal = frequencyGoals.find((g) => g.habitId === habit.id);
+    setTimesPerWeek(goal?.timesPerWeek ?? null);
+  }, [habit, frequencyGoals]);
 
   function toggleDay(idx: WeekDayIndex) {
     setWeekDays((prev) =>
@@ -89,6 +98,11 @@ export function EditHabitDialog({ habit, open, onClose }: Props) {
       negative,
       targetCount: targetCount > 1 ? targetCount : undefined,
     });
+    if (timesPerWeek) {
+      setFrequencyGoal(habit.id, timesPerWeek);
+    } else {
+      removeFrequencyGoal(habit.id);
+    }
     onClose();
   }
 
@@ -182,6 +196,44 @@ export function EditHabitDialog({ habit, open, onClose }: Props) {
                   <Plus size={12} />
                 </button>
               </div>
+            </div>
+          </div>
+
+          {/* Meta semanal */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Meta semanal</Label>
+              <span className="text-xs text-[#4a4a4a]">
+                {timesPerWeek ? `${timesPerWeek}× por semana` : "Sem meta"}
+              </span>
+            </div>
+            <div className="flex gap-1.5 flex-wrap">
+              <button
+                type="button"
+                onClick={() => setTimesPerWeek(null)}
+                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all cursor-pointer ${
+                  timesPerWeek === null
+                    ? "bg-[#6366f1] text-white"
+                    : "bg-[#1f1f1f] text-[#6b7280] hover:text-white border border-[#2a2a2a]"
+                }`}
+              >
+                Sem meta
+              </button>
+              {FREQ_OPTIONS.map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setTimesPerWeek(n === timesPerWeek ? null : n)}
+                  className={`w-9 h-8 rounded-md text-xs font-medium transition-all cursor-pointer ${
+                    timesPerWeek === n
+                      ? "text-white"
+                      : "bg-[#1f1f1f] text-[#6b7280] hover:text-white border border-[#2a2a2a]"
+                  }`}
+                  style={timesPerWeek === n ? { background: color } : {}}
+                >
+                  {n}x
+                </button>
+              ))}
             </div>
           </div>
 

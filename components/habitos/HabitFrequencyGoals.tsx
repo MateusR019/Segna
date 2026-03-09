@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
 import { useHabitosStore } from "@/store/habitosStore";
+import { useSettingsStore } from "@/store/settingsStore";
+import { useT } from "@/lib/i18n";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { subDays, format } from "date-fns";
 
@@ -14,6 +16,8 @@ const OPTIONS = [2, 3, 4, 5, 6, 7];
 export function HabitFrequencyGoals() {
   const { habits, completions, frequencyGoals, setFrequencyGoal, removeFrequencyGoal } =
     useHabitosStore();
+  const language = useSettingsStore((s) => s.language);
+  const t = useT(language);
   const [setting, setSetting] = useState<string | null>(null); // habitId being configured
 
   const weekDays = getThisWeekDays();
@@ -24,7 +28,7 @@ export function HabitFrequencyGoals() {
     <Card className="bg-[#1a1a1a] border-[#2a2a2a]">
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium text-[#9ca3af]">
-          Metas semanais
+          {t("weeklyGoals")}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -72,8 +76,8 @@ export function HabitFrequencyGoals() {
                     style={{ color: target ? (achieved ? "#22c55e" : "#6b7280") : "#3a3a3a" }}
                   >
                     {target
-                      ? `${doneThisWeek}/${target}x semana`
-                      : "Definir meta"}
+                      ? `${doneThisWeek}/${target}${t("perWeekShort")}`
+                      : t("setGoal")}
                   </button>
                 )}
               </div>

@@ -112,6 +112,7 @@ export function AddHabitDialog() {
   const [color, setColor] = useState(PRESET_COLORS[0]);
   const [tag, setTag] = useState<HabitTag | "none">("none");
   const [weekDays, setWeekDays] = useState<WeekDayIndex[]>([]);
+  const [timesPerWeek, setTimesPerWeek] = useState<number | null>(null);
   const [detectedTemplate, setDetectedTemplate] = useState<HabitTemplate | undefined>(undefined);
   const [selectedTemplateIdx, setSelectedTemplateIdx] = useState<string | null>(null);
   const [showTemplates, setShowTemplates] = useState(true);
@@ -130,6 +131,7 @@ export function AddHabitDialog() {
       setColor(PRESET_COLORS[0]);
       setTag("none");
       setWeekDays([]);
+      setTimesPerWeek(null);
       setDetectedTemplate(undefined);
       return;
     }
@@ -151,11 +153,13 @@ export function AddHabitDialog() {
       tag: tag === "none" ? undefined : tag,
       weekDays: weekDays.length > 0 ? weekDays : undefined,
       template: detectedTemplate,
+      timesPerWeek: timesPerWeek ?? undefined,
     });
     setName("");
     setColor(PRESET_COLORS[0]);
     setTag("none");
     setWeekDays([]);
+    setTimesPerWeek(null);
     setDetectedTemplate(undefined);
     setSelectedTemplateIdx(null);
     setShowTemplates(true);
@@ -298,6 +302,44 @@ export function AddHabitDialog() {
                   </button>
                 );
               })}
+            </div>
+          </div>
+
+          {/* Meta semanal */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Meta semanal</Label>
+              <span className="text-xs text-[#4a4a4a]">
+                {timesPerWeek ? `${timesPerWeek}× por semana` : "Sem meta"}
+              </span>
+            </div>
+            <div className="flex gap-1.5 flex-wrap">
+              <button
+                type="button"
+                onClick={() => setTimesPerWeek(null)}
+                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all cursor-pointer ${
+                  timesPerWeek === null
+                    ? "bg-[#6366f1] text-white"
+                    : "bg-[#1f1f1f] text-[#6b7280] hover:text-white border border-[#2a2a2a]"
+                }`}
+              >
+                Sem meta
+              </button>
+              {[2, 3, 4, 5, 6, 7].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setTimesPerWeek(n === timesPerWeek ? null : n)}
+                  className={`w-9 h-8 rounded-md text-xs font-medium transition-all cursor-pointer ${
+                    timesPerWeek === n
+                      ? "text-white"
+                      : "bg-[#1f1f1f] text-[#6b7280] hover:text-white border border-[#2a2a2a]"
+                  }`}
+                  style={timesPerWeek === n ? { background: color } : {}}
+                >
+                  {n}x
+                </button>
+              ))}
             </div>
           </div>
 

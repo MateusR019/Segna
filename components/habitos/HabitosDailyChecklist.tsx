@@ -3,7 +3,7 @@ import { useState, useRef } from "react";
 import { useHabitosStore, calcStreak } from "@/store/habitosStore";
 import { Button } from "@/components/ui/button";
 import { Flame, Trash2, GripVertical, Check, X, Ban, Minus, Plus, Pencil } from "lucide-react";
-import { format } from "date-fns";
+import { format, subDays } from "date-fns";
 import { useToast } from "@/hooks/useToast";
 import { HabitNoteInline } from "./HabitNoteInline";
 import { HabitBestStreakBadge } from "./HabitBestStreakBadge";
@@ -11,17 +11,25 @@ import { EditHabitDialog } from "./EditHabitDialog";
 import Link from "next/link";
 import { Habit } from "@/types";
 
+function getLast7Days(): string[] {
+  return Array.from({ length: 7 }, (_, i) =>
+    format(subDays(new Date(), 6 - i), "yyyy-MM-dd")
+  );
+}
+
 export function HabitosDailyChecklist() {
   const {
     habits,
     completions,
     counts,
+    frequencyGoals,
     toggleCompletion,
     removeHabit,
     reorderHabits,
     incrementCount,
     decrementCount,
   } = useHabitosStore();
+  const last7Days = getLast7Days();
   const { success } = useToast();
   const todayKey = format(new Date(), "yyyy-MM-dd");
   const completedIds = completions[todayKey] ?? [];
@@ -97,6 +105,12 @@ export function HabitosDailyChecklist() {
           const isNegative = habit.negative ?? false;
           const currentCount = counts[todayKey]?.[habit.id] ?? 0;
           const target = habit.targetCount ?? 1;
+          // Weekly goal badge
+          const freqGoal = frequencyGoals.find((g) => g.habitId === habit.id);
+          const doneThisWeek = freqGoal
+            ? last7Days.filter((d) => (completions[d] ?? []).includes(habit.id)).length
+            : 0;
+          const weekGoalAchieved = freqGoal ? doneThisWeek >= freqGoal.timesPerWeek : false;
 
           // Card border / background
           let cardClass =
@@ -252,6 +266,17 @@ export function HabitosDailyChecklist() {
                     {habit.tag && (
                       <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-[#2a2a2a] text-[#6b7280] capitalize">
                         {habit.tag}
+                      </span>
+                    )}
+                    {freqGoal && (
+                      <span
+                        className="text-[10px] px-1.5 py-0.5 rounded-md font-semibold tabular-nums"
+                        style={{
+                          background: weekGoalAchieved ? "#22c55e18" : "#2a2a2a",
+                          color: weekGoalAchieved ? "#22c55e" : "#6b7280",
+                        }}
+                      >
+                        {doneThisWeek}/{freqGoal.timesPerWeek}x
                       </span>
                     )}
                   </div>
