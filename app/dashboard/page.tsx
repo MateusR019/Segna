@@ -204,14 +204,14 @@ export default function DashboardPage() {
               const pct = prev !== 0 ? (diff / Math.abs(prev)) * 100 : 0;
               const isPos = diff >= 0;
               return (
-                <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-md ${
+                <span className={`text-xs font-medium px-1.5 py-0.5 rounded-md ${
                   isPos ? "bg-[#22c55e]/10 text-[#22c55e]" : "bg-[#ef4444]/10 text-[#ef4444]"
                 }`}>
                   {isPos ? "+" : ""}{pct.toFixed(1)}%
                 </span>
               );
             })()}
-            <Link href="/financas" className="text-[10px] text-[#4a4a4a] hover:text-[#9ca3af] transition-colors flex items-center gap-1">
+            <Link href="/financas" className="text-xs text-[#4a4a4a] hover:text-[#9ca3af] transition-colors flex items-center gap-1">
               {t("detailsLink")} <ArrowRight size={9} />
             </Link>
           </div>
@@ -227,26 +227,26 @@ export default function DashboardPage() {
         )}
         <div className="flex items-center flex-wrap gap-x-4 gap-y-1.5 mt-2.5 text-xs">
           <div>
-            <p className="text-[10px] text-[#4a4a4a]">{t("financialBalance")}</p>
+            <p className="text-xs text-[#4a4a4a]">{t("financialBalance")}</p>
             <p className="font-medium" style={{ color: totalFinancialBalance >= 0 ? "#22c55e" : "#ef4444" }}>
               {formatBRL(totalFinancialBalance)}
             </p>
           </div>
           {portfolioTotal > 0 && (
             <div>
-              <p className="text-[10px] text-[#4a4a4a]">Crypto</p>
+              <p className="text-xs text-[#4a4a4a]">Crypto</p>
               <p className="font-medium text-[#f59e0b]">{formatBRL(portfolioTotal)}</p>
             </div>
           )}
           {investmentTotal > 0 && (
             <div>
-              <p className="text-[10px] text-[#4a4a4a]">Investimentos</p>
+              <p className="text-xs text-[#4a4a4a]">Investimentos</p>
               <p className="font-medium text-[#6366f1]">{formatBRL(investmentTotal)}</p>
             </div>
           )}
           {poolsBRL > 0 && (
             <div>
-              <p className="text-[10px] text-[#4a4a4a]">DeFi Pools</p>
+              <p className="text-xs text-[#4a4a4a]">DeFi Pools</p>
               <p className="font-medium text-[#06b6d4]">{formatBRL(poolsBRL)}</p>
             </div>
           )}
@@ -275,10 +275,10 @@ export default function DashboardPage() {
           >
             {formatBRL(monthBalance)}
           </p>
-          <p className="text-[11px] text-[#4a4a4a] mt-0.5">{t("monthBalance")}</p>
+          <p className="text-xs text-[#4a4a4a] mt-0.5">{t("monthBalance")}</p>
           {showProjection && (
             <p
-              className="text-[10px] mt-0.5"
+              className="text-xs mt-0.5"
               style={{
                 color: projectedBalance >= 0 ? "#16a34a80" : "#ef444480",
               }}
@@ -331,7 +331,7 @@ export default function DashboardPage() {
               /{habitTotal}
             </span>
           </p>
-          <p className="text-[11px] text-[#4a4a4a] mt-0.5">{t("habitsToday")}</p>
+          <p className="text-xs text-[#4a4a4a] mt-0.5">{t("habitsToday")}</p>
           <div className="mt-2 h-1 bg-[#2a2a2a] rounded-full overflow-hidden">
             <div
               className="h-full rounded-full bar-animated"
@@ -360,7 +360,7 @@ export default function DashboardPage() {
           <p className="text-sm font-semibold text-white leading-tight break-words">
             {formatBRL(portfolioTotal)}
           </p>
-          <p className="text-[11px] text-[#4a4a4a] mt-0.5">
+          <p className="text-xs text-[#4a4a4a] mt-0.5">
             {tokens.length} {tokens.length === 1 ? "ativo" : "ativos"}
           </p>
         </Link>
@@ -380,7 +380,7 @@ export default function DashboardPage() {
             />
           </div>
           <p className="text-sm font-semibold text-white leading-tight">{notes.length}</p>
-          <p className="text-[11px] text-[#4a4a4a] mt-0.5">
+          <p className="text-xs text-[#4a4a4a] mt-0.5">
             {tags.length} {tags.length === 1 ? "tag" : "tags"}
           </p>
         </Link>
@@ -392,33 +392,33 @@ export default function DashboardPage() {
           <CalendarDays size={14} className="text-[#6366f1]" />
           <span className="text-sm font-medium text-white">{t("last7days")}</span>
         </div>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* Habit completions this week */}
           <div className="text-center space-y-0.5">
             <p className="text-xl font-bold text-[#a78bfa]">{weekHabitCompletions}</p>
-            <p className="text-[11px] text-[#4a4a4a]">{t("habitCompletions")}</p>
+            <p className="text-xs text-[#4a4a4a]">{t("habitCompletions")}</p>
           </div>
           {/* Best habit */}
-          <div className="text-center space-y-0.5">
+          <div className="text-center space-y-0.5 min-w-0 overflow-hidden">
             {bestHabitThisWeek ? (
               <>
-                <div className="flex items-center justify-center gap-1">
+                <div className="flex items-center justify-center gap-1 min-w-0">
                   <div
-                    className="w-2 h-2 rounded-full"
+                    className="w-2 h-2 rounded-full flex-shrink-0"
                     style={{ background: bestHabitThisWeek.color }}
                   />
-                  <p className="text-xs font-semibold text-white truncate max-w-[80px]">
+                  <p className="text-xs font-semibold text-white truncate">
                     {bestHabitThisWeek.name}
                   </p>
                 </div>
-                <p className="text-[11px] text-[#4a4a4a]">
+                <p className="text-xs text-[#4a4a4a]">
                   {bestHabitThisWeek.weekCount}× — {t("bestHabit")}
                 </p>
               </>
             ) : (
               <>
                 <p className="text-xl font-bold text-[#3a3a3a]">—</p>
-                <p className="text-[11px] text-[#3a3a3a]">{t("bestHabit")}</p>
+                <p className="text-xs text-[#3a3a3a]">{t("bestHabit")}</p>
               </>
             )}
           </div>
@@ -430,7 +430,7 @@ export default function DashboardPage() {
             >
               {weekExpenses > 0 ? formatBRL(weekExpenses) : "—"}
             </p>
-            <p className="text-[11px] text-[#4a4a4a]">{t("inExpenses")}</p>
+            <p className="text-xs text-[#4a4a4a]">{t("inExpenses")}</p>
           </div>
         </div>
       </motion.div>
@@ -571,7 +571,7 @@ export default function DashboardPage() {
                   >
                     {tag && (
                       <span
-                        className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-md mb-1 font-medium"
+                        className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded-md mb-1 font-medium"
                         style={{
                           background: tag.color + "20",
                           color: tag.color,

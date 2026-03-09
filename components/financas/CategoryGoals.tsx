@@ -174,7 +174,7 @@ export function CategoryGoals() {
                       variant="ghost"
                       size="icon"
                       onClick={() => removeGoal(goal.id)}
-                      className="h-5 w-5 text-[#4a4a4a] hover:text-[#ef4444] hover:bg-transparent cursor-pointer"
+                      className="h-7 w-7 text-[#4a4a4a] hover:text-[#ef4444] hover:bg-transparent cursor-pointer"
                     >
                       <Trash2 size={10} />
                     </Button>
@@ -188,12 +188,12 @@ export function CategoryGoals() {
                   />
                 </div>
                 {nearLimit && (
-                  <p className="text-[11px] text-[#f59e0b]">
+                  <p className="text-xs text-[#f59e0b]">
                     {formatBRL(goal.limitAmount - spent)} restante
                   </p>
                 )}
                 {over && (
-                  <p className="text-[11px] text-[#ef4444]">
+                  <p className="text-xs text-[#ef4444]">
                     {formatBRL(spent - goal.limitAmount)} acima do limite
                   </p>
                 )}

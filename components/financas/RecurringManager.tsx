@@ -80,7 +80,7 @@ export function RecurringManager() {
             Marque &quot;Recorrente&quot; ao adicionar um lançamento para que ele apareça aqui
           </p>
         </div>
-        <p className="text-[10px] text-[#2a2a2a] bg-[#141414] border border-[#1f1f1f] rounded-lg px-3 py-2">
+        <p className="text-xs text-[#2a2a2a] bg-[#141414] border border-[#1f1f1f] rounded-lg px-3 py-2">
           Dica: lançamentos recorrentes são copiados automaticamente todo mês
         </p>
       </div>
@@ -97,20 +97,20 @@ export function RecurringManager() {
   return (
     <div className="space-y-3">
       {/* Summary + Generate button */}
-      <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-3 flex items-center justify-between">
-        <div className="flex items-center gap-4 text-xs">
+      <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-3 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-3 flex-wrap text-xs">
           <div>
-            <p className="text-[10px] text-[#4a4a4a]">Fixas/mês</p>
+            <p className="text-xs text-[#4a4a4a]">Fixas/mês</p>
             <p className="text-[#ef4444] font-medium">{formatBRL(monthExpenses)}</p>
           </div>
           {monthIncome > 0 && (
             <div>
-              <p className="text-[10px] text-[#4a4a4a]">Entradas fixas</p>
+              <p className="text-xs text-[#4a4a4a]">Entradas fixas</p>
               <p className="text-[#22c55e] font-medium">{formatBRL(monthIncome)}</p>
             </div>
           )}
           <div>
-            <p className="text-[10px] text-[#4a4a4a]">Líquido fixo</p>
+            <p className="text-xs text-[#4a4a4a]">Líquido fixo</p>
             <p
               className="font-medium"
               style={{ color: monthIncome - monthExpenses >= 0 ? "#22c55e" : "#ef4444" }}
@@ -123,9 +123,9 @@ export function RecurringManager() {
           size="sm"
           variant="ghost"
           onClick={handleGenerate}
-          className="h-7 px-2.5 text-[10px] bg-[#6366f1]/10 hover:bg-[#6366f1]/20 text-[#a78bfa] border border-[#6366f1]/20 cursor-pointer gap-1"
+          className="h-8 px-3 text-xs bg-[#6366f1]/10 hover:bg-[#6366f1]/20 text-[#a78bfa] border border-[#6366f1]/20 cursor-pointer gap-1"
         >
-          <Plus size={10} />
+          <Plus size={12} />
           Gerar este mês
         </Button>
       </div>
@@ -146,7 +146,7 @@ export function RecurringManager() {
             {/* Info */}
             <div className="flex-1 min-w-0">
               <p className="text-sm text-white truncate">{t.description}</p>
-              <p className="text-[10px] text-[#4a4a4a]">
+              <p className="text-xs text-[#4a4a4a]">
                 {CATEGORY_LABEL[t.category] ?? t.category} · todo mês
               </p>
             </div>
@@ -162,20 +162,20 @@ export function RecurringManager() {
             {/* Actions */}
             {confirmId === t.id ? (
               <div className="flex items-center gap-1 flex-shrink-0">
-                <span className="text-[10px] text-[#ef4444]">Remover todas?</span>
+                <span className="text-xs text-[#ef4444]">Remover todas?</span>
                 <Button
                   variant="ghost" size="icon"
-                  className="h-6 w-6 text-[#ef4444] hover:bg-transparent cursor-pointer"
+                  className="h-7 w-7 text-[#ef4444] hover:bg-transparent cursor-pointer"
                   onClick={() => removeAllOccurrences(t)}
                 >
-                  <Check size={11} />
+                  <Check size={13} />
                 </Button>
                 <Button
                   variant="ghost" size="icon"
-                  className="h-6 w-6 text-[#4a4a4a] hover:bg-transparent cursor-pointer"
+                  className="h-7 w-7 text-[#4a4a4a] hover:bg-transparent cursor-pointer"
                   onClick={() => setConfirmId(null)}
                 >
-                  <X size={11} />
+                  <X size={13} />
                 </Button>
               </div>
             ) : (
@@ -202,7 +202,7 @@ export function RecurringManager() {
         ))}
       </div>
 
-      <p className="text-[10px] text-[#3a3a3a] text-center">
+      <p className="text-xs text-[#3a3a3a] text-center">
         Lançamentos recorrentes são copiados automaticamente quando você abre Finanças no início de cada mês
       </p>
     </div>

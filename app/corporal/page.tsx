@@ -50,11 +50,11 @@ function AddMetricForm({ onClose }: { onClose: () => void }) {
 
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <label className="text-[10px] font-medium text-[#4a4a4a] uppercase tracking-wide">Data</label>
+          <label className="text-xs font-medium text-[#4a4a4a] uppercase tracking-wide">Data</label>
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputClass} />
         </div>
         <div className="space-y-1.5">
-          <label className="text-[10px] font-medium text-[#4a4a4a] uppercase tracking-wide">Peso (kg)</label>
+          <label className="text-xs font-medium text-[#4a4a4a] uppercase tracking-wide">Peso (kg)</label>
           <input
             type="number" step="0.1" value={weight}
             onChange={(e) => setWeight(e.target.value)}
@@ -66,7 +66,7 @@ function AddMetricForm({ onClose }: { onClose: () => void }) {
       <button
         type="button"
         onClick={() => setShowExtras((v) => !v)}
-        className="flex items-center gap-1.5 text-[11px] text-[#4a4a4a] hover:text-[#6b7280] transition-colors cursor-pointer"
+        className="flex items-center gap-1.5 text-xs text-[#4a4a4a] hover:text-[#6b7280] transition-colors cursor-pointer"
       >
         <span className={`transition-transform duration-200 ${showExtras ? "rotate-90" : ""}`}>▶</span>
         {showExtras ? "Ocultar" : "Adicionar"} cintura, gordura e músculo
@@ -75,19 +75,19 @@ function AddMetricForm({ onClose }: { onClose: () => void }) {
       {showExtras && (
         <div className="grid grid-cols-2 gap-3 pt-1">
           <div className="space-y-1.5">
-            <label className="text-[10px] font-medium text-[#4a4a4a] uppercase tracking-wide">Cintura (cm)</label>
+            <label className="text-xs font-medium text-[#4a4a4a] uppercase tracking-wide">Cintura (cm)</label>
             <input type="number" step="0.1" value={waist} onChange={(e) => setWaist(e.target.value)} placeholder="ex: 82" className={inputClass} />
           </div>
           <div className="space-y-1.5">
-            <label className="text-[10px] font-medium text-[#4a4a4a] uppercase tracking-wide">Gordura (%)</label>
+            <label className="text-xs font-medium text-[#4a4a4a] uppercase tracking-wide">Gordura (%)</label>
             <input type="number" step="0.1" value={bodyFat} onChange={(e) => setBodyFat(e.target.value)} placeholder="ex: 18.5" className={inputClass} />
           </div>
           <div className="space-y-1.5">
-            <label className="text-[10px] font-medium text-[#4a4a4a] uppercase tracking-wide">Músculo (%)</label>
+            <label className="text-xs font-medium text-[#4a4a4a] uppercase tracking-wide">Músculo (%)</label>
             <input type="number" step="0.1" value={muscleMass} onChange={(e) => setMuscleMass(e.target.value)} placeholder="ex: 42" className={inputClass} />
           </div>
           <div className="space-y-1.5">
-            <label className="text-[10px] font-medium text-[#4a4a4a] uppercase tracking-wide">Nota</label>
+            <label className="text-xs font-medium text-[#4a4a4a] uppercase tracking-wide">Nota</label>
             <input type="text" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Opcional" className={inputClass} />
           </div>
         </div>
@@ -161,7 +161,7 @@ function MetricChart({ metrics, field, color, unit }: MetricChartProps) {
         <polyline points={polyline} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         <circle cx={lx} cy={ly} r="3" fill={color} />
       </svg>
-      <div className="flex items-center justify-between text-[10px] text-[#4a4a4a]">
+      <div className="flex items-center justify-between text-xs text-[#4a4a4a]">
         <span>{format(new Date(filtered[0].date + "T00:00:00"), "d MMM", { locale: ptBR })}</span>
         <span className="text-white text-xs font-medium">{lastVal} {unit}</span>
         <span>{format(new Date(filtered[filtered.length - 1].date + "T00:00:00"), "d MMM", { locale: ptBR })}</span>
@@ -224,29 +224,29 @@ function MetricRow({
   if (mode === "edit") {
     return (
       <div className="py-2.5 border-b border-[#1f1f1f] last:border-0 space-y-2">
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           <div className="space-y-0.5">
-            <label className="text-[10px] text-[#4a4a4a]">Data</label>
+            <label className="text-xs text-[#4a4a4a]">Data</label>
             <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputSm} />
           </div>
           <div className="space-y-0.5">
-            <label className="text-[10px] text-[#4a4a4a]">Peso (kg)</label>
+            <label className="text-xs text-[#4a4a4a]">Peso (kg)</label>
             <input type="number" step="0.1" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="—" className={inputSm} />
           </div>
           <div className="space-y-0.5">
-            <label className="text-[10px] text-[#4a4a4a]">Cintura (cm)</label>
+            <label className="text-xs text-[#4a4a4a]">Cintura (cm)</label>
             <input type="number" step="0.1" value={waist} onChange={(e) => setWaist(e.target.value)} placeholder="—" className={inputSm} />
           </div>
           <div className="space-y-0.5">
-            <label className="text-[10px] text-[#4a4a4a]">Gordura (%)</label>
+            <label className="text-xs text-[#4a4a4a]">Gordura (%)</label>
             <input type="number" step="0.1" value={bodyFat} onChange={(e) => setBodyFat(e.target.value)} placeholder="—" className={inputSm} />
           </div>
           <div className="space-y-0.5">
-            <label className="text-[10px] text-[#4a4a4a]">Músculo (%)</label>
+            <label className="text-xs text-[#4a4a4a]">Músculo (%)</label>
             <input type="number" step="0.1" value={muscleMass} onChange={(e) => setMuscleMass(e.target.value)} placeholder="—" className={inputSm} />
           </div>
           <div className="space-y-0.5">
-            <label className="text-[10px] text-[#4a4a4a]">Nota</label>
+            <label className="text-xs text-[#4a4a4a]">Nota</label>
             <input type="text" value={note} onChange={(e) => setNoteVal(e.target.value)} placeholder="—" className={inputSm} />
           </div>
         </div>
@@ -269,7 +269,7 @@ function MetricRow({
         <p className="text-xs font-medium text-white">
           {format(new Date(metric.date + "T00:00:00"), "d MMM", { locale: ptBR })}
         </p>
-        <p className="text-[10px] text-[#4a4a4a]">
+        <p className="text-xs text-[#4a4a4a]">
           {format(new Date(metric.date + "T00:00:00"), "yyyy")}
         </p>
       </div>
@@ -283,14 +283,14 @@ function MetricRow({
             </span>
           ))}
         </div>
-        {metric.note && <p className="text-[11px] text-[#4a4a4a]">{metric.note}</p>}
+        {metric.note && <p className="text-xs text-[#4a4a4a]">{metric.note}</p>}
       </div>
 
       {/* Ações — sempre visíveis (discretas), destacam no hover */}
       <div className="flex-shrink-0 flex items-center gap-1">
         {mode === "delete" ? (
           <>
-            <span className="text-[10px] text-[#ef4444] mr-1">Remover?</span>
+            <span className="text-xs text-[#ef4444] mr-1">Remover?</span>
             <button type="button" onClick={onRemove} className="text-[#ef4444] hover:text-[#dc2626] transition-colors cursor-pointer p-1" aria-label="Confirmar">
               <Check size={12} />
             </button>
@@ -330,7 +330,7 @@ function MetricRow({
 function StatCard({ label, value, trend }: { label: string; value: string; trend?: "up" | "down" | null }) {
   return (
     <div className="bg-[#141414] rounded-lg p-2.5 text-center">
-      <p className="text-[10px] text-[#6b7280] mb-1">{label}</p>
+      <p className="text-xs text-[#6b7280] mb-1">{label}</p>
       <div className="flex items-center justify-center gap-1">
         {trend === "down" && <TrendingDown size={10} className="text-[#22c55e]" />}
         {trend === "up" && <TrendingUp size={10} className="text-[#ef4444]" />}
@@ -433,7 +433,7 @@ export default function CorporalPage() {
             <p className="text-xs font-medium text-[#f59e0b]">
               Altura parece estar em metros ({height} m)
             </p>
-            <p className="text-[11px] text-[#6b7280]">
+            <p className="text-xs text-[#6b7280]">
               O campo espera centímetros. Clique em &quot;Definir altura&quot; abaixo e insira ex: <strong className="text-white">175</strong> (não 1.75).
             </p>
           </div>
@@ -521,7 +521,7 @@ export default function CorporalPage() {
               </div>
             )}
             {!imc && height === 0 && latestWeight && (
-              <span className="text-[11px] text-[#6b7280]">Defina sua altura para calcular o IMC</span>
+              <span className="text-xs text-[#6b7280]">Defina sua altura para calcular o IMC</span>
             )}
           </div>
         </div>
@@ -565,7 +565,7 @@ export default function CorporalPage() {
           <MetricChart metrics={metrics} field={activeConf.field} color={activeConf.color} unit={activeConf.unit} />
 
           {activeSeries.length >= 2 && activeMin !== null && activeMax !== null && activeAvg !== null && (
-            <div className="grid grid-cols-4 gap-2 mt-3 pt-3 border-t border-[#2a2a2a]">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3 pt-3 border-t border-[#2a2a2a]">
               <StatCard label="Mínimo" value={`${activeMin.toFixed(1)} ${activeConf.unit}`} />
               <StatCard label="Máximo" value={`${activeMax.toFixed(1)} ${activeConf.unit}`} />
               <StatCard label="Média"  value={`${activeAvg.toFixed(1)} ${activeConf.unit}`} />
@@ -581,7 +581,7 @@ export default function CorporalPage() {
 
       {/* Empty state */}
       {metrics.length === 0 && (
-        <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-10 text-center space-y-3">
+        <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6 sm:p-10 text-center space-y-3">
           <div className="flex justify-center">
             <div className="w-12 h-12 rounded-full bg-[#2a2a2a] flex items-center justify-center">
               <Scale size={22} className="text-[#4a4a4a]" />

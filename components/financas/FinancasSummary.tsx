@@ -49,7 +49,7 @@ export function FinancasSummary({ month }: Props) {
           <div className="flex items-center justify-between mb-3">
             <div>
               <p className="text-xs text-[#6b7280] font-medium capitalize">{sublabel}</p>
-              <p className="text-[11px] text-[#4a4a4a]">{label}</p>
+              <p className="text-xs text-[#4a4a4a]">{label}</p>
             </div>
             <div
               className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"

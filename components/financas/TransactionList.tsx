@@ -164,7 +164,7 @@ export function TransactionList({ initialMonth }: Props) {
             <button
               key={v}
               onClick={() => setFilterType(v)}
-              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+              className={`px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
                 filterType === v
                   ? v === "income"
                     ? "bg-[#22c55e]/15 text-[#22c55e]"
@@ -185,7 +185,7 @@ export function TransactionList({ initialMonth }: Props) {
           <div className="flex items-center gap-1">
             <button
               onClick={prevMonth}
-              className="p-1 rounded hover:bg-[#2a2a2a] text-[#6b7280] hover:text-white transition-colors cursor-pointer"
+              className="p-1.5 rounded hover:bg-[#2a2a2a] text-[#6b7280] hover:text-white transition-colors cursor-pointer"
             >
               <ChevronLeft size={13} />
             </button>
@@ -202,7 +202,7 @@ export function TransactionList({ initialMonth }: Props) {
             <button
               onClick={nextMonth}
               disabled={isCurrentMonth || !filterMonth}
-              className="p-1 rounded hover:bg-[#2a2a2a] text-[#6b7280] hover:text-white transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-default"
+              className="p-1.5 rounded hover:bg-[#2a2a2a] text-[#6b7280] hover:text-white transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-default"
             >
               <ChevronRight size={13} />
             </button>
@@ -262,7 +262,7 @@ export function TransactionList({ initialMonth }: Props) {
                         value={draft.amount}
                         onChange={(e) => setDraft({ ...draft, amount: e.target.value })}
                         placeholder="0,00"
-                        className="w-24 bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-2.5 py-1.5 text-sm text-white outline-none focus:border-[#6366f1]/60"
+                        className="w-20 sm:w-24 bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-2.5 py-1.5 text-sm text-white outline-none focus:border-[#6366f1]/60"
                       />
                     </div>
                   </div>
@@ -338,16 +338,16 @@ export function TransactionList({ initialMonth }: Props) {
                     <p className="text-xs text-[#4a4a4a]">
                       {format(parseISO(t.date), "d MMM yyyy", { locale: ptBR })}
                     </p>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-[#2a2a2a] text-[#6b7280]">
+                    <span className="text-xs px-1.5 py-0.5 rounded-md bg-[#2a2a2a] text-[#6b7280]">
                       {CATEGORY_LABELS[t.category] ?? t.category}
                     </span>
                     {t.subcategory && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-[#6366f1]/10 text-[#a78bfa]">
+                      <span className="text-xs px-1.5 py-0.5 rounded-md bg-[#6366f1]/10 text-[#a78bfa]">
                         {t.subcategory}
                       </span>
                     )}
                     {t.recurring && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-[#6366f1]/15 text-[#a78bfa]">
+                      <span className="text-xs px-1.5 py-0.5 rounded-md bg-[#6366f1]/15 text-[#a78bfa]">
                         recorrente
                       </span>
                     )}

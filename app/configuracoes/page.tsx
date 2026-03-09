@@ -59,7 +59,7 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
     <div className="space-y-1.5">
       <div>
         <p className="text-sm text-white font-medium">{label}</p>
-        {hint && <p className="text-[11px] text-[#4a4a4a] mt-0.5">{hint}</p>}
+        {hint && <p className="text-xs text-[#4a4a4a] mt-0.5">{hint}</p>}
       </div>
       {children}
     </div>
@@ -440,7 +440,7 @@ export default function ConfiguracoesPage() {
           <div key={label} className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-3 flex flex-col items-center gap-1">
             <span className="text-lg leading-none">{icon}</span>
             <p className="text-xl font-bold text-white">{value}</p>
-            <p className="text-[10px] text-[#6b7280] text-center leading-tight">{label}</p>
+            <p className="text-xs text-[#6b7280] text-center leading-tight">{label}</p>
           </div>
         ))}
       </div>
@@ -454,11 +454,11 @@ export default function ConfiguracoesPage() {
             <p className="text-sm font-semibold text-white truncate">
               {displayName || <span className="text-[#4a4a4a] font-normal">—</span>}
             </p>
-            <p className="text-[11px] text-[#4a4a4a]">
+            <p className="text-xs text-[#4a4a4a]">
               {age !== null ? `${age} anos · ` : ""}Segna Personal OS
             </p>
             {diasDeUso > 0 && (
-              <p className="text-[11px] text-[#6366f1]">Usando há {diasDeUso} dia{diasDeUso !== 1 ? "s" : ""}</p>
+              <p className="text-xs text-[#6366f1]">Usando há {diasDeUso} dia{diasDeUso !== 1 ? "s" : ""}</p>
             )}
           </div>
         </div>
@@ -699,7 +699,7 @@ export default function ConfiguracoesPage() {
                 {t("save")}
               </button>
             </div>
-            <p className="text-[11px] text-[#4a4a4a]">
+            <p className="text-xs text-[#4a4a4a]">
               O lembrete aparece enquanto o app estiver aberto ou instalado como PWA
             </p>
           </Field>
@@ -726,7 +726,7 @@ export default function ConfiguracoesPage() {
             </button>
           </div>
           {walletAddress && (
-            <p className="text-[11px] text-[#4a4a4a] font-mono truncate">{walletAddress}</p>
+            <p className="text-xs text-[#4a4a4a] font-mono truncate">{walletAddress}</p>
           )}
         </Field>
 
@@ -748,7 +748,7 @@ export default function ConfiguracoesPage() {
               {t("save")}
             </button>
           </div>
-          <p className="text-[11px] text-[#4a4a4a]">
+          <p className="text-xs text-[#4a4a4a]">
             Grátis em{" "}
             <a
               href="https://dashboard.zerion.io"
@@ -761,7 +761,7 @@ export default function ConfiguracoesPage() {
             {" "}— 3.000 calls/dia
           </p>
           {zerionApiKey && (
-            <p className="text-[11px] text-[#22c55e]">● Zerion API key configurada</p>
+            <p className="text-xs text-[#22c55e]">● Zerion API key configurada</p>
           )}
         </Field>
       </Section>
@@ -788,7 +788,7 @@ export default function ConfiguracoesPage() {
               </div>
               <div className="max-h-28 overflow-y-auto space-y-1">
                 {importRows.slice(0, 6).map((row, i) => (
-                  <div key={i} className={`text-[11px] px-2 py-1 rounded flex items-center justify-between gap-2 ${
+                  <div key={i} className={`text-xs px-2 py-1 rounded flex items-center justify-between gap-2 ${
                     row.valid ? "bg-[#22c55e]/8 text-[#9ca3af]" : "bg-[#ef4444]/8 text-[#ef4444]"
                   }`}>
                     {row.valid

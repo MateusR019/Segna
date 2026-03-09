@@ -394,11 +394,11 @@ export default function NotasPage() {
               </button>
             ) : (
               <form onSubmit={handleAddTag} className="flex items-center gap-1.5">
-                <Input value={newTagLabel} onChange={(e) => setNewTagLabel(e.target.value)} placeholder="Nome da tag" autoFocus className="h-6 text-xs bg-[#0f0f0f] border-[#2a2a2a] w-28 px-2" />
+                <Input value={newTagLabel} onChange={(e) => setNewTagLabel(e.target.value)} placeholder="Nome da tag" autoFocus className="h-6 text-xs bg-[#0f0f0f] border-[#2a2a2a] w-20 sm:w-28 px-2" />
                 <div className="flex gap-1">
                   {TAG_COLORS.map((c) => (
                     <button key={c} type="button" onClick={() => setNewTagColor(c)}
-                      className={`w-4 h-4 rounded-full cursor-pointer transition-all ${newTagColor === c ? "ring-1 ring-white ring-offset-1 ring-offset-[#1a1a1a]" : ""}`}
+                      className={`w-5 h-5 rounded-full cursor-pointer transition-all ${newTagColor === c ? "ring-1 ring-white ring-offset-1 ring-offset-[#1a1a1a]" : ""}`}
                       style={{ background: c }}
                     />
                   ))}
@@ -417,7 +417,7 @@ export default function NotasPage() {
           {[0, 1, 2].map((i) => <Skeleton key={i} className="h-16 bg-[#1a1a1a]" />)}
         </div>
       ) : visibleNotes.length === 0 ? (
-        <div className="text-center py-16 space-y-1">
+        <div className="text-center py-8 sm:py-16 space-y-1">
           <p className="text-sm text-[#4a4a4a]">
             {search ? `Nenhuma nota para "${search}".` : filterTagId ? "Nenhuma nota com essa tag." : t("noNotesYet")}
           </p>

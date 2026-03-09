@@ -215,7 +215,7 @@ function TaskRow({ id, title, description, priority, completed, isRecurring, onT
 
       {/* Priority badge */}
       <span
-        className="flex-shrink-0 mt-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded"
+        className="flex-shrink-0 mt-0.5 text-xs font-medium px-1.5 py-0.5 rounded"
         style={{
           background: PRIORITY_COLOR[priority] + "18",
           color: PRIORITY_COLOR[priority],
@@ -225,7 +225,7 @@ function TaskRow({ id, title, description, priority, completed, isRecurring, onT
       </span>
 
       {/* Delete */}
-      <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="flex-shrink-0 transition-opacity md:opacity-0 md:group-hover:opacity-100">
         {confirmDelete ? (
           <div className="flex items-center gap-1">
             <button
@@ -339,19 +339,19 @@ export default function TarefasPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-3">
           <p className="text-lg font-semibold text-white">{todayTasks.length}</p>
-          <p className="text-[11px] text-[#4a4a4a] mt-0.5">{t("totalDay")}</p>
+          <p className="text-xs text-[#4a4a4a] mt-0.5">{t("totalDay")}</p>
         </div>
         <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-3">
           <p className="text-lg font-semibold text-[#22c55e]">{completedTasks.length}</p>
-          <p className="text-[11px] text-[#4a4a4a] mt-0.5">{t("completed")}</p>
+          <p className="text-xs text-[#4a4a4a] mt-0.5">{t("completed")}</p>
         </div>
         <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-3">
           <p className="text-lg font-semibold text-[#f59e0b]">{pendingTasks.length}</p>
-          <p className="text-[11px] text-[#4a4a4a] mt-0.5">{t("pending")}</p>
+          <p className="text-xs text-[#4a4a4a] mt-0.5">{t("pending")}</p>
         </div>
         <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-3">
           <p className="text-lg font-semibold text-white">{completionRate}%</p>
-          <p className="text-[11px] text-[#4a4a4a] mt-0.5">{t("completion")}</p>
+          <p className="text-xs text-[#4a4a4a] mt-0.5">{t("completion")}</p>
           <div className="mt-2 h-1 bg-[#2a2a2a] rounded-full overflow-hidden">
             <div
               className="h-full rounded-full transition-all duration-500"
@@ -366,7 +366,7 @@ export default function TarefasPage() {
 
       {/* Task list */}
       {todayTasks.length === 0 ? (
-        <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-10 text-center space-y-3">
+        <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6 sm:p-10 text-center space-y-3">
           <div className="flex justify-center">
             <div className="w-12 h-12 rounded-full bg-[#2a2a2a] flex items-center justify-center">
               <ClipboardList size={22} className="text-[#4a4a4a]" />
@@ -397,7 +397,7 @@ export default function TarefasPage() {
                           style={{ background: PRIORITY_COLOR[priority] }}
                         />
                         <span
-                          className="text-[10px] font-semibold uppercase tracking-wider"
+                          className="text-xs font-semibold uppercase tracking-wider"
                           style={{ color: PRIORITY_COLOR[priority] }}
                         >
                           {PRIORITY_LABEL[priority]}
