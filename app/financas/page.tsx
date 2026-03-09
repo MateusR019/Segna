@@ -78,8 +78,8 @@ export default function FinancasPage() {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <MonthSelector month={selectedMonth} onChange={setSelectedMonth} />
-          <ExportPDFButton targetId="financas-pdf-target" month={selectedMonth} />
           <AddTransactionDialog />
+          <ExportPDFButton targetId="financas-pdf-target" month={selectedMonth} />
         </div>
       </div>
 

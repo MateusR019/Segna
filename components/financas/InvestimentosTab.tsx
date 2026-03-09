@@ -609,6 +609,242 @@ function AporteDialog({ inv }: { inv: Investment }) {
   );
 }
 
+// ─── GlobalAporteDialog ────────────────────────────────────────────────────────
+
+function GlobalAporteDialog() {
+  const investments = useInvestimentosStore((s) => s.investments);
+  const { addTransaction } = useFinancasStore();
+  const { updateInvestment } = useInvestimentosStore();
+  const { success } = useToast();
+
+  const [open, setOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState("");
+  const [operationType, setOperationType] = useState<"aporte" | "resgate">("aporte");
+  const [amount, setAmount] = useState("");
+  const [cryptoQty, setCryptoQty] = useState("");
+  const [useCryptoUnit, setUseCryptoUnit] = useState(false);
+  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [description, setDescription] = useState("");
+
+  const inv = investments.find((i) => i.id === selectedId) ?? null;
+  const isCripto = !!inv && inv.type === "cripto" && !!inv.symbol && !!inv.pricePerUnit;
+
+  function handleCryptoQtyChange(val: string) {
+    setCryptoQty(val);
+    const qty = parseFloat(val.replace(",", "."));
+    if (!isNaN(qty) && qty > 0 && inv?.pricePerUnit) {
+      setAmount((qty * inv.pricePerUnit).toFixed(2).replace(".", ","));
+    } else {
+      setAmount("");
+    }
+  }
+
+  function handleClose(v: boolean) {
+    setOpen(v);
+    if (!v) {
+      setSelectedId("");
+      setAmount("");
+      setCryptoQty("");
+      setDescription("");
+      setDate(new Date().toISOString().slice(0, 10));
+      setUseCryptoUnit(false);
+      setOperationType("aporte");
+    }
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!inv) return;
+    const value = parseFloat(amount.replace(",", "."));
+    if (isNaN(value) || value <= 0) return;
+
+    addTransaction({
+      type: operationType === "aporte" ? "expense" : "income",
+      amount: value,
+      description: description.trim() || (operationType === "aporte" ? `Aporte — ${inv.name}` : `Resgate — ${inv.name}`),
+      category: operationType === "aporte" ? "investments" : "investment_return",
+      date,
+      investmentId: inv.id,
+    });
+
+    if (isCripto && inv.pricePerUnit) {
+      const qtyChange = useCryptoUnit
+        ? parseFloat(cryptoQty.replace(",", ".")) || 0
+        : value / inv.pricePerUnit;
+      const newQty = operationType === "aporte"
+        ? (inv.quantity ?? 0) + qtyChange
+        : Math.max(0, (inv.quantity ?? 0) - qtyChange);
+      updateInvestment(inv.id, { quantity: newQty, currentValue: newQty * inv.pricePerUnit });
+    } else {
+      const newValue = operationType === "aporte"
+        ? inv.currentValue + value
+        : Math.max(0, inv.currentValue - value);
+      updateInvestment(inv.id, { currentValue: newValue });
+    }
+
+    handleClose(false);
+    success(operationType === "aporte" ? "Aporte registrado!" : "Resgate registrado!");
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogTrigger asChild>
+        <Button
+          size="sm"
+          className="h-7 text-[10px] bg-[#6366f1] hover:bg-[#4f46e5] text-white font-medium cursor-pointer px-2.5"
+        >
+          <ArrowDownCircle size={11} className="mr-1" />
+          Movimentação
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="bg-[#1a1a1a] border-[#2a2a2a] text-white max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Nova Movimentação</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+          {/* Seletor de investimento */}
+          <div className="space-y-1.5">
+            <Label>Investimento</Label>
+            <Select
+              value={selectedId}
+              onValueChange={(v) => {
+                setSelectedId(v);
+                setAmount("");
+                setCryptoQty("");
+                setUseCryptoUnit(false);
+              }}
+            >
+              <SelectTrigger className="bg-[#0f0f0f] border-[#2a2a2a]">
+                <SelectValue placeholder="Selecionar investimento…" />
+              </SelectTrigger>
+              <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a]">
+                {investments.map((i) => (
+                  <SelectItem key={i.id} value={i.id}>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: i.color }} />
+                      <span>{i.name}</span>
+                      <span className="text-[#6b7280] text-[11px]">· {TYPE_LABEL[i.type]}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {investments.length === 0 && (
+            <p className="text-center text-sm text-[#6b7280] py-4">Nenhum investimento cadastrado.</p>
+          )}
+
+          {inv && (
+            <>
+              {/* Aporte / Resgate */}
+              <div className="grid grid-cols-2 gap-2">
+                {(["aporte", "resgate"] as const).map((op) => (
+                  <button
+                    key={op}
+                    type="button"
+                    onClick={() => setOperationType(op)}
+                    className={`flex items-center justify-center gap-2 py-2.5 rounded-lg border text-sm font-medium transition-all cursor-pointer ${
+                      operationType === op
+                        ? op === "aporte"
+                          ? "bg-[#22c55e]/15 border-[#22c55e]/50 text-[#22c55e]"
+                          : "bg-[#ef4444]/15 border-[#ef4444]/50 text-[#ef4444]"
+                        : "bg-transparent border-[#2a2a2a] text-[#6b7280] hover:border-[#3a3a3a]"
+                    }`}
+                  >
+                    {op === "aporte" ? <ArrowDownCircle size={14} /> : <ArrowUpCircle size={14} />}
+                    {op === "aporte" ? "Aportar" : "Resgatar"}
+                  </button>
+                ))}
+              </div>
+
+              {isCripto && (
+                <div className="flex items-center gap-2 bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-3 py-2">
+                  <span className="text-[11px] text-[#6b7280]">Inserir em:</span>
+                  <div className="flex items-center gap-1 ml-auto">
+                    <button
+                      type="button"
+                      onClick={() => { setUseCryptoUnit(false); setCryptoQty(""); }}
+                      className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all cursor-pointer ${!useCryptoUnit ? "bg-[#6366f1] text-white" : "text-[#6b7280] hover:text-white"}`}
+                    >
+                      R$ BRL
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setUseCryptoUnit(true); setAmount(""); }}
+                      className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all cursor-pointer ${useCryptoUnit ? "bg-[#f59e0b] text-black" : "text-[#6b7280] hover:text-white"}`}
+                    >
+                      {inv.symbol}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {useCryptoUnit && isCripto ? (
+                <div className="space-y-1.5">
+                  <Label>Quantidade ({inv.symbol})</Label>
+                  <Input
+                    value={cryptoQty}
+                    onChange={(e) => handleCryptoQtyChange(e.target.value)}
+                    placeholder="0.001"
+                    className="bg-[#0f0f0f] border-[#2a2a2a] font-mono"
+                    required
+                  />
+                  {amount && inv.pricePerUnit && (
+                    <p className="text-[11px] text-[#22c55e]">≈ R$ {amount} · {formatBRL(inv.pricePerUnit)}/{inv.symbol}</p>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  <Label>Valor (R$)</Label>
+                  <Input
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="0,00"
+                    className="bg-[#0f0f0f] border-[#2a2a2a]"
+                    required
+                  />
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <Label>Data</Label>
+                <Input
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="bg-[#0f0f0f] border-[#2a2a2a]"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label>Descrição (opcional)</Label>
+                <Input
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder={operationType === "aporte" ? `Aporte — ${inv.name}` : `Resgate — ${inv.name}`}
+                  className="bg-[#0f0f0f] border-[#2a2a2a]"
+                />
+              </div>
+
+              <Button
+                type="submit"
+                className={`w-full font-medium cursor-pointer ${
+                  operationType === "aporte"
+                    ? "bg-[#22c55e] hover:bg-[#16a34a] text-black"
+                    : "bg-[#ef4444] hover:bg-[#dc2626] text-white"
+                }`}
+              >
+                {operationType === "aporte" ? "Registrar Aporte" : "Registrar Resgate"}
+              </Button>
+            </>
+          )}
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ─── InvestmentCard ───────────────────────────────────────────────────────────
 
 function InvestmentCard({ inv }: { inv: Investment }) {
@@ -862,6 +1098,7 @@ export function InvestimentosTab() {
               </Button>
             </div>
           )}
+          <GlobalAporteDialog />
           <AddInvestmentDialog />
         </div>
       </div>
