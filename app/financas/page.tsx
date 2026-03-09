@@ -14,7 +14,6 @@ import { SavingsGoalWidget } from "@/components/financas/SavingsGoalWidget";
 import { SpendingCalendar } from "@/components/financas/SpendingCalendar";
 import { RecurringManager } from "@/components/financas/RecurringManager";
 import { InvestimentosTab } from "@/components/financas/InvestimentosTab";
-import { ExportPDFButton } from "@/components/financas/ExportPDFButton";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useFinancasStore } from "@/store/financasStore";
 import { useSettingsStore } from "@/store/settingsStore";
@@ -79,7 +78,6 @@ export default function FinancasPage() {
         <div className="flex items-center gap-2 flex-wrap">
           <MonthSelector month={selectedMonth} onChange={setSelectedMonth} />
           <AddTransactionDialog />
-          <ExportPDFButton targetId="financas-pdf-target" month={selectedMonth} />
         </div>
       </div>
 
@@ -113,7 +111,7 @@ export default function FinancasPage() {
 
         <TabsContent value="overview" className="space-y-4 mt-4">
           {hydrated ? (
-            <div id="financas-pdf-target" className="space-y-4">
+            <div className="space-y-4">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <MonthlyLineChart />
                 <ExpensePieChart />

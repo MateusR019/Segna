@@ -2,14 +2,18 @@
 
 import { useState, useRef } from "react";
 import { useSettingsStore } from "@/store/settingsStore";
-import { useFinancasStore } from "@/store/financasStore";
+import { useFinancasStore, calcTotalIncome, calcTotalExpenses } from "@/store/financasStore";
+import { useHabitosStore, calcStreak } from "@/store/habitosStore";
+import { useCorporalStore } from "@/store/corporalStore";
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/lib/i18n";
 import {
   User, Palette, Wallet, Scale, Download, Upload,
-  Sun, Moon, Monitor, Check, Trash2,
+  Sun, Moon, Monitor, Check, Trash2, Cake, Bell, BellOff,
+  Target, Activity, FileDown, Flame,
 } from "lucide-react";
-import { format, parseISO, isValid } from "date-fns";
+import { format, parseISO, isValid, differenceInYears, differenceInDays } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import type { TransactionType, AnyCategory } from "@/types";
 import { formatBRL } from "@/lib/format";
 
@@ -101,22 +105,32 @@ export default function ConfiguracoesPage() {
   const {
     displayName, setDisplayName,
     avatarColor, setAvatarColor,
+    birthDate, setBirthDate,
+    joinedAt,
     walletAddress, setWalletAddress,
     zerionApiKey, setZerionApiKey,
     height, setHeight,
     theme, setTheme,
     language, setLanguage,
+    notificationsEnabled, setNotificationsEnabled,
+    notificationTime, setNotificationTime,
   } = useSettingsStore();
 
-  const { transactions, addTransaction } = useFinancasStore();
+  const { transactions, addTransaction, savingsGoal, setSavingsGoal, clearSavingsGoal } = useFinancasStore();
+  const { habits, completions } = useHabitosStore();
+  const { addMetric, metrics: bodyMetrics } = useCorporalStore();
   const { success, error: toastError } = useToast();
   const t = useT(language);
 
-  // Form state — campos diretos, sem click-to-edit
-  const [nameVal, setNameVal]       = useState(displayName);
-  const [heightVal, setHeightVal]   = useState(height > 0 ? String(height) : "");
-  const [walletVal, setWalletVal]   = useState(walletAddress);
-  const [zerionVal, setZerionVal]   = useState(zerionApiKey);
+  // Form state
+  const [nameVal, setNameVal]           = useState(displayName);
+  const [heightVal, setHeightVal]       = useState(height > 0 ? String(height) : "");
+  const [birthVal, setBirthVal]         = useState(birthDate);
+  const [walletVal, setWalletVal]       = useState(walletAddress);
+  const [zerionVal, setZerionVal]       = useState(zerionApiKey);
+  const [weightVal, setWeightVal]       = useState("");
+  const [savingsVal, setSavingsVal]     = useState(savingsGoal ? String(savingsGoal.targetAmount) : "");
+  const [notifTimeVal, setNotifTimeVal] = useState(notificationTime);
 
   // CSV import
   const fileRef = useRef<HTMLInputElement>(null);
@@ -129,11 +143,31 @@ export default function ConfiguracoesPage() {
 
   // Export
   const [exportRange, setExportRange] = useState<"month" | "3months" | "year" | "all">("month");
+  const [pdfLoading, setPdfLoading]   = useState(false);
 
   // Danger zone
   const [confirmReset, setConfirmReset] = useState(false);
 
   const inputClass = "w-full bg-[#141414] border border-[#2a2a2a] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#3a3a3a] outline-none focus:border-[#6366f1] transition-colors";
+
+  // ── Stats ──────────────────────────────────────────────────────────────────
+  const diasDeUso = joinedAt
+    ? Math.max(0, differenceInDays(new Date(), parseISO(joinedAt)))
+    : 0;
+  const habitosAtivos = habits.filter((h) => !h.paused).length;
+  const thisMonth = format(new Date(), "yyyy-MM");
+  const transacoesMes = transactions.filter((tx) => tx.date.startsWith(thisMonth)).length;
+  const melhorStreak = habits.reduce((max, h) => {
+    const s = calcStreak(h.id, completions);
+    return Math.max(max, s);
+  }, 0);
+
+  // ── Age ────────────────────────────────────────────────────────────────────
+  const parsedBirth = birthDate && isValid(parseISO(birthDate)) ? parseISO(birthDate) : null;
+  const age = parsedBirth ? differenceInYears(new Date(), parsedBirth) : null;
+
+  // ── Latest weight ──────────────────────────────────────────────────────────
+  const latestWeight = bodyMetrics.find((m) => m.weight != null)?.weight ?? null;
 
   // ── Saves ─────────────────────────────────────────────────────────────────
   function saveName() {
@@ -142,9 +176,30 @@ export default function ConfiguracoesPage() {
     success(t("nameUpdated"));
   }
 
+  function saveBirth() {
+    if (!birthVal) return;
+    setBirthDate(birthVal);
+    success("Aniversário salvo!");
+  }
+
   function saveHeight() {
     const h = parseFloat(heightVal);
     if (!isNaN(h) && h > 0) { setHeight(h); success(t("heightSaved")); }
+  }
+
+  function saveWeight() {
+    const w = parseFloat(weightVal.replace(",", "."));
+    if (isNaN(w) || w <= 0) return;
+    addMetric({ date: format(new Date(), "yyyy-MM-dd"), weight: w });
+    setWeightVal("");
+    success("Peso registrado!");
+  }
+
+  function saveSavingsGoal() {
+    const val = parseFloat(savingsVal.replace(",", "."));
+    if (isNaN(val) || val <= 0) { clearSavingsGoal(); success("Meta removida."); return; }
+    setSavingsGoal(val);
+    success("Meta de economia salva!");
   }
 
   function saveWallet() {
@@ -155,6 +210,34 @@ export default function ConfiguracoesPage() {
   function saveZerion() {
     setZerionApiKey(zerionVal);
     success(t("saved"));
+  }
+
+  function saveNotifTime() {
+    setNotificationTime(notifTimeVal);
+    success("Horário salvo!");
+  }
+
+  async function toggleNotifications(enable: boolean) {
+    if (enable) {
+      if (!("Notification" in window)) {
+        toastError("Notificações não suportadas neste dispositivo.");
+        return;
+      }
+      const permission = await Notification.requestPermission();
+      if (permission === "granted") {
+        setNotificationsEnabled(true);
+        new Notification("Segna", {
+          body: `Lembretes de hábitos ativados às ${notificationTime} 🔔`,
+          icon: "/icon-192.png",
+        });
+        success("Notificações ativadas!");
+      } else {
+        toastError("Permissão negada. Ative nas configurações do navegador.");
+      }
+    } else {
+      setNotificationsEnabled(false);
+      success("Notificações desativadas.");
+    }
   }
 
   // ── CSV import ────────────────────────────────────────────────────────────
@@ -204,10 +287,10 @@ export default function ConfiguracoesPage() {
   // ── CSV export ────────────────────────────────────────────────────────────
   function doExport() {
     const now = new Date();
-    const filtered = transactions.filter((t) => {
-      if (exportRange === "month") return t.date.startsWith(format(now, "yyyy-MM"));
-      if (exportRange === "3months") return (now.getTime() - new Date(t.date).getTime()) / 86400000 <= 92;
-      if (exportRange === "year") return t.date.startsWith(format(now, "yyyy"));
+    const filtered = transactions.filter((tx) => {
+      if (exportRange === "month") return tx.date.startsWith(format(now, "yyyy-MM"));
+      if (exportRange === "3months") return (now.getTime() - new Date(tx.date).getTime()) / 86400000 <= 92;
+      if (exportRange === "year") return tx.date.startsWith(format(now, "yyyy"));
       return true;
     }).sort((a, b) => a.date.localeCompare(b.date));
     if (filtered.length === 0) { toastError("Nenhuma transação no período."); return; }
@@ -223,7 +306,119 @@ export default function ConfiguracoesPage() {
     success(`${filtered.length} lançamentos exportados!`);
   }
 
-  const validCount = importRows.filter((r) => r.valid).length;
+  // ── PDF export (data-driven) ───────────────────────────────────────────────
+  async function doExportPDF() {
+    setPdfLoading(true);
+    try {
+      const { default: jsPDF } = await import("jspdf");
+      const now = new Date();
+      const monthKey = format(now, "yyyy-MM");
+      const monthLabel = format(parseISO(monthKey + "-01"), "MMMM yyyy", { locale: ptBR });
+
+      const filtered = transactions
+        .filter((tx) => {
+          if (exportRange === "month") return tx.date.startsWith(monthKey);
+          if (exportRange === "3months") return (now.getTime() - new Date(tx.date).getTime()) / 86400000 <= 92;
+          if (exportRange === "year") return tx.date.startsWith(format(now, "yyyy"));
+          return true;
+        })
+        .sort((a, b) => a.date.localeCompare(b.date));
+
+      if (filtered.length === 0) { toastError("Nenhuma transação no período."); setPdfLoading(false); return; }
+
+      const income   = filtered.filter((t) => t.type === "income").reduce((s, t) => s + t.amount, 0);
+      const expenses = filtered.filter((t) => t.type === "expense").reduce((s, t) => s + t.amount, 0);
+      const balance  = income - expenses;
+
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const pageW = pdf.internal.pageSize.getWidth();
+      let y = 18;
+
+      // Header
+      pdf.setFillColor(99, 102, 241);
+      pdf.rect(0, 0, pageW, 12, "F");
+      pdf.setFontSize(11);
+      pdf.setTextColor(255, 255, 255);
+      pdf.text("Segna — Relatório Financeiro", 14, 8.5);
+      pdf.text(format(now, "dd/MM/yyyy"), pageW - 14, 8.5, { align: "right" });
+
+      y = 22;
+      pdf.setFontSize(16);
+      pdf.setTextColor(30, 30, 30);
+      pdf.text(`Finanças — ${monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1)}`, 14, y);
+
+      if (displayName) {
+        y += 6;
+        pdf.setFontSize(9);
+        pdf.setTextColor(100, 100, 100);
+        pdf.text(`Usuário: ${displayName}`, 14, y);
+      }
+
+      // Summary boxes
+      y += 10;
+      const boxW = (pageW - 28 - 8) / 3;
+      const boxes = [
+        { label: "Receitas", value: formatBRL(income), color: [34, 197, 94] as [number,number,number] },
+        { label: "Despesas", value: formatBRL(expenses), color: [239, 68, 68] as [number,number,number] },
+        { label: "Saldo", value: formatBRL(balance), color: balance >= 0 ? [99, 102, 241] as [number,number,number] : [249, 115, 22] as [number,number,number] },
+      ];
+      boxes.forEach(({ label, value, color }, i) => {
+        const x = 14 + i * (boxW + 4);
+        pdf.setFillColor(245, 245, 250);
+        pdf.roundedRect(x, y, boxW, 16, 2, 2, "F");
+        pdf.setFontSize(8);
+        pdf.setTextColor(120, 120, 120);
+        pdf.text(label, x + boxW / 2, y + 5, { align: "center" });
+        pdf.setFontSize(11);
+        pdf.setTextColor(...color);
+        pdf.text(value, x + boxW / 2, y + 12, { align: "center" });
+      });
+
+      // Transactions table
+      y += 24;
+      pdf.setFontSize(10);
+      pdf.setTextColor(30, 30, 30);
+      pdf.text(`Lançamentos (${filtered.length})`, 14, y);
+      y += 4;
+
+      // Table header
+      pdf.setFillColor(240, 240, 248);
+      pdf.rect(14, y, pageW - 28, 7, "F");
+      pdf.setFontSize(7.5);
+      pdf.setTextColor(80, 80, 80);
+      pdf.text("Data",       18,       y + 4.8);
+      pdf.text("Descrição",  40,       y + 4.8);
+      pdf.text("Categoria",  115,      y + 4.8);
+      pdf.text("Valor",      pageW - 18, y + 4.8, { align: "right" });
+      y += 7;
+
+      pdf.setFontSize(7.5);
+      filtered.forEach((tx) => {
+        if (y > 270) { pdf.addPage(); y = 14; }
+        const isIncome = tx.type === "income";
+        pdf.setTextColor(60, 60, 60);
+        pdf.text(tx.date,                     18,         y + 4);
+        pdf.text(tx.description.slice(0, 35), 40,         y + 4);
+        pdf.text(CATEGORY_LABEL[tx.category] ?? tx.category, 115, y + 4);
+        pdf.setTextColor(...(isIncome ? [34, 197, 94] as [number,number,number] : [239, 68, 68] as [number,number,number]));
+        pdf.text(`${isIncome ? "+" : "-"}${formatBRL(tx.amount)}`, pageW - 18, y + 4, { align: "right" });
+        pdf.setDrawColor(230, 230, 230);
+        pdf.line(14, y + 6.5, pageW - 14, y + 6.5);
+        y += 7;
+      });
+
+      const rangeLabel = exportRange === "month" ? monthKey : exportRange === "year" ? format(now, "yyyy") : exportRange;
+      pdf.save(`segna-financas-${rangeLabel}.pdf`);
+      success("PDF exportado!");
+    } catch (err) {
+      console.error(err);
+      toastError("Erro ao gerar PDF.");
+    } finally {
+      setPdfLoading(false);
+    }
+  }
+
+  const validCount   = importRows.filter((r) => r.valid).length;
   const invalidCount = importRows.filter((r) => !r.valid).length;
 
   return (
@@ -234,14 +429,37 @@ export default function ConfiguracoesPage() {
         <p className="text-sm text-[#6b7280]">{t("settingsDesc")}</p>
       </div>
 
+      {/* ── STATS BAR ──────────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { icon: "📅", label: "Dias de uso",       value: diasDeUso },
+          { icon: "✅", label: "Hábitos ativos",    value: habitosAtivos },
+          { icon: "🔥", label: "Melhor streak",     value: melhorStreak },
+          { icon: "📊", label: "Transações/mês",    value: transacoesMes },
+        ].map(({ icon, label, value }) => (
+          <div key={label} className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-3 flex flex-col items-center gap-1">
+            <span className="text-lg leading-none">{icon}</span>
+            <p className="text-xl font-bold text-white">{value}</p>
+            <p className="text-[10px] text-[#6b7280] text-center leading-tight">{label}</p>
+          </div>
+        ))}
+      </div>
+
       {/* ── PERFIL ─────────────────────────────────────────────────────────── */}
       <Section title={t("sectionProfile")} icon={User}>
         {/* Avatar preview */}
         <div className="flex items-center gap-4 pb-1">
           <Avatar name={nameVal || displayName || "?"} color={avatarColor} size={52} />
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-white truncate">{displayName || <span className="text-[#4a4a4a] font-normal">—</span>}</p>
-            <p className="text-[11px] text-[#4a4a4a]">Segna Personal OS</p>
+            <p className="text-sm font-semibold text-white truncate">
+              {displayName || <span className="text-[#4a4a4a] font-normal">—</span>}
+            </p>
+            <p className="text-[11px] text-[#4a4a4a]">
+              {age !== null ? `${age} anos · ` : ""}Segna Personal OS
+            </p>
+            {diasDeUso > 0 && (
+              <p className="text-[11px] text-[#6366f1]">Usando há {diasDeUso} dia{diasDeUso !== 1 ? "s" : ""}</p>
+            )}
           </div>
         </div>
 
@@ -264,6 +482,29 @@ export default function ConfiguracoesPage() {
           </div>
         </Field>
 
+        <Field label="Data de nascimento" hint="Usada para calcular sua idade e IMC">
+          <div className="flex gap-2 items-center">
+            <input
+              type="date"
+              value={birthVal}
+              onChange={(e) => setBirthVal(e.target.value)}
+              className={`${inputClass} flex-1`}
+            />
+            <button
+              onClick={saveBirth}
+              disabled={!birthVal || birthVal === birthDate}
+              className="px-3 py-2 bg-[#6366f1] hover:bg-[#5254cc] disabled:opacity-30 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer flex-shrink-0"
+            >
+              {t("save")}
+            </button>
+          </div>
+          {age !== null && (
+            <p className="text-xs text-[#22c55e] flex items-center gap-1">
+              <Cake size={11} /> {age} anos
+            </p>
+          )}
+        </Field>
+
         <Field label={t("labelAvatarColor")}>
           <div className="flex items-center gap-2">
             {AVATAR_COLORS.map((c) => (
@@ -277,6 +518,33 @@ export default function ConfiguracoesPage() {
               </button>
             ))}
           </div>
+        </Field>
+      </Section>
+
+      {/* ── OBJETIVOS ──────────────────────────────────────────────────────── */}
+      <Section title="Objetivos" icon={Target}>
+        <Field label="Meta de economia mensal" hint="Quanto você quer guardar por mês (R$)">
+          <div className="flex gap-2 items-center">
+            <input
+              value={savingsVal}
+              onChange={(e) => setSavingsVal(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && saveSavingsGoal()}
+              className={`${inputClass} flex-1`}
+              placeholder="Ex: 500"
+              type="number"
+              min={0}
+            />
+            <button
+              onClick={saveSavingsGoal}
+              disabled={savingsVal === (savingsGoal ? String(savingsGoal.targetAmount) : "")}
+              className="px-3 py-2 bg-[#22c55e] hover:bg-[#16a34a] disabled:opacity-30 disabled:cursor-not-allowed text-black text-xs font-semibold rounded-lg transition-colors cursor-pointer flex-shrink-0"
+            >
+              {t("save")}
+            </button>
+          </div>
+          {savingsGoal && (
+            <p className="text-xs text-[#22c55e]">Meta atual: {formatBRL(savingsGoal.targetAmount)}/mês</p>
+          )}
         </Field>
       </Section>
 
@@ -352,6 +620,90 @@ export default function ConfiguracoesPage() {
             <p className="text-xs text-[#4a4a4a]">Atual: <span className="text-white">{height} cm</span></p>
           )}
         </Field>
+
+        <Field label="Peso atual" hint="Registra um novo ponto de peso no módulo Corporal">
+          <div className="flex gap-2 items-center">
+            <input
+              type="number"
+              min={20} max={300} step={0.1}
+              value={weightVal}
+              onChange={(e) => setWeightVal(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && saveWeight()}
+              className={`${inputClass} flex-1`}
+              placeholder="Ex: 75.5"
+            />
+            <span className="text-sm text-[#6b7280] flex-shrink-0">kg</span>
+            <button
+              onClick={saveWeight}
+              disabled={!weightVal}
+              className="px-3 py-2 bg-[#6366f1] hover:bg-[#5254cc] disabled:opacity-30 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer flex-shrink-0"
+            >
+              {t("save")}
+            </button>
+          </div>
+          {latestWeight && (
+            <p className="text-xs text-[#4a4a4a]">
+              Último registro: <span className="text-white">{latestWeight} kg</span>
+              {height > 0 && (
+                <span className="ml-2 text-[#6366f1]">
+                  · IMC {(latestWeight / ((height / 100) ** 2)).toFixed(1)}
+                </span>
+              )}
+            </p>
+          )}
+        </Field>
+      </Section>
+
+      {/* ── NOTIFICAÇÕES ───────────────────────────────────────────────────── */}
+      <Section title="Notificações" icon={Bell}>
+        <Field label="Lembrete diário de hábitos" hint="Requer permissão do navegador / PWA instalado">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              {notificationsEnabled
+                ? <Bell size={16} className="text-[#22c55e]" />
+                : <BellOff size={16} className="text-[#4a4a4a]" />
+              }
+              <span className="text-sm text-[#9ca3af]">
+                {notificationsEnabled ? "Ativado" : "Desativado"}
+              </span>
+            </div>
+            <button
+              onClick={() => toggleNotifications(!notificationsEnabled)}
+              className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${
+                notificationsEnabled ? "bg-[#22c55e]" : "bg-[#2a2a2a]"
+              }`}
+            >
+              <span
+                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200 ${
+                  notificationsEnabled ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
+        </Field>
+
+        {notificationsEnabled && (
+          <Field label="Horário do lembrete">
+            <div className="flex gap-2 items-center">
+              <input
+                type="time"
+                value={notifTimeVal}
+                onChange={(e) => setNotifTimeVal(e.target.value)}
+                className={`${inputClass} flex-1`}
+              />
+              <button
+                onClick={saveNotifTime}
+                disabled={notifTimeVal === notificationTime}
+                className="px-3 py-2 bg-[#6366f1] hover:bg-[#5254cc] disabled:opacity-30 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer flex-shrink-0"
+              >
+                {t("save")}
+              </button>
+            </div>
+            <p className="text-[11px] text-[#4a4a4a]">
+              O lembrete aparece enquanto o app estiver aberto ou instalado como PWA
+            </p>
+          </Field>
+        )}
       </Section>
 
       {/* ── DeFi / WALLET ──────────────────────────────────────────────────── */}
@@ -406,7 +758,7 @@ export default function ConfiguracoesPage() {
             >
               dashboard.zerion.io
             </a>
-            {" "}— 300 calls/dia
+            {" "}— 3.000 calls/dia
           </p>
           {zerionApiKey && (
             <p className="text-[11px] text-[#22c55e]">● Zerion API key configurada</p>
@@ -458,23 +810,38 @@ export default function ConfiguracoesPage() {
         </Field>
 
         <div className="border-t border-[#2a2a2a] pt-4 space-y-3">
+          {/* Período selector (shared between CSV and PDF) */}
+          <div className="flex flex-wrap gap-1.5">
+            {(["month", "3months", "year", "all"] as const).map((r) => (
+              <button key={r} onClick={() => setExportRange(r)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer border ${
+                  exportRange === r ? "bg-[#6366f1] text-white border-[#6366f1]" : "bg-[#141414] text-[#6b7280] hover:text-white border-[#2a2a2a]"
+                }`}
+              >
+                {r === "month" ? t("periodMonth") : r === "3months" ? t("period3Months") : r === "year" ? t("periodYear") : t("periodAll")}
+              </button>
+            ))}
+          </div>
+
+          {/* CSV Export */}
           <Field label={t("exportCSV")}>
-            <div className="flex flex-wrap gap-1.5 mb-2">
-              {(["month", "3months", "year", "all"] as const).map((r) => (
-                <button key={r} onClick={() => setExportRange(r)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer border ${
-                    exportRange === r ? "bg-[#6366f1] text-white border-[#6366f1]" : "bg-[#141414] text-[#6b7280] hover:text-white border-[#2a2a2a]"
-                  }`}
-                >
-                  {r === "month" ? t("periodMonth") : r === "3months" ? t("period3Months") : r === "year" ? t("periodYear") : t("periodAll")}
-                </button>
-              ))}
-            </div>
             <button onClick={doExport}
               className="flex items-center gap-2 px-3 py-2 bg-[#141414] border border-[#2a2a2a] hover:border-[#3a3a3a] rounded-lg text-xs text-white font-medium transition-colors cursor-pointer"
             >
               <Download size={13} className="text-[#6366f1]" />
               {t("exportBtn")}
+            </button>
+          </Field>
+
+          {/* PDF Export */}
+          <Field label="Exportar PDF">
+            <button
+              onClick={doExportPDF}
+              disabled={pdfLoading}
+              className="flex items-center gap-2 px-3 py-2 bg-[#141414] border border-[#2a2a2a] hover:border-[#6366f1] rounded-lg text-xs text-white font-medium transition-colors cursor-pointer disabled:opacity-50"
+            >
+              <FileDown size={13} className={`text-[#6366f1] ${pdfLoading ? "animate-bounce" : ""}`} />
+              {pdfLoading ? "Gerando PDF..." : "Exportar relatório PDF"}
             </button>
           </Field>
         </div>
@@ -490,6 +857,7 @@ export default function ConfiguracoesPage() {
                 onClick={() => {
                   setDisplayName(""); setNameVal("");
                   setAvatarColor("#6366f1");
+                  setBirthDate(""); setBirthVal("");
                   setWalletAddress(""); setWalletVal("");
                   setHeight(0); setHeightVal("");
                   setConfirmReset(false);
