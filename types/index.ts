@@ -238,6 +238,7 @@ export interface Task {
   createdAt: string;
   recurrence?: TaskRecurrence; // undefined = tarefa normal; definido = template recorrente
   generatedFrom?: string;      // ID do template que gerou esta instância
+  time?: string;               // "HH:MM" — horário opcional da tarefa
 }
 
 // ─── Mood ─────────────────────────────────────────────────────────────────────
@@ -261,6 +262,10 @@ export interface BodyMetric {
   waist?: number;        // cm
   bodyFat?: number;      // %
   muscleMass?: number;   // %
+  chest?: number;        // cm — circunferência do peito
+  bicep?: number;        // cm — circunferência do bícep
+  thigh?: number;        // cm — circunferência da coxa
+  hip?: number;          // cm — circunferência do quadril
   note?: string;
   createdAt: string;
 }

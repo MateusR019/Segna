@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Plus, Trash2, Check, X, ClipboardList, RefreshCcw } from "lucide-react";
+import { Plus, Trash2, Check, X, ClipboardList, RefreshCcw, Clock } from "lucide-react";
 import { useTarefasStore, getTodayTasks, getOverdueTasks, daysOverdue, calcCompletionRate } from "@/store/tarefasStore";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useSettingsStore } from "@/store/settingsStore";
@@ -41,6 +41,7 @@ function AddTaskForm({ onClose }: AddTaskFormProps) {
   const [priority, setPriority] = useState<TaskPriority>("medium");
   const [description, setDescription] = useState("");
   const [recurrence, setRecurrence] = useState<TaskRecurrence | "">("");
+  const [time, setTime] = useState("");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -51,6 +52,7 @@ function AddTaskForm({ onClose }: AddTaskFormProps) {
       priority,
       date: format(new Date(), "yyyy-MM-dd"),
       ...(recurrence ? { recurrence } : {}),
+      ...(time ? { time } : {}),
     });
     onClose();
   }
@@ -98,6 +100,17 @@ function AddTaskForm({ onClose }: AddTaskFormProps) {
           ))}
         </div>
 
+        {/* Horário (opcional) */}
+        <div className="flex items-center gap-1.5">
+          <Clock size={11} className={time ? "text-[#6366f1]" : "text-[#3a3a3a]"} />
+          <input
+            type="time"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            className="bg-transparent border border-[#2a2a2a] rounded text-xs text-[#6b7280] px-1.5 py-0.5 outline-none hover:border-[#3a3a3a] focus:border-[#6366f1] transition-colors"
+          />
+        </div>
+
         {/* Recorrência */}
         <div className="flex items-center gap-1.5 ml-auto">
           <RefreshCcw size={11} className={recurrence ? "text-[#6366f1]" : "text-[#3a3a3a]"} />
@@ -141,6 +154,7 @@ interface TaskRowProps {
   id: string;
   title: string;
   description?: string;
+  time?: string;
   priority: TaskPriority;
   completed: boolean;
   isRecurring?: boolean;
@@ -149,7 +163,7 @@ interface TaskRowProps {
   onRemove: () => void;
 }
 
-function TaskRow({ id, title, description, priority, completed, isRecurring, daysLate, onToggle, onRemove }: TaskRowProps) {
+function TaskRow({ id, title, description, time, priority, completed, isRecurring, daysLate, onToggle, onRemove }: TaskRowProps) {
   const language = useSettingsStore((s) => s.language);
   const t = useT(language);
   const PRIORITY_LABEL: Record<TaskPriority, string> = {
@@ -211,6 +225,12 @@ function TaskRow({ id, title, description, priority, completed, isRecurring, day
         </span>
         {description && (
           <p className="text-xs text-[#4a4a4a] leading-snug line-clamp-1">{description}</p>
+        )}
+        {time && (
+          <span className="flex items-center gap-1 text-[10px] text-[#6b7280] mt-0.5">
+            <Clock size={9} />
+            {time}
+          </span>
         )}
       </div>
 
@@ -389,6 +409,7 @@ export default function TarefasPage() {
                 id={task.id}
                 title={task.title}
                 description={task.description}
+                time={task.time}
                 priority={task.priority}
                 completed={task.completed}
                 isRecurring={!!task.generatedFrom}
@@ -446,6 +467,7 @@ export default function TarefasPage() {
                           id={task.id}
                           title={task.title}
                           description={task.description}
+                          time={task.time}
                           priority={task.priority}
                           completed={task.completed}
                           isRecurring={!!task.generatedFrom}
@@ -473,6 +495,7 @@ export default function TarefasPage() {
                     id={task.id}
                     title={task.title}
                     description={task.description}
+                    time={task.time}
                     priority={task.priority}
                     completed={task.completed}
                     isRecurring={!!task.generatedFrom}

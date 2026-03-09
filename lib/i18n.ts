@@ -172,6 +172,27 @@ const translations = {
 
     // ── PDF ──
     exportPDF:         "PDF",
+
+    // ── Task time ──
+    taskTime:          "Horário",
+
+    // ── Chart period ──
+    chartPeriod1m:     "1 mês",
+    chartPeriod3m:     "3 meses",
+    chartPeriod6m:     "6 meses",
+    chartPeriodAll:    "Tudo",
+
+    // ── Extra body metrics ──
+    metricChest:       "Peito",
+    metricBicep:       "Bícep",
+    metricThigh:       "Coxa",
+    metricHip:         "Quadril",
+    measurementHistory:"Histórico",
+    evolutionChart:    "Evolução",
+    statMin:           "Mínimo",
+    statMax:           "Máximo",
+    statAvg:           "Média",
+    statDelta:         "Variação",
   },
 
   en: {
@@ -345,6 +366,27 @@ const translations = {
 
     // ── PDF ──
     exportPDF:         "PDF",
+
+    // ── Task time ──
+    taskTime:          "Time",
+
+    // ── Chart period ──
+    chartPeriod1m:     "1 month",
+    chartPeriod3m:     "3 months",
+    chartPeriod6m:     "6 months",
+    chartPeriodAll:    "All",
+
+    // ── Extra body metrics ──
+    metricChest:       "Chest",
+    metricBicep:       "Bicep",
+    metricThigh:       "Thigh",
+    metricHip:         "Hip",
+    measurementHistory:"History",
+    evolutionChart:    "Progress",
+    statMin:           "Min",
+    statMax:           "Max",
+    statAvg:           "Average",
+    statDelta:         "Change",
   },
 } as const;
 

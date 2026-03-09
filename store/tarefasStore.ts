@@ -10,7 +10,7 @@ interface TarefasState {
   addTask: (t: Omit<Task, "id" | "createdAt" | "completed">) => void;
   removeTask: (id: string) => void;
   toggleTask: (id: string) => void;
-  editTask: (id: string, updates: Partial<Pick<Task, "title" | "description" | "priority" | "date">>) => void;
+  editTask: (id: string, updates: Partial<Pick<Task, "title" | "description" | "priority" | "date" | "time">>) => void;
   generateRecurring: (dateStr: string) => void;
 
   loadFromDB: () => Promise<void>;

@@ -7,6 +7,7 @@ import { Plus, Trash2, Check, X, Activity, Scale, TrendingDown, TrendingUp, Penc
 import { useCorporalStore } from "@/store/corporalStore";
 import { useSettingsStore } from "@/store/settingsStore";
 import { useHydrated } from "@/hooks/useHydrated";
+import { useT } from "@/lib/i18n";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { BodyMetric } from "@/types";
 
@@ -19,20 +20,28 @@ function AddMetricForm({ onClose }: { onClose: () => void }) {
   const [waist, setWaist] = useState("");
   const [bodyFat, setBodyFat] = useState("");
   const [muscleMass, setMuscleMass] = useState("");
+  const [chest,      setChest]      = useState("");
+  const [bicep,      setBicep]      = useState("");
+  const [thigh,      setThigh]      = useState("");
+  const [hip,        setHip]        = useState("");
   const [note, setNote] = useState("");
   const [showExtras, setShowExtras] = useState(false);
 
-  const hasValue = weight || waist || bodyFat || muscleMass;
+  const hasValue = weight || waist || bodyFat || muscleMass || chest || bicep || thigh || hip;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!hasValue) return;
     addMetric({
       date,
-      weight: weight ? parseFloat(weight) : undefined,
-      waist: waist ? parseFloat(waist) : undefined,
-      bodyFat: bodyFat ? parseFloat(bodyFat) : undefined,
+      weight:     weight     ? parseFloat(weight)     : undefined,
+      waist:      waist      ? parseFloat(waist)      : undefined,
+      bodyFat:    bodyFat    ? parseFloat(bodyFat)    : undefined,
       muscleMass: muscleMass ? parseFloat(muscleMass) : undefined,
+      chest:      chest      ? parseFloat(chest)      : undefined,
+      bicep:      bicep      ? parseFloat(bicep)      : undefined,
+      thigh:      thigh      ? parseFloat(thigh)      : undefined,
+      hip:        hip        ? parseFloat(hip)        : undefined,
       note: note.trim() || undefined,
     });
     onClose();
@@ -69,7 +78,7 @@ function AddMetricForm({ onClose }: { onClose: () => void }) {
         className="flex items-center gap-1.5 text-xs text-[#4a4a4a] hover:text-[#6b7280] transition-colors cursor-pointer"
       >
         <span className={`transition-transform duration-200 ${showExtras ? "rotate-90" : ""}`}>▶</span>
-        {showExtras ? "Ocultar" : "Adicionar"} cintura, gordura e músculo
+        {showExtras ? "Ocultar" : "Adicionar"} medidas detalhadas
       </button>
 
       {showExtras && (
@@ -85,6 +94,22 @@ function AddMetricForm({ onClose }: { onClose: () => void }) {
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-[#4a4a4a] uppercase tracking-wide">Músculo (%)</label>
             <input type="number" step="0.1" value={muscleMass} onChange={(e) => setMuscleMass(e.target.value)} placeholder="ex: 42" className={inputClass} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-[#4a4a4a] uppercase tracking-wide">Peito (cm)</label>
+            <input type="number" step="0.1" value={chest} onChange={(e) => setChest(e.target.value)} placeholder="ex: 95" className={inputClass} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-[#4a4a4a] uppercase tracking-wide">Bícep (cm)</label>
+            <input type="number" step="0.1" value={bicep} onChange={(e) => setBicep(e.target.value)} placeholder="ex: 35" className={inputClass} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-[#4a4a4a] uppercase tracking-wide">Coxa (cm)</label>
+            <input type="number" step="0.1" value={thigh} onChange={(e) => setThigh(e.target.value)} placeholder="ex: 55" className={inputClass} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-[#4a4a4a] uppercase tracking-wide">Quadril (cm)</label>
+            <input type="number" step="0.1" value={hip} onChange={(e) => setHip(e.target.value)} placeholder="ex: 90" className={inputClass} />
           </div>
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-[#4a4a4a] uppercase tracking-wide">Nota</label>
@@ -110,7 +135,7 @@ function AddMetricForm({ onClose }: { onClose: () => void }) {
 
 // ─── MetricChart (genérico) ───────────────────────────────────────────────────
 
-type MetricField = "weight" | "waist" | "bodyFat" | "muscleMass";
+type MetricField = "weight" | "waist" | "bodyFat" | "muscleMass" | "chest" | "bicep" | "thigh" | "hip";
 
 interface MetricChartProps {
   metrics: BodyMetric[];
@@ -120,9 +145,18 @@ interface MetricChartProps {
 }
 
 function MetricChart({ metrics, field, color, unit }: MetricChartProps) {
+  const language = useSettingsStore((s) => s.language);
+  const t = useT(language);
+  const [period, setPeriod] = useState<"1m" | "3m" | "6m" | "all">("3m");
+
+  const cutoffDays: Record<string, number> = { "1m": 30, "3m": 90, "6m": 180 };
+  const cutoff = period !== "all"
+    ? new Date(Date.now() - cutoffDays[period] * 86_400_000)
+    : null;
+
   const filtered = [...metrics]
     .filter((m) => m[field] !== undefined)
-    .slice(0, 30)
+    .filter((m) => !cutoff || new Date(m.date + "T00:00:00") >= cutoff)
     .reverse();
 
   if (filtered.length < 2) {
@@ -166,6 +200,32 @@ function MetricChart({ metrics, field, color, unit }: MetricChartProps) {
         <span className="text-white text-xs font-medium">{lastVal} {unit}</span>
         <span>{format(new Date(filtered[filtered.length - 1].date + "T00:00:00"), "d MMM", { locale: ptBR })}</span>
       </div>
+
+      {/* Seletor de período */}
+      <div className="flex gap-1 justify-end pt-1">
+        {(["1m", "3m", "6m", "all"] as const).map((p) => {
+          const labels: Record<string, string> = {
+            "1m": t("chartPeriod1m"),
+            "3m": t("chartPeriod3m"),
+            "6m": t("chartPeriod6m"),
+            "all": t("chartPeriodAll"),
+          };
+          return (
+            <button
+              key={p}
+              type="button"
+              onClick={() => setPeriod(p)}
+              className={`text-[10px] px-2 py-0.5 rounded transition-colors cursor-pointer ${
+                period === p
+                  ? "bg-[#2a2a2a] text-white font-medium"
+                  : "text-[#4a4a4a] hover:text-[#6b7280]"
+              }`}
+            >
+              {labels[p]}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -198,6 +258,10 @@ function MetricRow({
   const [waist,      setWaist]      = useState(metric.waist !== undefined ? String(metric.waist) : "");
   const [bodyFat,    setBodyFat]    = useState(metric.bodyFat !== undefined ? String(metric.bodyFat) : "");
   const [muscleMass, setMuscleMass] = useState(metric.muscleMass !== undefined ? String(metric.muscleMass) : "");
+  const [chest,      setChest]      = useState(metric.chest !== undefined ? String(metric.chest) : "");
+  const [bicep,      setBicep]      = useState(metric.bicep !== undefined ? String(metric.bicep) : "");
+  const [thigh,      setThigh]      = useState(metric.thigh !== undefined ? String(metric.thigh) : "");
+  const [hip,        setHip]        = useState(metric.hip !== undefined ? String(metric.hip) : "");
   const [note,       setNoteVal]    = useState(metric.note ?? "");
 
   function confirmEdit() {
@@ -207,6 +271,10 @@ function MetricRow({
       waist:      waist      ? parseFloat(waist)      : undefined,
       bodyFat:    bodyFat    ? parseFloat(bodyFat)    : undefined,
       muscleMass: muscleMass ? parseFloat(muscleMass) : undefined,
+      chest:      chest      ? parseFloat(chest)      : undefined,
+      bicep:      bicep      ? parseFloat(bicep)      : undefined,
+      thigh:      thigh      ? parseFloat(thigh)      : undefined,
+      hip:        hip        ? parseFloat(hip)        : undefined,
       note:       note.trim() || undefined,
     });
     setMode("view");
@@ -217,6 +285,10 @@ function MetricRow({
     metric.waist !== undefined && `${metric.waist} cm cintura`,
     metric.bodyFat !== undefined && `${metric.bodyFat}% gordura`,
     metric.muscleMass !== undefined && `${metric.muscleMass}% músculo`,
+    metric.chest !== undefined && `${metric.chest} cm peito`,
+    metric.bicep !== undefined && `${metric.bicep} cm bícep`,
+    metric.thigh !== undefined && `${metric.thigh} cm coxa`,
+    metric.hip !== undefined && `${metric.hip} cm quadril`,
   ].filter(Boolean) as string[];
 
   const inputSm = "bg-[#0f0f0f] border border-[#2a2a2a] rounded px-2 py-1 text-xs text-white outline-none focus:border-[#6366f1] transition-colors w-full";
@@ -244,6 +316,22 @@ function MetricRow({
           <div className="space-y-0.5">
             <label className="text-xs text-[#4a4a4a]">Músculo (%)</label>
             <input type="number" step="0.1" value={muscleMass} onChange={(e) => setMuscleMass(e.target.value)} placeholder="—" className={inputSm} />
+          </div>
+          <div className="space-y-0.5">
+            <label className="text-xs text-[#4a4a4a]">Peito (cm)</label>
+            <input type="number" step="0.1" value={chest} onChange={(e) => setChest(e.target.value)} placeholder="—" className={inputSm} />
+          </div>
+          <div className="space-y-0.5">
+            <label className="text-xs text-[#4a4a4a]">Bícep (cm)</label>
+            <input type="number" step="0.1" value={bicep} onChange={(e) => setBicep(e.target.value)} placeholder="—" className={inputSm} />
+          </div>
+          <div className="space-y-0.5">
+            <label className="text-xs text-[#4a4a4a]">Coxa (cm)</label>
+            <input type="number" step="0.1" value={thigh} onChange={(e) => setThigh(e.target.value)} placeholder="—" className={inputSm} />
+          </div>
+          <div className="space-y-0.5">
+            <label className="text-xs text-[#4a4a4a]">Quadril (cm)</label>
+            <input type="number" step="0.1" value={hip} onChange={(e) => setHip(e.target.value)} placeholder="—" className={inputSm} />
           </div>
           <div className="space-y-0.5">
             <label className="text-xs text-[#4a4a4a]">Nota</label>
@@ -342,13 +430,17 @@ function StatCard({ label, value, trend }: { label: string; value: string; trend
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-type Tab = "weight" | "waist" | "bodyFat" | "muscleMass";
+type Tab = MetricField;
 
 const TAB_CONFIG: { key: Tab; label: string; field: MetricField; color: string; unit: string }[] = [
-  { key: "weight",     label: "Peso",    field: "weight",     color: "#6366f1", unit: "kg" },
-  { key: "waist",      label: "Cintura", field: "waist",      color: "#f59e0b", unit: "cm" },
-  { key: "bodyFat",    label: "Gordura", field: "bodyFat",    color: "#ef4444", unit: "%" },
-  { key: "muscleMass", label: "Músculo", field: "muscleMass", color: "#22c55e", unit: "%" },
+  { key: "weight",     label: "Peso",     field: "weight",     color: "#6366f1", unit: "kg" },
+  { key: "waist",      label: "Cintura",  field: "waist",      color: "#f59e0b", unit: "cm" },
+  { key: "bodyFat",    label: "Gordura",  field: "bodyFat",    color: "#ef4444", unit: "%" },
+  { key: "muscleMass", label: "Músculo",  field: "muscleMass", color: "#22c55e", unit: "%" },
+  { key: "chest",      label: "Peito",    field: "chest",      color: "#06b6d4", unit: "cm" },
+  { key: "bicep",      label: "Bícep",    field: "bicep",      color: "#8b5cf6", unit: "cm" },
+  { key: "thigh",      label: "Coxa",     field: "thigh",      color: "#f43f5e", unit: "cm" },
+  { key: "hip",        label: "Quadril",  field: "hip",        color: "#fb923c", unit: "cm" },
 ];
 
 export default function CorporalPage() {
@@ -358,6 +450,8 @@ export default function CorporalPage() {
   const editMetric   = useCorporalStore((s) => s.editMetric);
   const height    = useSettingsStore((s) => s.height);
   const setHeight = useSettingsStore((s) => s.setHeight);
+  const language  = useSettingsStore((s) => s.language);
+  const t = useT(language);
   const [showForm, setShowForm]     = useState(false);
   const [activeTab, setActiveTab]   = useState<Tab>("weight");
   const [editHeight, setEditHeight] = useState(false);
@@ -408,7 +502,7 @@ export default function CorporalPage() {
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-white">Métricas Corporais</h1>
+          <h1 className="text-xl font-semibold text-white">{t("corporalTitle")}</h1>
           <p className="text-sm text-[#6b7280]">
             {metrics.length} {metrics.length === 1 ? "medição registrada" : "medições registradas"}
           </p>
@@ -549,7 +643,7 @@ export default function CorporalPage() {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Activity size={14} className="text-[#6366f1]" />
-              <span className="text-sm font-medium text-white">Evolução</span>
+              <span className="text-sm font-medium text-white">{t("evolutionChart")}</span>
             </div>
             {activeDelta !== null && (
               <span className="text-xs font-medium" style={{ color: activeDelta <= 0 ? "#22c55e" : "#ef4444" }}>
@@ -582,11 +676,11 @@ export default function CorporalPage() {
 
           {activeSeries.length >= 2 && activeMin !== null && activeMax !== null && activeAvg !== null && (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3 pt-3 border-t border-[#2a2a2a]">
-              <StatCard label="Mínimo" value={`${activeMin.toFixed(1)} ${activeConf.unit}`} />
-              <StatCard label="Máximo" value={`${activeMax.toFixed(1)} ${activeConf.unit}`} />
-              <StatCard label="Média"  value={`${activeAvg.toFixed(1)} ${activeConf.unit}`} />
+              <StatCard label={t("statMin")} value={`${activeMin.toFixed(1)} ${activeConf.unit}`} />
+              <StatCard label={t("statMax")} value={`${activeMax.toFixed(1)} ${activeConf.unit}`} />
+              <StatCard label={t("statAvg")} value={`${activeAvg.toFixed(1)} ${activeConf.unit}`} />
               <StatCard
-                label="Variação"
+                label={t("statDelta")}
                 value={`${activeDelta !== null && activeDelta > 0 ? "+" : ""}${activeDelta !== null ? activeDelta.toFixed(1) : "-"} ${activeConf.unit}`}
                 trend={activeDelta !== null ? (activeDelta > 0 ? "up" : "down") : null}
               />
@@ -614,7 +708,7 @@ export default function CorporalPage() {
       {metrics.length > 0 && (
         <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-4">
           <p className="text-xs font-medium text-[#6b7280] uppercase tracking-wide mb-3">
-            Histórico completo
+            {t("measurementHistory")}
           </p>
           <div>
             {metrics.map((metric) => (
