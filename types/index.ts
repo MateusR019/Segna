@@ -29,14 +29,15 @@ export type AnyCategory = ExpenseCategory | IncomeCategory;
 export interface Transaction {
   id: string;
   type: TransactionType;
-  category: string;      // AnyCategory | categoria personalizada
-  subcategory?: string;  // detalhamento livre (ex: "Mercado", "Delivery")
+  category: string;        // AnyCategory | categoria personalizada
+  subcategory?: string;    // detalhamento livre (ex: "Mercado", "Delivery")
   description: string;
   amount: number;
-  date: string; // "YYYY-MM-DD"
+  date: string;            // "YYYY-MM-DD"
   createdAt: string;
   recurring?: boolean;
-  investmentId?: string; // vincula a um investimento (aporte ou resgate)
+  investmentId?: string;   // vincula a um investimento (aporte ou resgate)
+  accountType?: "pf" | "pj"; // Pessoa Física ou Pessoa Jurídica (default: pf)
 }
 
 export interface CategorySummary {
@@ -229,6 +230,12 @@ export type TaskRecurrence = "daily" | "weekly" | "monthly";
 
 export type TaskTag = "pessoal" | "trabalho" | "estudos" | "negocio" | "saude" | "financas";
 
+export interface CustomTag {
+  id: string;
+  label: string;
+  color: string;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -241,7 +248,7 @@ export interface Task {
   recurrence?: TaskRecurrence; // undefined = tarefa normal; definido = template recorrente
   generatedFrom?: string;      // ID do template que gerou esta instância
   time?: string;               // "HH:MM" — horário opcional da tarefa
-  tag?: TaskTag;               // contexto da tarefa
+  tag?: string;                // contexto da tarefa (built-in TaskTag ou CustomTag.id)
 }
 
 // ─── Mood ─────────────────────────────────────────────────────────────────────

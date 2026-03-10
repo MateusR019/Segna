@@ -3,6 +3,7 @@ import { Geist } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { AppShell } from "@/components/layout/AppShell";
+import { PomodoroWidget } from "@/components/pomodoro/PomodoroWidget";
 
 const geist = Geist({ subsets: ["latin"] });
 
@@ -81,6 +82,7 @@ export default function RootLayout({
       <body className={geist.className}>
         <Providers>
           <AppShell>{children}</AppShell>
+          <PomodoroWidget />
         </Providers>
       </body>
     </html>

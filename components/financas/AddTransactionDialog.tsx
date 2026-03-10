@@ -61,6 +61,7 @@ export function AddTransactionDialog({ trigger = "default" }: Props) {
 
   const [open, setOpen]             = useState(false);
   const [type, setType]             = useState<TransactionType>("expense");
+  const [accountType, setAccountType] = useState<"pf" | "pj">("pf");
   const [amount, setAmount]         = useState("");
   const [description, setDesc]      = useState("");
   const [category, setCategory]     = useState<string>("other");
@@ -117,6 +118,7 @@ export function AddTransactionDialog({ trigger = "default" }: Props) {
       date,
       recurring,
       investmentId: investmentId !== "none" ? investmentId : undefined,
+      accountType,
     });
     setAmount("");
     setDesc("");
@@ -153,6 +155,27 @@ export function AddTransactionDialog({ trigger = "default" }: Props) {
           <DialogTitle>Nova Transação</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+          {/* Conta PF / PJ */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-[#6b7280] flex-shrink-0">Conta:</span>
+            {(["pf", "pj"] as const).map((at) => (
+              <button
+                key={at}
+                type="button"
+                onClick={() => setAccountType(at)}
+                className={`px-3 py-1 rounded text-xs font-semibold border transition-colors cursor-pointer ${
+                  accountType === at
+                    ? at === "pf"
+                      ? "bg-[#6366f1]/20 text-[#818cf8] border-[#6366f1]/50"
+                      : "bg-[#a855f7]/20 text-[#c084fc] border-[#a855f7]/50"
+                    : "bg-transparent text-[#6b7280] border-[#2a2a2a] hover:border-[#4a4a4a]"
+                }`}
+              >
+                {at.toUpperCase()}
+              </button>
+            ))}
+          </div>
+
           <div className="flex gap-2">
             {(["income", "expense"] as TransactionType[]).map((t) => (
               <button

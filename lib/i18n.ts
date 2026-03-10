@@ -217,6 +217,10 @@ const translations = {
     tagSaude:          "Saúde",
     tagFinancas:       "Finanças",
     filterAll:         "Todos",
+
+    // ── Custom tags ──
+    manageTags:         "Tags personalizadas",
+    tagNamePlaceholder: "Nome da tag",
   },
 
   en: {
@@ -435,6 +439,10 @@ const translations = {
     tagSaude:          "Health",
     tagFinancas:       "Finance",
     filterAll:         "All",
+
+    // ── Custom tags ──
+    manageTags:         "Custom tags",
+    tagNamePlaceholder: "Tag name",
   },
 } as const;
 

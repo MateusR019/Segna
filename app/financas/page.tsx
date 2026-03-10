@@ -14,6 +14,7 @@ import { SavingsGoalWidget } from "@/components/financas/SavingsGoalWidget";
 import { SpendingCalendar } from "@/components/financas/SpendingCalendar";
 import { RecurringManager } from "@/components/financas/RecurringManager";
 import { InvestimentosTab } from "@/components/financas/InvestimentosTab";
+import { KpiWidget } from "@/components/financas/KpiWidget";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useFinancasStore } from "@/store/financasStore";
 import { useSettingsStore } from "@/store/settingsStore";
@@ -57,15 +58,25 @@ function MonthSelector({ month, onChange }: { month: string; onChange: (m: strin
 }
 
 export default function FinancasPage() {
-  const hydrated = useHydrated();
+  const hydrated          = useHydrated();
   const generateRecurring = useFinancasStore((s) => s.generateRecurring);
-  const language = useSettingsStore((s) => s.language);
-  const t = useT(language);
-  const [selectedMonth, setSelectedMonth] = useState(format(new Date(), "yyyy-MM"));
+  const transactions      = useFinancasStore((s) => s.transactions);
+  const language          = useSettingsStore((s) => s.language);
+  const t                 = useT(language);
+  const [selectedMonth, setSelectedMonth]     = useState(format(new Date(), "yyyy-MM"));
+  const [accountFilter, setAccountFilter]     = useState<"all" | "pf" | "pj">("all");
 
   useEffect(() => {
     if (hydrated) generateRecurring();
   }, [hydrated, generateRecurring]);
+
+  // Transações filtradas por conta (para KpiWidget)
+  const filteredForKpi = accountFilter === "all"
+    ? transactions
+    : transactions.filter((t) =>
+        t.accountType === accountFilter ||
+        (!t.accountType && accountFilter === "pf") // sem accountType → PF por padrão
+      );
 
   return (
     <div className="space-y-5">
@@ -81,9 +92,30 @@ export default function FinancasPage() {
         </div>
       </div>
 
+      {/* Filtro conta PF / PJ */}
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-[#4a4a4a]">Conta:</span>
+        {(["all", "pf", "pj"] as const).map((f) => (
+          <button
+            key={f}
+            type="button"
+            onClick={() => setAccountFilter(f)}
+            className="px-2.5 py-1 rounded-full text-xs font-medium transition-all cursor-pointer"
+            style={
+              accountFilter === f
+                ? { background: f === "all" ? "#6366f1" : f === "pf" ? "#6366f1" : "#a855f7", color: "#fff" }
+                : { background: "#1a1a1a", color: "#6b7280", border: "1px solid #2a2a2a" }
+            }
+          >
+            {f === "all" ? "Todas" : f.toUpperCase()}
+          </button>
+        ))}
+      </div>
+
       {hydrated ? (
         <>
           <FinancasSummary month={selectedMonth} />
+          <KpiWidget transactions={filteredForKpi} selectedMonth={selectedMonth} />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <MonthlyBudget />
             <SavingsGoalWidget />

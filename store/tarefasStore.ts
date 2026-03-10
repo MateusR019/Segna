@@ -1,17 +1,20 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { Task, TaskPriority, TaskTag } from "@/types";
+import { Task, TaskPriority, CustomTag } from "@/types";
 import { format, getDay, getDate } from "date-fns";
 import { loadStoreData, saveStoreData } from "@/lib/db";
 
 interface TarefasState {
   tasks: Task[];
+  customTags: CustomTag[];
 
   addTask: (t: Omit<Task, "id" | "createdAt" | "completed">) => void;
   removeTask: (id: string) => void;
   toggleTask: (id: string) => void;
   editTask: (id: string, updates: Partial<Pick<Task, "title" | "description" | "priority" | "date" | "time" | "tag">>) => void;
   generateRecurring: (dateStr: string) => void;
+  addCustomTag: (label: string, color: string) => void;
+  removeCustomTag: (id: string) => void;
 
   loadFromDB: () => Promise<void>;
 }
@@ -24,7 +27,7 @@ function scheduleSync() {
   if (_syncTimer) clearTimeout(_syncTimer);
   _syncTimer = setTimeout(() => {
     const s = useTarefasStore.getState();
-    saveStoreData("tarefas", { tasks: s.tasks });
+    saveStoreData("tarefas", { tasks: s.tasks, customTags: s.customTags });
   }, 1000);
 }
 
@@ -34,6 +37,7 @@ export const useTarefasStore = create<TarefasState>()(
   persist(
     (set) => ({
       tasks: [],
+      customTags: [],
 
       addTask: (t) => {
         set((state) => ({
@@ -125,10 +129,25 @@ export const useTarefasStore = create<TarefasState>()(
         scheduleSync();
       },
 
+      addCustomTag: (label, color) => {
+        set((s) => ({
+          customTags: [...s.customTags, { id: crypto.randomUUID(), label: label.trim(), color }],
+        }));
+        scheduleSync();
+      },
+
+      removeCustomTag: (id) => {
+        set((s) => ({ customTags: s.customTags.filter((ct) => ct.id !== id) }));
+        scheduleSync();
+      },
+
       loadFromDB: async () => {
         const data = await loadStoreData("tarefas");
         if (!data) return;
-        set({ tasks: (data.tasks as Task[]) ?? [] });
+        set({
+          tasks:      (data.tasks      as Task[])      ?? [],
+          customTags: (data.customTags as CustomTag[]) ?? [],
+        });
       },
     }),
     {

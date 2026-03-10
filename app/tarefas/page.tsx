@@ -1,14 +1,19 @@
 "use client";
 import { useState, useEffect } from "react";
-import { format, addDays } from "date-fns";
+import {
+  format, addDays,
+  startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval,
+  isSameMonth, subMonths, addMonths, isToday as dfIsToday,
+} from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Plus, Trash2, Check, X, ClipboardList, RefreshCcw, Clock, Calendar } from "lucide-react";
+import { Plus, Trash2, Check, X, ClipboardList, RefreshCcw, Clock, Calendar, Tag, ChevronLeft, ChevronRight, LayoutList, CalendarDays, Timer } from "lucide-react";
 import { useTarefasStore, getTasksForDate, getOverdueTasks, daysOverdue, calcCompletionRate } from "@/store/tarefasStore";
+import { usePomodoroStore } from "@/store/pomodoroStore";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useSettingsStore } from "@/store/settingsStore";
 import { useT, type TranslationKey } from "@/lib/i18n";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TaskPriority, TaskRecurrence, TaskTag } from "@/types";
+import { TaskPriority, TaskRecurrence, TaskTag, CustomTag } from "@/types";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -44,6 +49,104 @@ const TAG_LABEL_KEY: Record<TaskTag, TranslationKey> = {
 
 const TAG_KEYS: TaskTag[] = ["pessoal", "trabalho", "estudos", "negocio", "saude", "financas"];
 
+// 8 cores predefinidas para tags customizadas
+const CUSTOM_TAG_COLORS = [
+  "#6366f1", "#f59e0b", "#22c55e", "#a855f7",
+  "#f43f5e", "#14b8a6", "#3b82f6", "#f97316",
+];
+
+// Helpers para resolver cor e label de qualquer tag (built-in ou custom)
+function getTagColor(tag: string, customTags: CustomTag[]): string {
+  if (tag in TAG_COLOR) return TAG_COLOR[tag as TaskTag];
+  return customTags.find((ct) => ct.id === tag)?.color ?? "#6b7280";
+}
+
+function getTagLabel(
+  tag: string,
+  customTags: CustomTag[],
+  t: (key: TranslationKey) => string
+): string {
+  if (tag in TAG_LABEL_KEY) return t(TAG_LABEL_KEY[tag as TaskTag]);
+  return customTags.find((ct) => ct.id === tag)?.label ?? tag;
+}
+
+// ─── Month Calendar ───────────────────────────────────────────────────────────
+
+interface MonthCalendarProps {
+  selectedDate: string;
+  calendarMonth: string; // "yyyy-MM"
+  tasks: import("@/types").Task[];
+  onSelectDate: (d: string) => void;
+  onPrevMonth: () => void;
+  onNextMonth: () => void;
+}
+
+function MonthCalendar({ selectedDate, calendarMonth, tasks, onSelectDate, onPrevMonth, onNextMonth }: MonthCalendarProps) {
+  const monthDate = new Date(calendarMonth + "-01T12:00:00");
+  const start     = startOfWeek(startOfMonth(monthDate), { weekStartsOn: 0 });
+  const end       = endOfWeek(endOfMonth(monthDate), { weekStartsOn: 0 });
+  const days      = eachDayOfInterval({ start, end });
+  const weekLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+  const todayStr  = format(new Date(), "yyyy-MM-dd");
+
+  return (
+    <div className="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4 space-y-3">
+      {/* Header com navegação */}
+      <div className="flex items-center justify-between">
+        <button type="button" onClick={onPrevMonth} className="p-1 rounded-lg text-[#6b7280] hover:text-white hover:bg-[#2a2a2a] transition-colors cursor-pointer">
+          <ChevronLeft size={15} />
+        </button>
+        <span className="text-sm font-semibold text-white capitalize">
+          {format(monthDate, "MMMM yyyy", { locale: ptBR })}
+        </span>
+        <button type="button" onClick={onNextMonth} className="p-1 rounded-lg text-[#6b7280] hover:text-white hover:bg-[#2a2a2a] transition-colors cursor-pointer">
+          <ChevronRight size={15} />
+        </button>
+      </div>
+      {/* Dias da semana */}
+      <div className="grid grid-cols-7 gap-0.5">
+        {weekLabels.map((l) => (
+          <div key={l} className="text-center text-[10px] font-medium text-[#4a4a4a] py-1">{l}</div>
+        ))}
+        {days.map((d) => {
+          const dateStr   = format(d, "yyyy-MM-dd");
+          const inMonth   = isSameMonth(d, monthDate);
+          const isToday   = dateStr === todayStr;
+          const isSel     = dateStr === selectedDate;
+          const count     = getTasksForDate(tasks, dateStr).length;
+          return (
+            <button
+              key={dateStr}
+              type="button"
+              onClick={() => onSelectDate(dateStr)}
+              className="relative flex flex-col items-center justify-center py-1.5 rounded-lg transition-all cursor-pointer text-[11px] font-medium"
+              style={
+                isSel
+                  ? { background: "#6366f1", color: "#fff" }
+                  : isToday
+                  ? { background: "#1a1a1a", color: "#e5e5e5", outline: "1px solid rgba(99,102,241,0.4)" }
+                  : inMonth
+                  ? { color: "#9ca3af" }
+                  : { color: "#2a2a2a" }
+              }
+            >
+              <span>{format(d, "d")}</span>
+              {count > 0 && inMonth && (
+                <span
+                  className="text-[9px] font-bold tabular-nums leading-none"
+                  style={{ color: isSel ? "rgba(255,255,255,0.75)" : "#f97316", opacity: inMonth ? 1 : 0.3 }}
+                >
+                  {count}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ─── Add Task Form ────────────────────────────────────────────────────────────
 
 interface AddTaskFormProps {
@@ -52,9 +155,10 @@ interface AddTaskFormProps {
 }
 
 function AddTaskForm({ onClose, defaultDate }: AddTaskFormProps) {
-  const addTask = useTarefasStore((s) => s.addTask);
-  const language = useSettingsStore((s) => s.language);
-  const t = useT(language);
+  const addTask    = useTarefasStore((s) => s.addTask);
+  const customTags = useTarefasStore((s) => s.customTags);
+  const language   = useSettingsStore((s) => s.language);
+  const t          = useT(language);
   const PRIORITY_LABEL: Record<TaskPriority, string> = {
     high: t("priorityHigh"),
     medium: t("priorityMedium"),
@@ -65,7 +169,7 @@ function AddTaskForm({ onClose, defaultDate }: AddTaskFormProps) {
   const [description, setDescription] = useState("");
   const [recurrence, setRecurrence] = useState<TaskRecurrence | "">("");
   const [time, setTime] = useState("");
-  const [tag, setTag] = useState<TaskTag | undefined>(undefined);
+  const [tag, setTag] = useState<string | undefined>(undefined);
   const todayStr = format(new Date(), "yyyy-MM-dd");
   const [date, setDate] = useState(defaultDate ?? todayStr);
 
@@ -182,6 +286,21 @@ function AddTaskForm({ onClose, defaultDate }: AddTaskFormProps) {
             {t(TAG_LABEL_KEY[tk])}
           </button>
         ))}
+        {customTags.map((ct) => (
+          <button
+            key={ct.id}
+            type="button"
+            onClick={() => setTag(tag === ct.id ? undefined : ct.id)}
+            className="px-2 py-0.5 rounded text-[11px] font-medium transition-all cursor-pointer"
+            style={
+              tag === ct.id
+                ? { background: ct.color + "25", color: ct.color, borderWidth: 1, borderStyle: "solid", borderColor: ct.color + "55" }
+                : { color: "#4a4a4a", borderWidth: 1, borderStyle: "solid", borderColor: "#2a2a2a" }
+            }
+          >
+            {ct.label}
+          </button>
+        ))}
       </div>
 
       <div className="flex items-center justify-end gap-2 pt-1 border-t border-[#1f1f1f]">
@@ -213,7 +332,7 @@ interface TaskRowProps {
   description?: string;
   date: string;
   time?: string;
-  tag?: TaskTag;
+  tag?: string;
   priority: TaskPriority;
   completed: boolean;
   isRecurring?: boolean;
@@ -223,9 +342,11 @@ interface TaskRowProps {
 }
 
 function TaskRow({ id, title, description, date, time, tag, priority, completed, isRecurring, daysLate, onToggle, onRemove }: TaskRowProps) {
-  const language    = useSettingsStore((s) => s.language);
-  const t           = useT(language);
-  const editTask    = useTarefasStore((s) => s.editTask);
+  const language      = useSettingsStore((s) => s.language);
+  const t             = useT(language);
+  const editTask      = useTarefasStore((s) => s.editTask);
+  const customTags    = useTarefasStore((s) => s.customTags);
+  const startPomodoro = usePomodoroStore((s) => s.startSession);
 
   const PRIORITY_LABEL: Record<TaskPriority, string> = {
     high: t("priorityHigh"), medium: t("priorityMedium"), low: t("priorityLow"),
@@ -240,7 +361,7 @@ function TaskRow({ id, title, description, date, time, tag, priority, completed,
   const [editDesc,     setEditDesc]     = useState(description ?? "");
   const [editPriority, setEditPriority] = useState<TaskPriority>(priority);
   const [editTime,     setEditTime]     = useState(time ?? "");
-  const [editTag,      setEditTag]      = useState<TaskTag | undefined>(tag);
+  const [editTag,      setEditTag]      = useState<string | undefined>(tag);
   const [editDate,     setEditDate]     = useState(date);
 
   function openEdit() {
@@ -326,6 +447,21 @@ function TaskRow({ id, title, description, date, time, tag, priority, completed,
                 }
               >
                 {t(TAG_LABEL_KEY[tk])}
+              </button>
+            ))}
+            {customTags.map((ct) => (
+              <button
+                key={ct.id}
+                type="button"
+                onClick={() => setEditTag(editTag === ct.id ? undefined : ct.id)}
+                className="px-2 py-0.5 rounded text-[11px] font-medium transition-all cursor-pointer"
+                style={
+                  editTag === ct.id
+                    ? { background: ct.color + "25", color: ct.color, borderWidth: 1, borderStyle: "solid", borderColor: ct.color + "55" }
+                    : { color: "#4a4a4a", borderWidth: 1, borderStyle: "solid", borderColor: "#2a2a2a" }
+                }
+              >
+                {ct.label}
               </button>
             ))}
           </div>
@@ -431,9 +567,9 @@ function TaskRow({ id, title, description, date, time, tag, priority, completed,
         {tag && (
           <span
             className="inline-block mt-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded"
-            style={{ background: TAG_COLOR[tag] + "20", color: TAG_COLOR[tag] }}
+            style={{ background: getTagColor(tag, customTags) + "20", color: getTagColor(tag, customTags) }}
           >
-            {t(TAG_LABEL_KEY[tag])}
+            {getTagLabel(tag, customTags, t)}
           </span>
         )}
       </div>
@@ -453,8 +589,19 @@ function TaskRow({ id, title, description, date, time, tag, priority, completed,
         )}
       </div>
 
-      {/* Delete */}
-      <div className="flex-shrink-0 transition-opacity md:opacity-0 md:group-hover:opacity-100">
+      {/* Pomodoro + Delete */}
+      <div className="flex items-center gap-1 flex-shrink-0 transition-opacity md:opacity-0 md:group-hover:opacity-100">
+        {!completed && (
+          <button
+            type="button"
+            onClick={() => startPomodoro(id, title)}
+            className="text-[#3a3a3a] hover:text-[#6366f1] transition-colors cursor-pointer"
+            aria-label="Iniciar Pomodoro"
+            title="Iniciar Pomodoro"
+          >
+            <Timer size={13} />
+          </button>
+        )}
         {confirmDelete ? (
           <div className="flex items-center gap-1">
             <button type="button" onClick={onRemove} className="text-[#ef4444] hover:text-[#dc2626] transition-colors cursor-pointer" aria-label="Confirmar exclusão">
@@ -485,15 +632,30 @@ export default function TarefasPage() {
     medium: t("priorityMedium"),
     low: t("priorityLow"),
   };
-  const tasks = useTarefasStore((s) => s.tasks);
-  const toggleTask = useTarefasStore((s) => s.toggleTask);
-  const removeTask = useTarefasStore((s) => s.removeTask);
+  const tasks           = useTarefasStore((s) => s.tasks);
+  const toggleTask      = useTarefasStore((s) => s.toggleTask);
+  const removeTask      = useTarefasStore((s) => s.removeTask);
   const generateRecurring = useTarefasStore((s) => s.generateRecurring);
+  const customTags      = useTarefasStore((s) => s.customTags);
+  const addCustomTag    = useTarefasStore((s) => s.addCustomTag);
+  const removeCustomTag = useTarefasStore((s) => s.removeCustomTag);
 
-  const [showForm, setShowForm]       = useState(false);
-  const [activeTag, setActiveTag]     = useState<"all" | TaskTag>("all");
-  const today                         = format(new Date(), "yyyy-MM-dd");
-  const [selectedDate, setSelectedDate] = useState(today);
+  const [showForm, setShowForm]              = useState(false);
+  const [activeTag, setActiveTag]            = useState<"all" | string>("all");
+  const [showManageTags, setShowManageTags]  = useState(false);
+  const [newTagName, setNewTagName]          = useState("");
+  const [newTagColor, setNewTagColor]        = useState(CUSTOM_TAG_COLORS[0]);
+  const [viewMode, setViewMode]              = useState<"week" | "month">("week");
+  const today                                = format(new Date(), "yyyy-MM-dd");
+  const [selectedDate, setSelectedDate]      = useState(today);
+  const [calendarMonth, setCalendarMonth]    = useState(format(new Date(), "yyyy-MM"));
+
+  // Sincroniza mês do calendário quando a data selecionada muda para outro mês
+  function handleSelectDate(d: string) {
+    setSelectedDate(d);
+    setShowForm(false);
+    setCalendarMonth(d.slice(0, 7)); // "yyyy-MM"
+  }
 
   // Gera instâncias de tarefas recorrentes para hoje ao montar
   useEffect(() => {
@@ -519,12 +681,13 @@ export default function TarefasPage() {
   );
 
   // Contagem por tag (para o dia selecionado + atrasadas se for hoje)
-  const allOverdueTasks = selectedDate === today ? getOverdueTasks(tasks) : [];
-  const tagCounts = TAG_KEYS.reduce<Record<TaskTag, number>>((acc, tk) => {
+  const allOverdueTasks   = selectedDate === today ? getOverdueTasks(tasks) : [];
+  const allTagKeysForCount = [...TAG_KEYS, ...customTags.map((ct) => ct.id)];
+  const tagCounts = allTagKeysForCount.reduce<Record<string, number>>((acc, tk) => {
     const dayTasks = getTasksForDate(tasks, selectedDate);
     acc[tk] = [...dayTasks, ...allOverdueTasks].filter((t) => t.tag === tk).length;
     return acc;
-  }, {} as Record<TaskTag, number>);
+  }, {});
 
   // Aplica filtro de tag
   const filteredTasks = activeTag === "all" ? tasks : tasks.filter((t) => t.tag === activeTag);
@@ -566,14 +729,37 @@ export default function TarefasPage() {
           <h1 className="text-xl font-semibold text-white">{t("tarefasTitle")}</h1>
           <p className="text-sm text-[#6b7280] capitalize">{selectedDateLabel}</p>
         </div>
-        <button
-          type="button"
-          onClick={() => setShowForm((v) => !v)}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-[#6366f1] hover:bg-[#5254cc] text-white text-sm font-medium rounded-lg transition-colors cursor-pointer flex-shrink-0"
-        >
-          <Plus size={14} />
-          {t("addTask")}
-        </button>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Toggle Semana / Mês */}
+          <div className="flex items-center bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setViewMode("week")}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium transition-all cursor-pointer"
+              style={viewMode === "week" ? { background: "#2a2a2a", color: "#e5e5e5" } : { color: "#4a4a4a" }}
+              title="Semana"
+            >
+              <LayoutList size={12} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("month")}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium transition-all cursor-pointer"
+              style={viewMode === "month" ? { background: "#2a2a2a", color: "#e5e5e5" } : { color: "#4a4a4a" }}
+              title="Mês"
+            >
+              <CalendarDays size={12} />
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowForm((v) => !v)}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#6366f1] hover:bg-[#5254cc] text-white text-sm font-medium rounded-lg transition-colors cursor-pointer"
+          >
+            <Plus size={14} />
+            {t("addTask")}
+          </button>
+        </div>
       </div>
 
       {/* Inline add form */}
@@ -581,38 +767,49 @@ export default function TarefasPage() {
         <AddTaskForm onClose={() => setShowForm(false)} defaultDate={selectedDate} />
       )}
 
-      {/* Week bar */}
-      <div className="flex gap-1.5 overflow-x-auto pb-0.5" style={{ scrollbarWidth: "none" }}>
-        {weekDays.map(({ dateStr, dayLabel, dayNum, count }) => {
-          const isSelected = selectedDate === dateStr;
-          const isToday    = dateStr === today;
-          return (
-            <button
-              key={dateStr}
-              type="button"
-              onClick={() => { setSelectedDate(dateStr); setShowForm(false); }}
-              className="flex-shrink-0 flex flex-col items-center gap-0.5 w-12 py-2 rounded-xl transition-all cursor-pointer"
-              style={
-                isSelected
-                  ? { background: "#6366f1", color: "#fff" }
-                  : isToday
-                  ? { background: "#1a1a1a", color: "#e5e5e5", border: "1px solid rgba(99,102,241,0.35)" }
-                  : { background: "#141414", color: "#6b7280", border: "1px solid #2a2a2a" }
-              }
-            >
-              <span className="text-[10px] font-medium capitalize leading-none">{dayLabel}</span>
-              <span className="text-sm font-bold tabular-nums leading-tight">{dayNum}</span>
-              {count > 0 ? (
-                <span className="text-[10px] font-semibold tabular-nums leading-none" style={{ opacity: isSelected ? 0.85 : 0.55 }}>
-                  {count}
-                </span>
-              ) : (
-                <span className="text-[10px] leading-none opacity-0">·</span>
-              )}
-            </button>
-          );
-        })}
-      </div>
+      {/* Week bar ou Calendário mensal */}
+      {viewMode === "week" ? (
+        <div className="flex gap-1.5 overflow-x-auto pb-0.5" style={{ scrollbarWidth: "none" }}>
+          {weekDays.map(({ dateStr, dayLabel, dayNum, count }) => {
+            const isSelected = selectedDate === dateStr;
+            const isToday    = dateStr === today;
+            return (
+              <button
+                key={dateStr}
+                type="button"
+                onClick={() => handleSelectDate(dateStr)}
+                className="flex-shrink-0 flex flex-col items-center gap-0.5 w-12 py-2 rounded-xl transition-all cursor-pointer"
+                style={
+                  isSelected
+                    ? { background: "#6366f1", color: "#fff" }
+                    : isToday
+                    ? { background: "#1a1a1a", color: "#e5e5e5", border: "1px solid rgba(99,102,241,0.35)" }
+                    : { background: "#141414", color: "#6b7280", border: "1px solid #2a2a2a" }
+                }
+              >
+                <span className="text-[10px] font-medium capitalize leading-none">{dayLabel}</span>
+                <span className="text-sm font-bold tabular-nums leading-tight">{dayNum}</span>
+                {count > 0 ? (
+                  <span className="text-[10px] font-semibold tabular-nums leading-none" style={{ opacity: isSelected ? 0.85 : 0.55 }}>
+                    {count}
+                  </span>
+                ) : (
+                  <span className="text-[10px] leading-none opacity-0">·</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <MonthCalendar
+          selectedDate={selectedDate}
+          calendarMonth={calendarMonth}
+          tasks={tasks}
+          onSelectDate={handleSelectDate}
+          onPrevMonth={() => setCalendarMonth(format(subMonths(new Date(calendarMonth + "-01"), 1), "yyyy-MM"))}
+          onNextMonth={() => setCalendarMonth(format(addMonths(new Date(calendarMonth + "-01"), 1), "yyyy-MM"))}
+        />
+      )}
 
       {/* Filter bar */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5" style={{ scrollbarWidth: "none" }}>
@@ -642,16 +839,129 @@ export default function TarefasPage() {
           >
             {t(TAG_LABEL_KEY[tk])}
             {tagCounts[tk] > 0 && (
-              <span
-                className="text-[10px] font-semibold tabular-nums leading-none"
-                style={{ opacity: activeTag === tk ? 0.85 : 0.6 }}
-              >
+              <span className="text-[10px] font-semibold tabular-nums leading-none" style={{ opacity: activeTag === tk ? 0.85 : 0.6 }}>
                 {tagCounts[tk]}
               </span>
             )}
           </button>
         ))}
+        {customTags.map((ct) => (
+          <button
+            key={ct.id}
+            type="button"
+            onClick={() => setActiveTag(activeTag === ct.id ? "all" : ct.id)}
+            className="flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all cursor-pointer"
+            style={
+              activeTag === ct.id
+                ? { background: ct.color, color: "#fff" }
+                : { background: "#1a1a1a", color: "#6b7280", border: "1px solid #2a2a2a" }
+            }
+          >
+            {ct.label}
+            {(tagCounts[ct.id] ?? 0) > 0 && (
+              <span className="text-[10px] font-semibold tabular-nums leading-none" style={{ opacity: activeTag === ct.id ? 0.85 : 0.6 }}>
+                {tagCounts[ct.id]}
+              </span>
+            )}
+          </button>
+        ))}
+        {/* Botão gerenciar tags */}
+        <button
+          type="button"
+          onClick={() => setShowManageTags((v) => !v)}
+          className="flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ml-auto"
+          style={
+            showManageTags
+              ? { background: "#2a2a2a", color: "#e5e5e5", border: "1px solid #3a3a3a" }
+              : { background: "#1a1a1a", color: "#4a4a4a", border: "1px solid #2a2a2a" }
+          }
+          title={t("manageTags")}
+        >
+          <Tag size={10} />
+        </button>
       </div>
+
+      {/* Painel gerenciar tags */}
+      {showManageTags && (
+        <div className="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-medium text-[#9ca3af] uppercase tracking-wide">{t("manageTags")}</p>
+            <button type="button" onClick={() => setShowManageTags(false)} className="text-[#4a4a4a] hover:text-white transition-colors cursor-pointer">
+              <X size={13} />
+            </button>
+          </div>
+          {/* Tags custom existentes */}
+          {customTags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {customTags.map((ct) => (
+                <div
+                  key={ct.id}
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
+                  style={{ background: ct.color + "20", color: ct.color, border: `1px solid ${ct.color}55` }}
+                >
+                  <span>{ct.label}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      removeCustomTag(ct.id);
+                      if (activeTag === ct.id) setActiveTag("all");
+                    }}
+                    className="hover:opacity-60 transition-opacity cursor-pointer ml-0.5"
+                    aria-label={`Remover tag ${ct.label}`}
+                  >
+                    <X size={9} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          {/* Formulário nova tag */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <input
+              type="text"
+              value={newTagName}
+              onChange={(e) => setNewTagName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && newTagName.trim()) {
+                  addCustomTag(newTagName.trim(), newTagColor);
+                  setNewTagName("");
+                }
+              }}
+              placeholder={t("tagNamePlaceholder")}
+              maxLength={20}
+              className="flex-1 min-w-[120px] bg-transparent border border-[#2a2a2a] rounded text-xs text-white placeholder-[#4a4a4a] px-2 py-1 outline-none focus:border-[#6366f1] transition-colors"
+            />
+            <div className="flex gap-1.5">
+              {CUSTOM_TAG_COLORS.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setNewTagColor(c)}
+                  className="w-4 h-4 rounded-full transition-all cursor-pointer flex-shrink-0"
+                  style={{
+                    background: c,
+                    outline: newTagColor === c ? `2px solid ${c}` : "none",
+                    outlineOffset: "2px",
+                  }}
+                />
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                if (!newTagName.trim()) return;
+                addCustomTag(newTagName.trim(), newTagColor);
+                setNewTagName("");
+              }}
+              disabled={!newTagName.trim()}
+              className="flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium bg-[#6366f1] hover:bg-[#5254cc] disabled:opacity-30 disabled:cursor-not-allowed text-white transition-colors cursor-pointer flex-shrink-0"
+            >
+              <Plus size={11} />
+              {t("addBtn")}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Stats bar */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
