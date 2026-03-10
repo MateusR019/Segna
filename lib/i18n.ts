@@ -208,6 +208,15 @@ const translations = {
     statMax:           "Máximo",
     statAvg:           "Média",
     statDelta:         "Variação",
+
+    // ── Task tags ──
+    tagPessoal:        "Pessoal",
+    tagTrabalho:       "Trabalho",
+    tagEstudos:        "Estudos",
+    tagNegocio:        "Negócio",
+    tagSaude:          "Saúde",
+    tagFinancas:       "Finanças",
+    filterAll:         "Todos",
   },
 
   en: {
@@ -417,6 +426,15 @@ const translations = {
     statMax:           "Max",
     statAvg:           "Average",
     statDelta:         "Change",
+
+    // ── Task tags ──
+    tagPessoal:        "Personal",
+    tagTrabalho:       "Work",
+    tagEstudos:        "Studies",
+    tagNegocio:        "Business",
+    tagSaude:          "Health",
+    tagFinancas:       "Finance",
+    filterAll:         "All",
   },
 } as const;
 

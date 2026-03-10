@@ -1,14 +1,14 @@
 "use client";
 import { useState, useEffect } from "react";
-import { format } from "date-fns";
+import { format, addDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Plus, Trash2, Check, X, ClipboardList, RefreshCcw, Clock } from "lucide-react";
-import { useTarefasStore, getTodayTasks, getOverdueTasks, daysOverdue, calcCompletionRate } from "@/store/tarefasStore";
+import { Plus, Trash2, Check, X, ClipboardList, RefreshCcw, Clock, Calendar } from "lucide-react";
+import { useTarefasStore, getTasksForDate, getOverdueTasks, daysOverdue, calcCompletionRate } from "@/store/tarefasStore";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useSettingsStore } from "@/store/settingsStore";
-import { useT } from "@/lib/i18n";
+import { useT, type TranslationKey } from "@/lib/i18n";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TaskPriority, TaskRecurrence } from "@/types";
+import { TaskPriority, TaskRecurrence, TaskTag } from "@/types";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -22,13 +22,36 @@ const PRIORITY_COLOR: Record<TaskPriority, string> = {
 
 const PRIORITY_ORDER: TaskPriority[] = ["high", "medium", "low"];
 
+// ─── Tag config ───────────────────────────────────────────────────────────────
+
+const TAG_COLOR: Record<TaskTag, string> = {
+  pessoal:  "#6366f1",
+  trabalho: "#f59e0b",
+  estudos:  "#22c55e",
+  negocio:  "#a855f7",
+  saude:    "#f43f5e",
+  financas: "#14b8a6",
+};
+
+const TAG_LABEL_KEY: Record<TaskTag, TranslationKey> = {
+  pessoal:  "tagPessoal",
+  trabalho: "tagTrabalho",
+  estudos:  "tagEstudos",
+  negocio:  "tagNegocio",
+  saude:    "tagSaude",
+  financas: "tagFinancas",
+};
+
+const TAG_KEYS: TaskTag[] = ["pessoal", "trabalho", "estudos", "negocio", "saude", "financas"];
+
 // ─── Add Task Form ────────────────────────────────────────────────────────────
 
 interface AddTaskFormProps {
   onClose: () => void;
+  defaultDate?: string;
 }
 
-function AddTaskForm({ onClose }: AddTaskFormProps) {
+function AddTaskForm({ onClose, defaultDate }: AddTaskFormProps) {
   const addTask = useTarefasStore((s) => s.addTask);
   const language = useSettingsStore((s) => s.language);
   const t = useT(language);
@@ -42,6 +65,9 @@ function AddTaskForm({ onClose }: AddTaskFormProps) {
   const [description, setDescription] = useState("");
   const [recurrence, setRecurrence] = useState<TaskRecurrence | "">("");
   const [time, setTime] = useState("");
+  const [tag, setTag] = useState<TaskTag | undefined>(undefined);
+  const todayStr = format(new Date(), "yyyy-MM-dd");
+  const [date, setDate] = useState(defaultDate ?? todayStr);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -50,9 +76,10 @@ function AddTaskForm({ onClose }: AddTaskFormProps) {
       title: title.trim(),
       description: description.trim() || undefined,
       priority,
-      date: format(new Date(), "yyyy-MM-dd"),
+      date,
       ...(recurrence ? { recurrence } : {}),
       ...(time ? { time } : {}),
+      ...(tag ? { tag } : {}),
     });
     onClose();
   }
@@ -100,6 +127,17 @@ function AddTaskForm({ onClose }: AddTaskFormProps) {
           ))}
         </div>
 
+        {/* Data */}
+        <div className="flex items-center gap-1.5">
+          <Calendar size={11} className={date !== todayStr ? "text-[#6366f1]" : "text-[#3a3a3a]"} />
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="bg-transparent border border-[#2a2a2a] rounded text-xs text-[#6b7280] px-1.5 py-0.5 outline-none hover:border-[#3a3a3a] focus:border-[#6366f1] transition-colors"
+          />
+        </div>
+
         {/* Horário (opcional) */}
         <div className="flex items-center gap-1.5">
           <Clock size={11} className={time ? "text-[#6366f1]" : "text-[#3a3a3a]"} />
@@ -125,6 +163,25 @@ function AddTaskForm({ onClose }: AddTaskFormProps) {
             <option value="monthly">{t("repeatMonthly")}</option>
           </select>
         </div>
+      </div>
+
+      {/* Tag picker */}
+      <div className="flex items-center gap-1.5 flex-wrap">
+        {TAG_KEYS.map((tk) => (
+          <button
+            key={tk}
+            type="button"
+            onClick={() => setTag(tag === tk ? undefined : tk)}
+            className="px-2 py-0.5 rounded text-[11px] font-medium transition-all cursor-pointer"
+            style={
+              tag === tk
+                ? { background: TAG_COLOR[tk] + "25", color: TAG_COLOR[tk], borderWidth: 1, borderStyle: "solid", borderColor: TAG_COLOR[tk] + "55" }
+                : { color: "#4a4a4a", borderWidth: 1, borderStyle: "solid", borderColor: "#2a2a2a" }
+            }
+          >
+            {t(TAG_LABEL_KEY[tk])}
+          </button>
+        ))}
       </div>
 
       <div className="flex items-center justify-end gap-2 pt-1 border-t border-[#1f1f1f]">
@@ -154,7 +211,9 @@ interface TaskRowProps {
   id: string;
   title: string;
   description?: string;
+  date: string;
   time?: string;
+  tag?: TaskTag;
   priority: TaskPriority;
   completed: boolean;
   isRecurring?: boolean;
@@ -163,16 +222,159 @@ interface TaskRowProps {
   onRemove: () => void;
 }
 
-function TaskRow({ id, title, description, time, priority, completed, isRecurring, daysLate, onToggle, onRemove }: TaskRowProps) {
-  const language = useSettingsStore((s) => s.language);
-  const t = useT(language);
+function TaskRow({ id, title, description, date, time, tag, priority, completed, isRecurring, daysLate, onToggle, onRemove }: TaskRowProps) {
+  const language    = useSettingsStore((s) => s.language);
+  const t           = useT(language);
+  const editTask    = useTarefasStore((s) => s.editTask);
+
   const PRIORITY_LABEL: Record<TaskPriority, string> = {
-    high: t("priorityHigh"),
-    medium: t("priorityMedium"),
-    low: t("priorityLow"),
+    high: t("priorityHigh"), medium: t("priorityMedium"), low: t("priorityLow"),
   };
+
+  // ── View state ──
   const [confirmDelete, setConfirmDelete] = useState(false);
 
+  // ── Edit state ──
+  const [isEditing,    setIsEditing]    = useState(false);
+  const [editTitle,    setEditTitle]    = useState(title);
+  const [editDesc,     setEditDesc]     = useState(description ?? "");
+  const [editPriority, setEditPriority] = useState<TaskPriority>(priority);
+  const [editTime,     setEditTime]     = useState(time ?? "");
+  const [editTag,      setEditTag]      = useState<TaskTag | undefined>(tag);
+  const [editDate,     setEditDate]     = useState(date);
+
+  function openEdit() {
+    // Sync local state from latest props before opening
+    setEditTitle(title);
+    setEditDesc(description ?? "");
+    setEditPriority(priority);
+    setEditTime(time ?? "");
+    setEditTag(tag);
+    setEditDate(date);
+    setIsEditing(true);
+  }
+
+  function saveEdit() {
+    if (!editTitle.trim()) return;
+    editTask(id, {
+      title:       editTitle.trim(),
+      description: editDesc.trim() || undefined,
+      priority:    editPriority,
+      date:        editDate,
+      time:        editTime || undefined,
+      tag:         editTag,
+    });
+    setIsEditing(false);
+  }
+
+  function cancelEdit() { setIsEditing(false); }
+
+  // ── Edit mode render ──
+  if (isEditing) {
+    return (
+      <div className="py-2 border-b border-[#1f1f1f] last:border-0">
+        <div className="bg-[#141414] border border-[#6366f1]/30 rounded-xl p-3 space-y-2.5">
+          {/* Title */}
+          <input
+            autoFocus
+            type="text"
+            value={editTitle}
+            onChange={(e) => setEditTitle(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") saveEdit(); if (e.key === "Escape") cancelEdit(); }}
+            className="w-full bg-transparent text-sm text-white placeholder-[#4a4a4a] outline-none border-b border-[#2a2a2a] pb-1 focus:border-[#6366f1] transition-colors"
+            placeholder={t("taskTitle")}
+          />
+          {/* Description */}
+          <input
+            type="text"
+            value={editDesc}
+            onChange={(e) => setEditDesc(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Escape") cancelEdit(); }}
+            className="w-full bg-transparent text-xs text-[#9ca3af] placeholder-[#3a3a3a] outline-none border-b border-[#2a2a2a] pb-1 focus:border-[#4a4a4a] transition-colors"
+            placeholder={t("taskDesc")}
+          />
+          {/* Priority */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {PRIORITY_ORDER.map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => setEditPriority(p)}
+                className="px-2.5 py-0.5 rounded text-xs font-medium transition-all cursor-pointer"
+                style={
+                  editPriority === p
+                    ? { background: PRIORITY_COLOR[p] + "22", color: PRIORITY_COLOR[p], borderWidth: 1, borderStyle: "solid", borderColor: PRIORITY_COLOR[p] + "55" }
+                    : { color: "#4a4a4a", borderWidth: 1, borderStyle: "solid", borderColor: "#2a2a2a" }
+                }
+              >
+                {PRIORITY_LABEL[p]}
+              </button>
+            ))}
+          </div>
+          {/* Tags */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {TAG_KEYS.map((tk) => (
+              <button
+                key={tk}
+                type="button"
+                onClick={() => setEditTag(editTag === tk ? undefined : tk)}
+                className="px-2 py-0.5 rounded text-[11px] font-medium transition-all cursor-pointer"
+                style={
+                  editTag === tk
+                    ? { background: TAG_COLOR[tk] + "25", color: TAG_COLOR[tk], borderWidth: 1, borderStyle: "solid", borderColor: TAG_COLOR[tk] + "55" }
+                    : { color: "#4a4a4a", borderWidth: 1, borderStyle: "solid", borderColor: "#2a2a2a" }
+                }
+              >
+                {t(TAG_LABEL_KEY[tk])}
+              </button>
+            ))}
+          </div>
+          {/* Date + Time */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-1.5">
+              <Calendar size={11} className="text-[#4a4a4a]" />
+              <input
+                type="date"
+                value={editDate}
+                onChange={(e) => setEditDate(e.target.value)}
+                className="bg-transparent border border-[#2a2a2a] rounded text-xs text-[#6b7280] px-1.5 py-0.5 outline-none focus:border-[#6366f1] transition-colors"
+              />
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Clock size={11} className="text-[#4a4a4a]" />
+              <input
+                type="time"
+                value={editTime}
+                onChange={(e) => setEditTime(e.target.value)}
+                className="bg-transparent border border-[#2a2a2a] rounded text-xs text-[#6b7280] px-1.5 py-0.5 outline-none focus:border-[#6366f1] transition-colors"
+              />
+            </div>
+          </div>
+          {/* Actions */}
+          <div className="flex items-center justify-end gap-2 pt-1 border-t border-[#1f1f1f]">
+            <button
+              type="button"
+              onClick={cancelEdit}
+              className="px-3 py-1.5 text-xs text-[#6b7280] hover:text-[#9ca3af] transition-colors cursor-pointer"
+            >
+              {t("cancelBtn")}
+            </button>
+            <button
+              type="button"
+              onClick={saveEdit}
+              disabled={!editTitle.trim()}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#6366f1] hover:bg-[#5254cc] disabled:opacity-30 disabled:cursor-not-allowed text-white text-xs font-medium rounded-lg transition-colors cursor-pointer"
+            >
+              <Check size={12} />
+              {t("save")}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Normal view ──
   return (
     <div
       className={`group flex items-start gap-3 py-2.5 border-b border-[#1f1f1f] last:border-0 transition-opacity ${
@@ -192,13 +394,7 @@ function TaskRow({ id, title, description, time, priority, completed, isRecurrin
       >
         {completed && (
           <svg viewBox="0 0 12 12" width="8" height="8" fill="none">
-            <path
-              d="M2 6l3 3 5-5"
-              stroke="black"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+            <path d="M2 6l3 3 5-5" stroke="black" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         )}
       </button>
@@ -209,12 +405,12 @@ function TaskRow({ id, title, description, time, priority, completed, isRecurrin
         style={{ background: PRIORITY_COLOR[priority] }}
       />
 
-      {/* Content */}
-      <div className="flex-1 min-w-0 space-y-0.5">
+      {/* Content — click to edit */}
+      <div className="flex-1 min-w-0 space-y-0.5 cursor-pointer" onClick={openEdit}>
         <span className="flex items-center gap-1.5 flex-wrap">
           <span
-            className={`text-sm leading-snug ${
-              completed ? "line-through text-[#4a4a4a]" : "text-[#e5e5e5]"
+            className={`text-sm leading-snug transition-colors ${
+              completed ? "line-through text-[#4a4a4a]" : "text-[#e5e5e5] hover:text-white"
             }`}
           >
             {title}
@@ -232,16 +428,21 @@ function TaskRow({ id, title, description, time, priority, completed, isRecurrin
             {time}
           </span>
         )}
+        {tag && (
+          <span
+            className="inline-block mt-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded"
+            style={{ background: TAG_COLOR[tag] + "20", color: TAG_COLOR[tag] }}
+          >
+            {t(TAG_LABEL_KEY[tag])}
+          </span>
+        )}
       </div>
 
       {/* Badges */}
       <div className="flex flex-col items-end gap-1 flex-shrink-0">
         <span
           className="mt-0.5 text-xs font-medium px-1.5 py-0.5 rounded"
-          style={{
-            background: PRIORITY_COLOR[priority] + "18",
-            color: PRIORITY_COLOR[priority],
-          }}
+          style={{ background: PRIORITY_COLOR[priority] + "18", color: PRIORITY_COLOR[priority] }}
         >
           {PRIORITY_LABEL[priority]}
         </span>
@@ -256,30 +457,15 @@ function TaskRow({ id, title, description, time, priority, completed, isRecurrin
       <div className="flex-shrink-0 transition-opacity md:opacity-0 md:group-hover:opacity-100">
         {confirmDelete ? (
           <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={onRemove}
-              className="text-[#ef4444] hover:text-[#dc2626] transition-colors cursor-pointer"
-              aria-label="Confirmar exclusão"
-            >
+            <button type="button" onClick={onRemove} className="text-[#ef4444] hover:text-[#dc2626] transition-colors cursor-pointer" aria-label="Confirmar exclusão">
               <Check size={13} />
             </button>
-            <button
-              type="button"
-              onClick={() => setConfirmDelete(false)}
-              className="text-[#4a4a4a] hover:text-[#6b7280] transition-colors cursor-pointer"
-              aria-label="Cancelar"
-            >
+            <button type="button" onClick={() => setConfirmDelete(false)} className="text-[#4a4a4a] hover:text-[#6b7280] transition-colors cursor-pointer" aria-label="Cancelar">
               <X size={13} />
             </button>
           </div>
         ) : (
-          <button
-            type="button"
-            onClick={() => setConfirmDelete(true)}
-            className="text-[#3a3a3a] hover:text-[#ef4444] transition-colors cursor-pointer"
-            aria-label="Remover tarefa"
-          >
+          <button type="button" onClick={() => setConfirmDelete(true)} className="text-[#3a3a3a] hover:text-[#ef4444] transition-colors cursor-pointer" aria-label="Remover tarefa">
             <Trash2 size={13} />
           </button>
         )}
@@ -304,20 +490,49 @@ export default function TarefasPage() {
   const removeTask = useTarefasStore((s) => s.removeTask);
   const generateRecurring = useTarefasStore((s) => s.generateRecurring);
 
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm]       = useState(false);
+  const [activeTag, setActiveTag]     = useState<"all" | TaskTag>("all");
+  const today                         = format(new Date(), "yyyy-MM-dd");
+  const [selectedDate, setSelectedDate] = useState(today);
 
   // Gera instâncias de tarefas recorrentes para hoje ao montar
   useEffect(() => {
-    if (hydrated) {
-      generateRecurring(format(new Date(), "yyyy-MM-dd"));
-    }
-  }, [hydrated, generateRecurring]);
+    if (hydrated) generateRecurring(today);
+  }, [hydrated, generateRecurring, today]);
 
-  const todayLabel = format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR });
-  const todayTasks = getTodayTasks(tasks);
-  const overdueTasks = getOverdueTasks(tasks);
+  // Barra semanal: hoje + 6 dias seguintes
+  const weekDays = Array.from({ length: 7 }, (_, i) => {
+    const d       = addDays(new Date(), i);
+    const dateStr = format(d, "yyyy-MM-dd");
+    return {
+      dateStr,
+      dayLabel: i === 0 ? "Hoje" : format(d, "EEE", { locale: ptBR }),
+      dayNum:   format(d, "d"),
+      count:    getTasksForDate(tasks, dateStr).length, // total sem filtro de tag
+    };
+  });
+
+  const selectedDateLabel = format(
+    new Date(selectedDate + "T00:00:00"),
+    "EEEE, d 'de' MMMM",
+    { locale: ptBR }
+  );
+
+  // Contagem por tag (para o dia selecionado + atrasadas se for hoje)
+  const allOverdueTasks = selectedDate === today ? getOverdueTasks(tasks) : [];
+  const tagCounts = TAG_KEYS.reduce<Record<TaskTag, number>>((acc, tk) => {
+    const dayTasks = getTasksForDate(tasks, selectedDate);
+    acc[tk] = [...dayTasks, ...allOverdueTasks].filter((t) => t.tag === tk).length;
+    return acc;
+  }, {} as Record<TaskTag, number>);
+
+  // Aplica filtro de tag
+  const filteredTasks = activeTag === "all" ? tasks : tasks.filter((t) => t.tag === activeTag);
+
+  const todayTasks    = getTasksForDate(filteredTasks, selectedDate);
+  const overdueTasks  = selectedDate === today ? getOverdueTasks(filteredTasks) : [];
   const completedTasks = todayTasks.filter((t) => t.completed);
-  const pendingTasks = todayTasks.filter((t) => !t.completed);
+  const pendingTasks   = todayTasks.filter((t) => !t.completed);
   const completionRate = calcCompletionRate(todayTasks);
 
   // Group pending by priority
@@ -349,7 +564,7 @@ export default function TarefasPage() {
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-white">{t("tarefasTitle")}</h1>
-          <p className="text-sm text-[#6b7280] capitalize">{todayLabel}</p>
+          <p className="text-sm text-[#6b7280] capitalize">{selectedDateLabel}</p>
         </div>
         <button
           type="button"
@@ -362,7 +577,81 @@ export default function TarefasPage() {
       </div>
 
       {/* Inline add form */}
-      {showForm && <AddTaskForm onClose={() => setShowForm(false)} />}
+      {showForm && (
+        <AddTaskForm onClose={() => setShowForm(false)} defaultDate={selectedDate} />
+      )}
+
+      {/* Week bar */}
+      <div className="flex gap-1.5 overflow-x-auto pb-0.5" style={{ scrollbarWidth: "none" }}>
+        {weekDays.map(({ dateStr, dayLabel, dayNum, count }) => {
+          const isSelected = selectedDate === dateStr;
+          const isToday    = dateStr === today;
+          return (
+            <button
+              key={dateStr}
+              type="button"
+              onClick={() => { setSelectedDate(dateStr); setShowForm(false); }}
+              className="flex-shrink-0 flex flex-col items-center gap-0.5 w-12 py-2 rounded-xl transition-all cursor-pointer"
+              style={
+                isSelected
+                  ? { background: "#6366f1", color: "#fff" }
+                  : isToday
+                  ? { background: "#1a1a1a", color: "#e5e5e5", border: "1px solid rgba(99,102,241,0.35)" }
+                  : { background: "#141414", color: "#6b7280", border: "1px solid #2a2a2a" }
+              }
+            >
+              <span className="text-[10px] font-medium capitalize leading-none">{dayLabel}</span>
+              <span className="text-sm font-bold tabular-nums leading-tight">{dayNum}</span>
+              {count > 0 ? (
+                <span className="text-[10px] font-semibold tabular-nums leading-none" style={{ opacity: isSelected ? 0.85 : 0.55 }}>
+                  {count}
+                </span>
+              ) : (
+                <span className="text-[10px] leading-none opacity-0">·</span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Filter bar */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5" style={{ scrollbarWidth: "none" }}>
+        <button
+          type="button"
+          onClick={() => setActiveTag("all")}
+          className="flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-medium transition-all cursor-pointer"
+          style={
+            activeTag === "all"
+              ? { background: "#6366f1", color: "#fff" }
+              : { background: "#1a1a1a", color: "#6b7280", border: "1px solid #2a2a2a" }
+          }
+        >
+          {t("filterAll")}
+        </button>
+        {TAG_KEYS.map((tk) => (
+          <button
+            key={tk}
+            type="button"
+            onClick={() => setActiveTag(activeTag === tk ? "all" : tk)}
+            className="flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all cursor-pointer"
+            style={
+              activeTag === tk
+                ? { background: TAG_COLOR[tk], color: "#fff" }
+                : { background: "#1a1a1a", color: "#6b7280", border: "1px solid #2a2a2a" }
+            }
+          >
+            {t(TAG_LABEL_KEY[tk])}
+            {tagCounts[tk] > 0 && (
+              <span
+                className="text-[10px] font-semibold tabular-nums leading-none"
+                style={{ opacity: activeTag === tk ? 0.85 : 0.6 }}
+              >
+                {tagCounts[tk]}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
 
       {/* Stats bar */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -409,7 +698,9 @@ export default function TarefasPage() {
                 id={task.id}
                 title={task.title}
                 description={task.description}
+                date={task.date}
                 time={task.time}
+                tag={task.tag}
                 priority={task.priority}
                 completed={task.completed}
                 isRecurring={!!task.generatedFrom}
@@ -431,7 +722,9 @@ export default function TarefasPage() {
             </div>
           </div>
           <div className="space-y-1">
-            <p className="text-sm text-[#4a4a4a]">{t("noTasksToday")}</p>
+            <p className="text-sm text-[#4a4a4a]">
+              {selectedDate === today ? t("noTasksToday") : "Nenhuma tarefa para este dia"}
+            </p>
             <p className="text-xs text-[#3a3a3a]">Clique em "Adicionar tarefa" para começar</p>
           </div>
         </div>
@@ -467,7 +760,9 @@ export default function TarefasPage() {
                           id={task.id}
                           title={task.title}
                           description={task.description}
+                          date={task.date}
                           time={task.time}
+                          tag={task.tag}
                           priority={task.priority}
                           completed={task.completed}
                           isRecurring={!!task.generatedFrom}
@@ -495,7 +790,9 @@ export default function TarefasPage() {
                     id={task.id}
                     title={task.title}
                     description={task.description}
+                    date={task.date}
                     time={task.time}
+                    tag={task.tag}
                     priority={task.priority}
                     completed={task.completed}
                     isRecurring={!!task.generatedFrom}

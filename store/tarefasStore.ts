@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { Task, TaskPriority } from "@/types";
+import { Task, TaskPriority, TaskTag } from "@/types";
 import { format, getDay, getDate } from "date-fns";
 import { loadStoreData, saveStoreData } from "@/lib/db";
 
@@ -10,7 +10,7 @@ interface TarefasState {
   addTask: (t: Omit<Task, "id" | "createdAt" | "completed">) => void;
   removeTask: (id: string) => void;
   toggleTask: (id: string) => void;
-  editTask: (id: string, updates: Partial<Pick<Task, "title" | "description" | "priority" | "date" | "time">>) => void;
+  editTask: (id: string, updates: Partial<Pick<Task, "title" | "description" | "priority" | "date" | "time" | "tag">>) => void;
   generateRecurring: (dateStr: string) => void;
 
   loadFromDB: () => Promise<void>;

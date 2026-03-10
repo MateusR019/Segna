@@ -529,14 +529,6 @@ export default function TreinoPage() {
               Registre exercícios, séries e pesos — seus PRs aparecem automaticamente
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => addSession(today)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[#6366f1] hover:bg-[#5254cc] text-white text-sm font-medium rounded-lg transition-colors cursor-pointer"
-          >
-            <Plus size={14} />
-            {t("startWorkout")}
-          </button>
         </div>
       )}
 
@@ -544,20 +536,6 @@ export default function TreinoPage() {
       {todaySessions.map((session) => (
         <ActiveSession key={session.id} session={session} />
       ))}
-
-      {/* ─── Prompt to start if there's history but no session today ─── */}
-      {sessions.length > 0 && todaySessions.length === 0 && (
-        <div className="bg-[#141414] border border-dashed border-[#2a2a2a] rounded-xl py-5 flex items-center justify-center">
-          <button
-            type="button"
-            onClick={() => addSession(today)}
-            className="flex items-center gap-2 text-sm text-[#6b7280] hover:text-[#a78bfa] transition-colors cursor-pointer"
-          >
-            <Plus size={14} className="text-[#6366f1]" />
-            {t("startWorkout")} hoje
-          </button>
-        </div>
-      )}
 
       {/* ─── Stats bar ─── */}
       {sessions.length > 0 && (

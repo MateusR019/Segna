@@ -227,6 +227,8 @@ export type TaskPriority = "low" | "medium" | "high";
 
 export type TaskRecurrence = "daily" | "weekly" | "monthly";
 
+export type TaskTag = "pessoal" | "trabalho" | "estudos" | "negocio" | "saude" | "financas";
+
 export interface Task {
   id: string;
   title: string;
@@ -239,6 +241,7 @@ export interface Task {
   recurrence?: TaskRecurrence; // undefined = tarefa normal; definido = template recorrente
   generatedFrom?: string;      // ID do template que gerou esta instância
   time?: string;               // "HH:MM" — horário opcional da tarefa
+  tag?: TaskTag;               // contexto da tarefa
 }
 
 // ─── Mood ─────────────────────────────────────────────────────────────────────
