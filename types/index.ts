@@ -270,6 +270,32 @@ export interface BodyMetric {
   createdAt: string;
 }
 
+// ─── Treino / Workout ─────────────────────────────────────────────────────────
+
+export interface WorkoutSet {
+  id: string;
+  reps: number;
+  weight?: number;   // kg — undefined = peso corporal
+  done: boolean;
+}
+
+export interface WorkoutExercise {
+  id: string;
+  name: string;
+  sets: WorkoutSet[];
+  note?: string;
+}
+
+export interface WorkoutSession {
+  id: string;
+  date: string;       // "YYYY-MM-DD"
+  name?: string;      // "Push Day", "Treino A", etc.
+  exercises: WorkoutExercise[];
+  duration?: number;  // minutos (manual)
+  note?: string;
+  createdAt: string;  // ISO
+}
+
 // ─── Investimentos / Reservas ────────────────────────────────────────────────
 
 export type InvestmentType =

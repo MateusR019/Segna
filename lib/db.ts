@@ -18,7 +18,8 @@ export type StoreKey =
   | "tarefas"
   | "mood"
   | "corporal"
-  | "investimentos";
+  | "investimentos"
+  | "treino";
 
 async function getUserId(): Promise<string | null> {
   const user = await getAuthUser();

@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   TrendingUp, CheckSquare, Coins, LayoutDashboard, ClipboardList,
-  WifiOff, MoreHorizontal, StickyNote, Scale, CalendarDays, X, Settings,
+  WifiOff, MoreHorizontal, StickyNote, Scale, CalendarDays, X, Settings, Dumbbell,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/store/settingsStore";
@@ -27,11 +27,12 @@ export function BottomNav() {
 
   // Extra items in the "More" drawer
   const extraItems = [
-    { href: "/defi",           label: t("defi"),        icon: Coins },
-    { href: "/notas",          label: t("notes"),       icon: StickyNote },
-    { href: "/corporal",       label: t("corporal"),    icon: Scale },
-    { href: "/revisao",        label: t("review"),      icon: CalendarDays },
-    { href: "/configuracoes",  label: t("settings"),    icon: Settings },
+    { href: "/defi",           label: t("defi"),          icon: Coins },
+    { href: "/notas",          label: t("notes"),         icon: StickyNote },
+    { href: "/treino",         label: t("treinoTitle"),   icon: Dumbbell },
+    { href: "/corporal",       label: t("corporal"),      icon: Scale },
+    { href: "/revisao",        label: t("review"),        icon: CalendarDays },
+    { href: "/configuracoes",  label: t("settings"),      icon: Settings },
   ];
 
   // Fecha o drawer ao navegar

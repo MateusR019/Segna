@@ -173,6 +173,21 @@ const translations = {
     // ── PDF ──
     exportPDF:         "PDF",
 
+    // ── Treino / Workout ──
+    treinoTitle:       "Treino",
+    treinoDesc:        "Exercícios e séries",
+    newWorkout:        "Novo treino",
+    startWorkout:      "Começar treino",
+    addExerciseBtn:    "Exercício",
+    exerciseName:      "Nome do exercício",
+    sessionName:       "Nome do treino",
+    repsLabel:         "Reps",
+    weightLabel:       "Kg",
+    noWorkoutsYet:     "Nenhum treino registrado",
+    workoutHistory:    "Histórico",
+    prsTitle:          "Recordes (PRs)",
+    durationMin:       "min",
+
     // ── Task time ──
     taskTime:          "Horário",
 
@@ -366,6 +381,21 @@ const translations = {
 
     // ── PDF ──
     exportPDF:         "PDF",
+
+    // ── Treino / Workout ──
+    treinoTitle:       "Workout",
+    treinoDesc:        "Exercises & sets",
+    newWorkout:        "New workout",
+    startWorkout:      "Start workout",
+    addExerciseBtn:    "Exercise",
+    exerciseName:      "Exercise name",
+    sessionName:       "Workout name",
+    repsLabel:         "Reps",
+    weightLabel:       "Kg",
+    noWorkoutsYet:     "No workouts yet",
+    workoutHistory:    "History",
+    prsTitle:          "Personal Records",
+    durationMin:       "min",
 
     // ── Task time ──
     taskTime:          "Time",

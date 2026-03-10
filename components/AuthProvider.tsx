@@ -11,6 +11,7 @@ import { useTarefasStore } from "@/store/tarefasStore";
 import { useMoodStore } from "@/store/moodStore";
 import { useCorporalStore } from "@/store/corporalStore";
 import { useInvestimentosStore } from "@/store/investimentosStore";
+import { useWorkoutStore } from "@/store/workoutStore";
 
 export async function loadAllStores() {
   await Promise.all([
@@ -23,6 +24,7 @@ export async function loadAllStores() {
     useMoodStore.getState().loadFromDB(),
     useCorporalStore.getState().loadFromDB(),
     useInvestimentosStore.getState().loadFromDB(),
+    useWorkoutStore.getState().loadFromDB(),
   ]);
 }
 
