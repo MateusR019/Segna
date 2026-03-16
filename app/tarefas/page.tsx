@@ -804,7 +804,7 @@ export default function TarefasPage() {
         <MonthCalendar
           selectedDate={selectedDate}
           calendarMonth={calendarMonth}
-          tasks={tasks}
+          tasks={filteredTasks}
           onSelectDate={handleSelectDate}
           onPrevMonth={() => setCalendarMonth(format(subMonths(new Date(calendarMonth + "-01"), 1), "yyyy-MM"))}
           onNextMonth={() => setCalendarMonth(format(addMonths(new Date(calendarMonth + "-01"), 1), "yyyy-MM"))}
