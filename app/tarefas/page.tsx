@@ -124,10 +124,10 @@ function MonthCalendar({ selectedDate, calendarMonth, tasks, onSelectDate, onPre
                 isSel
                   ? { background: "#6366f1", color: "#fff" }
                   : isToday
-                  ? { background: "#1a1a1a", color: "#e5e5e5", outline: "1px solid rgba(99,102,241,0.4)" }
+                  ? { background: "#1e1b4b", color: "#c7d2fe", outline: "2px solid #6366f1" }
                   : inMonth
                   ? { color: "#9ca3af" }
-                  : { color: "#2a2a2a" }
+                  : { color: "#404040" }
               }
             >
               <span>{format(d, "d")}</span>
@@ -276,7 +276,7 @@ function AddTaskForm({ onClose, defaultDate }: AddTaskFormProps) {
             key={tk}
             type="button"
             onClick={() => setTag(tag === tk ? undefined : tk)}
-            className="px-2 py-0.5 rounded text-[11px] font-medium transition-all cursor-pointer"
+            className="px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-all cursor-pointer"
             style={
               tag === tk
                 ? { background: TAG_COLOR[tk] + "25", color: TAG_COLOR[tk], borderWidth: 1, borderStyle: "solid", borderColor: TAG_COLOR[tk] + "55" }
@@ -291,7 +291,7 @@ function AddTaskForm({ onClose, defaultDate }: AddTaskFormProps) {
             key={ct.id}
             type="button"
             onClick={() => setTag(tag === ct.id ? undefined : ct.id)}
-            className="px-2 py-0.5 rounded text-[11px] font-medium transition-all cursor-pointer"
+            className="px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-all cursor-pointer"
             style={
               tag === ct.id
                 ? { background: ct.color + "25", color: ct.color, borderWidth: 1, borderStyle: "solid", borderColor: ct.color + "55" }
@@ -439,7 +439,7 @@ function TaskRow({ id, title, description, date, time, tag, priority, completed,
                 key={tk}
                 type="button"
                 onClick={() => setEditTag(editTag === tk ? undefined : tk)}
-                className="px-2 py-0.5 rounded text-[11px] font-medium transition-all cursor-pointer"
+                className="px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-all cursor-pointer"
                 style={
                   editTag === tk
                     ? { background: TAG_COLOR[tk] + "25", color: TAG_COLOR[tk], borderWidth: 1, borderStyle: "solid", borderColor: TAG_COLOR[tk] + "55" }
@@ -454,7 +454,7 @@ function TaskRow({ id, title, description, date, time, tag, priority, completed,
                 key={ct.id}
                 type="button"
                 onClick={() => setEditTag(editTag === ct.id ? undefined : ct.id)}
-                className="px-2 py-0.5 rounded text-[11px] font-medium transition-all cursor-pointer"
+                className="px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-all cursor-pointer"
                 style={
                   editTag === ct.id
                     ? { background: ct.color + "25", color: ct.color, borderWidth: 1, borderStyle: "solid", borderColor: ct.color + "55" }
@@ -590,7 +590,7 @@ function TaskRow({ id, title, description, date, time, tag, priority, completed,
       </div>
 
       {/* Pomodoro + Delete */}
-      <div className="flex items-center gap-1 flex-shrink-0 transition-opacity md:opacity-0 md:group-hover:opacity-100">
+      <div className="flex items-center gap-1 flex-shrink-0 transition-opacity opacity-30 group-hover:opacity-100">
         {!completed && (
           <button
             type="button"
@@ -662,15 +662,18 @@ export default function TarefasPage() {
     if (hydrated) generateRecurring(today);
   }, [hydrated, generateRecurring, today]);
 
-  // Barra semanal: hoje + 6 dias seguintes
+  // Aplica filtro de tag (definido antes da barra semanal para usar no count)
+  const filteredTasks = activeTag === "all" ? tasks : tasks.filter((t) => t.tag === activeTag);
+
+  // Barra semanal: selectedDate + 6 dias seguintes (sincroniza com calendário mensal)
   const weekDays = Array.from({ length: 7 }, (_, i) => {
-    const d       = addDays(new Date(), i);
+    const d       = addDays(new Date(selectedDate + "T00:00:00"), i);
     const dateStr = format(d, "yyyy-MM-dd");
     return {
       dateStr,
-      dayLabel: i === 0 ? "Hoje" : format(d, "EEE", { locale: ptBR }),
+      dayLabel: dateStr === today ? "Hoje" : format(d, "EEE", { locale: ptBR }),
       dayNum:   format(d, "d"),
-      count:    getTasksForDate(tasks, dateStr).length, // total sem filtro de tag
+      count:    getTasksForDate(filteredTasks, dateStr).length,
     };
   });
 
@@ -688,9 +691,6 @@ export default function TarefasPage() {
     acc[tk] = [...dayTasks, ...allOverdueTasks].filter((t) => t.tag === tk).length;
     return acc;
   }, {});
-
-  // Aplica filtro de tag
-  const filteredTasks = activeTag === "all" ? tasks : tasks.filter((t) => t.tag === activeTag);
 
   const todayTasks    = getTasksForDate(filteredTasks, selectedDate);
   const overdueTasks  = selectedDate === today ? getOverdueTasks(filteredTasks) : [];
@@ -736,7 +736,7 @@ export default function TarefasPage() {
               type="button"
               onClick={() => setViewMode("week")}
               className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium transition-all cursor-pointer"
-              style={viewMode === "week" ? { background: "#2a2a2a", color: "#e5e5e5" } : { color: "#4a4a4a" }}
+              style={viewMode === "week" ? { background: "#6366f1", color: "#fff" } : { color: "#6b7280" }}
               title="Semana"
             >
               <LayoutList size={12} />
@@ -745,7 +745,7 @@ export default function TarefasPage() {
               type="button"
               onClick={() => setViewMode("month")}
               className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium transition-all cursor-pointer"
-              style={viewMode === "month" ? { background: "#2a2a2a", color: "#e5e5e5" } : { color: "#4a4a4a" }}
+              style={viewMode === "month" ? { background: "#6366f1", color: "#fff" } : { color: "#6b7280" }}
               title="Mês"
             >
               <CalendarDays size={12} />
@@ -812,72 +812,75 @@ export default function TarefasPage() {
       )}
 
       {/* Filter bar */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5" style={{ scrollbarWidth: "none" }}>
-        <button
-          type="button"
-          onClick={() => setActiveTag("all")}
-          className="flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-medium transition-all cursor-pointer"
-          style={
-            activeTag === "all"
-              ? { background: "#6366f1", color: "#fff" }
-              : { background: "#1a1a1a", color: "#6b7280", border: "1px solid #2a2a2a" }
-          }
-        >
-          {t("filterAll")}
-        </button>
-        {TAG_KEYS.map((tk) => (
+      <div className="flex items-center gap-2">
+        {/* Filtros — scroll horizontal */}
+        <div className="flex flex-1 items-center gap-1.5 overflow-x-auto pb-0.5 min-w-0" style={{ scrollbarWidth: "none" }}>
           <button
-            key={tk}
             type="button"
-            onClick={() => setActiveTag(activeTag === tk ? "all" : tk)}
-            className="flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all cursor-pointer"
+            onClick={() => setActiveTag("all")}
+            className="flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-medium transition-all cursor-pointer"
             style={
-              activeTag === tk
-                ? { background: TAG_COLOR[tk], color: "#fff" }
+              activeTag === "all"
+                ? { background: "#6366f1", color: "#fff" }
                 : { background: "#1a1a1a", color: "#6b7280", border: "1px solid #2a2a2a" }
             }
           >
-            {t(TAG_LABEL_KEY[tk])}
-            {tagCounts[tk] > 0 && (
-              <span className="text-[10px] font-semibold tabular-nums leading-none" style={{ opacity: activeTag === tk ? 0.85 : 0.6 }}>
-                {tagCounts[tk]}
-              </span>
-            )}
+            {t("filterAll")}
           </button>
-        ))}
-        {customTags.map((ct) => (
-          <button
-            key={ct.id}
-            type="button"
-            onClick={() => setActiveTag(activeTag === ct.id ? "all" : ct.id)}
-            className="flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all cursor-pointer"
-            style={
-              activeTag === ct.id
-                ? { background: ct.color, color: "#fff" }
-                : { background: "#1a1a1a", color: "#6b7280", border: "1px solid #2a2a2a" }
-            }
-          >
-            {ct.label}
-            {(tagCounts[ct.id] ?? 0) > 0 && (
-              <span className="text-[10px] font-semibold tabular-nums leading-none" style={{ opacity: activeTag === ct.id ? 0.85 : 0.6 }}>
-                {tagCounts[ct.id]}
-              </span>
-            )}
-          </button>
-        ))}
-        {/* Botão gerenciar tags */}
+          {TAG_KEYS.map((tk) => (
+            <button
+              key={tk}
+              type="button"
+              onClick={() => setActiveTag(activeTag === tk ? "all" : tk)}
+              className="flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all cursor-pointer"
+              style={
+                activeTag === tk
+                  ? { background: TAG_COLOR[tk], color: "#fff" }
+                  : { background: "#1a1a1a", color: "#6b7280", border: "1px solid #2a2a2a" }
+              }
+            >
+              {t(TAG_LABEL_KEY[tk])}
+              {tagCounts[tk] > 0 && (
+                <span className="text-[10px] font-semibold tabular-nums leading-none" style={{ opacity: activeTag === tk ? 0.85 : 0.6 }}>
+                  {tagCounts[tk]}
+                </span>
+              )}
+            </button>
+          ))}
+          {customTags.map((ct) => (
+            <button
+              key={ct.id}
+              type="button"
+              onClick={() => setActiveTag(activeTag === ct.id ? "all" : ct.id)}
+              className="flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all cursor-pointer"
+              style={
+                activeTag === ct.id
+                  ? { background: ct.color, color: "#fff" }
+                  : { background: "#1a1a1a", color: "#6b7280", border: "1px solid #2a2a2a" }
+              }
+            >
+              {ct.label}
+              {(tagCounts[ct.id] ?? 0) > 0 && (
+                <span className="text-[10px] font-semibold tabular-nums leading-none" style={{ opacity: activeTag === ct.id ? 0.85 : 0.6 }}>
+                  {tagCounts[ct.id]}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+        {/* Botão gerenciar tags — fora do scroll, sempre visível */}
         <button
           type="button"
           onClick={() => setShowManageTags((v) => !v)}
-          className="flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ml-auto"
+          className="flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-full transition-all cursor-pointer"
           style={
             showManageTags
-              ? { background: "#2a2a2a", color: "#e5e5e5", border: "1px solid #3a3a3a" }
-              : { background: "#1a1a1a", color: "#4a4a4a", border: "1px solid #2a2a2a" }
+              ? { background: "#6366f1", color: "#fff" }
+              : { background: "#1a1a1a", color: "#6b7280", border: "1px solid #2a2a2a" }
           }
           title={t("manageTags")}
         >
-          <Tag size={10} />
+          <Tag size={11} />
         </button>
       </div>
 

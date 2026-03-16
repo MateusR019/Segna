@@ -67,7 +67,7 @@ export function PomodoroWidget() {
           {PHASE_LABEL[phase]}
         </span>
         <span className="text-[10px] text-[#4a4a4a] tabular-nums">
-          {sessionCount} sessão{sessionCount !== 1 ? "ões" : ""}
+          {sessionCount} {sessionCount === 1 ? "sessão" : "sessões"}
         </span>
       </div>
 

@@ -94,7 +94,7 @@ export default function FinancasPage() {
 
       {/* Filtro conta PF / PJ */}
       <div className="flex items-center gap-2">
-        <span className="text-xs text-[#4a4a4a]">Conta:</span>
+        <span className="text-xs text-[#6b7280]">Conta:</span>
         {(["all", "pf", "pj"] as const).map((f) => (
           <button
             key={f}
