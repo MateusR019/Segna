@@ -41,7 +41,7 @@ function NetworkBadge({ network }: { network: string }) {
 export function WalletSyncButton() {
   const { walletAddress, setWalletAddress, zerionApiKey, setZerionApiKey } = useSettingsStore();
   const addPool = useDefiStore((s) => s.addPool);
-  const { success, error: toastError } = useToast();
+  const { success } = useToast();
 
   const isConfigured = !!(walletAddress && zerionApiKey);
 
@@ -127,8 +127,6 @@ export function WalletSyncButton() {
     setTimeout(() => setOpen(false), 1200);
   }
 
-  void toastError; // suppress unused warning
-
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
@@ -204,7 +202,7 @@ export function WalletSyncButton() {
             <Button
               onClick={saveSetup}
               disabled={!inputAddress.trim() || !inputKey.trim()}
-              className="w-full bg-[#6366f1] hover:bg-[#5558e8] text-white text-sm font-semibold disabled:opacity-30 cursor-pointer"
+              className="w-full bg-[#6366f1] hover:bg-[#4f46e5] text-white text-sm font-semibold disabled:opacity-30 cursor-pointer"
             >
               Salvar e continuar
             </Button>
@@ -246,7 +244,7 @@ export function WalletSyncButton() {
 
             <Button
               onClick={runSync}
-              className="w-full bg-[#6366f1] hover:bg-[#5558e8] text-white text-sm font-semibold cursor-pointer gap-2"
+              className="w-full bg-[#6366f1] hover:bg-[#4f46e5] text-white text-sm font-semibold cursor-pointer gap-2"
             >
               <RefreshCw size={14} />
               Sincronizar agora
@@ -341,7 +339,7 @@ export function WalletSyncButton() {
                 <Button
                   onClick={importSelected}
                   disabled={selected.size === 0}
-                  className="w-full bg-[#6366f1] hover:bg-[#5558e8] text-white text-sm font-semibold disabled:opacity-30 cursor-pointer"
+                  className="w-full bg-[#6366f1] hover:bg-[#4f46e5] text-white text-sm font-semibold disabled:opacity-30 cursor-pointer"
                 >
                   Importar {selected.size} {selected.size === 1 ? "posição" : "posições"}
                 </Button>

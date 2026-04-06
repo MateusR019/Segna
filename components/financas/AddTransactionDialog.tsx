@@ -265,7 +265,7 @@ export function AddTransactionDialog({ trigger = "default" }: Props) {
                   autoFocus
                 />
                 <button type="button" onClick={handleAddCustomCategory}
-                  className="px-3 h-8 rounded-md text-xs font-medium bg-[#6366f1] text-white hover:bg-[#5855e0] transition-colors flex-shrink-0">
+                  className="px-3 h-8 rounded-md text-xs font-medium bg-[#6366f1] text-white hover:bg-[#4f46e5] transition-colors flex-shrink-0">
                   Criar
                 </button>
                 <button type="button" onClick={() => { setShowNewCat(false); setNewCatInput(""); }}

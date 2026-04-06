@@ -295,7 +295,7 @@ export function ImportExportButton() {
         <Button
           size="sm"
           variant="ghost"
-          className="h-8 px-3 bg-[#1a1a1a] hover:bg-[#222] text-[#6b7280] hover:text-white border border-[#2a2a2a] text-xs font-medium cursor-pointer gap-1.5"
+          className="h-8 px-3 bg-[#1a1a1a] hover:bg-[#1f1f1f] text-[#6b7280] hover:text-white border border-[#2a2a2a] text-xs font-medium cursor-pointer gap-1.5"
         >
           <Upload size={12} />
           Import / Export
@@ -458,7 +458,7 @@ export function ImportExportButton() {
                 <Button
                   onClick={handleImport}
                   disabled={toImportCount === 0}
-                  className="w-full bg-[#6366f1] hover:bg-[#5558e8] text-white text-sm font-semibold disabled:opacity-30 cursor-pointer"
+                  className="w-full bg-[#6366f1] hover:bg-[#4f46e5] text-white text-sm font-semibold disabled:opacity-30 cursor-pointer"
                 >
                   {toImportCount === 0
                     ? "Nenhum lançamento para importar"
@@ -521,7 +521,7 @@ export function ImportExportButton() {
             <Button
               onClick={handleExport}
               disabled={exportPreviewCount === 0}
-              className="w-full bg-[#1a1a1a] hover:bg-[#222] border border-[#2a2a2a] text-white text-sm font-semibold disabled:opacity-30 cursor-pointer gap-2"
+              className="w-full bg-[#1a1a1a] hover:bg-[#1f1f1f] border border-[#2a2a2a] text-white text-sm font-semibold disabled:opacity-30 cursor-pointer gap-2"
             >
               <Download size={14} />
               Baixar CSV

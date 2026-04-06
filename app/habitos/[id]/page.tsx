@@ -54,7 +54,7 @@ export default function HabitoDetailPage() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => router.push("/habitos")}
-          className="flex-shrink-0 w-8 h-8 rounded-lg bg-[#1a1a1a] border border-[#2a2a2a] flex items-center justify-center text-[#6b7280] hover:text-white hover:bg-[#222] transition-colors cursor-pointer"
+          className="flex-shrink-0 w-8 h-8 rounded-lg bg-[#1a1a1a] border border-[#2a2a2a] flex items-center justify-center text-[#6b7280] hover:text-white hover:bg-[#1f1f1f] transition-colors cursor-pointer"
         >
           <ArrowLeft size={15} />
         </button>

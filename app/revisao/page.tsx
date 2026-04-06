@@ -382,7 +382,7 @@ function GuidedReviewSection({ weekStart }: { weekStart: string }) {
           <button
             type="button"
             onClick={handleSave}
-            className="flex items-center gap-2 bg-[#a78bfa] hover:bg-[#9061f9] text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer w-full justify-center"
+            className="flex items-center gap-2 bg-[#a78bfa] hover:bg-[#8b5cf6] text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer w-full justify-center"
           >
             <Save size={13} />
             Salvar revisão

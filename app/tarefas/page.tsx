@@ -314,7 +314,7 @@ function AddTaskForm({ onClose, defaultDate }: AddTaskFormProps) {
         <button
           type="submit"
           disabled={!title.trim()}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-[#6366f1] hover:bg-[#5254cc] disabled:opacity-30 disabled:cursor-not-allowed text-white text-xs font-medium rounded-lg transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-[#6366f1] hover:bg-[#4f46e5] disabled:opacity-30 disabled:cursor-not-allowed text-white text-xs font-medium rounded-lg transition-colors cursor-pointer"
         >
           <Plus size={12} />
           {t("addBtn")}
@@ -499,7 +499,7 @@ function TaskRow({ id, title, description, date, time, tag, priority, completed,
               type="button"
               onClick={saveEdit}
               disabled={!editTitle.trim()}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#6366f1] hover:bg-[#5254cc] disabled:opacity-30 disabled:cursor-not-allowed text-white text-xs font-medium rounded-lg transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#6366f1] hover:bg-[#4f46e5] disabled:opacity-30 disabled:cursor-not-allowed text-white text-xs font-medium rounded-lg transition-colors cursor-pointer"
             >
               <Check size={12} />
               {t("save")}
@@ -754,7 +754,7 @@ export default function TarefasPage() {
           <button
             type="button"
             onClick={() => setShowForm((v) => !v)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#6366f1] hover:bg-[#5254cc] text-white text-sm font-medium rounded-lg transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#6366f1] hover:bg-[#4f46e5] text-white text-sm font-medium rounded-lg transition-colors cursor-pointer"
           >
             <Plus size={14} />
             {t("addTask")}
@@ -889,7 +889,7 @@ export default function TarefasPage() {
         <div className="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4 space-y-3">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium text-[#9ca3af] uppercase tracking-wide">{t("manageTags")}</p>
-            <button type="button" onClick={() => setShowManageTags(false)} className="text-[#4a4a4a] hover:text-white transition-colors cursor-pointer">
+            <button type="button" onClick={() => setShowManageTags(false)} aria-label="Fechar painel de tags" className="text-[#4a4a4a] hover:text-white transition-colors cursor-pointer">
               <X size={13} />
             </button>
           </div>
@@ -957,7 +957,7 @@ export default function TarefasPage() {
                 setNewTagName("");
               }}
               disabled={!newTagName.trim()}
-              className="flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium bg-[#6366f1] hover:bg-[#5254cc] disabled:opacity-30 disabled:cursor-not-allowed text-white transition-colors cursor-pointer flex-shrink-0"
+              className="flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium bg-[#6366f1] hover:bg-[#4f46e5] disabled:opacity-30 disabled:cursor-not-allowed text-white transition-colors cursor-pointer flex-shrink-0"
             >
               <Plus size={11} />
               {t("addBtn")}

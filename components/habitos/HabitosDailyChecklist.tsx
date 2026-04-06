@@ -10,6 +10,8 @@ import { HabitBestStreakBadge } from "./HabitBestStreakBadge";
 import { EditHabitDialog } from "./EditHabitDialog";
 import Link from "next/link";
 import { Habit } from "@/types";
+import { useSettingsStore } from "@/store/settingsStore";
+import { useT } from "@/lib/i18n";
 
 function getLast7Days(): string[] {
   return Array.from({ length: 7 }, (_, i) =>
@@ -31,6 +33,8 @@ export function HabitosDailyChecklist() {
   } = useHabitosStore();
   const last7Days = getLast7Days();
   const { success } = useToast();
+  const language = useSettingsStore((s) => s.language);
+  const t = useT(language);
   const todayKey = format(new Date(), "yyyy-MM-dd");
   const completedIds = completions[todayKey] ?? [];
 
@@ -86,10 +90,8 @@ export function HabitosDailyChecklist() {
   if (habits.filter((h) => !h.paused).length === 0) {
     return (
       <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-8 text-center space-y-2">
-        <p className="text-sm text-[#4a4a4a]">Nenhum hábito criado ainda</p>
-        <p className="text-xs text-[#3a3a3a]">
-          Clique em &quot;Novo hábito&quot; para começar a rastrear.
-        </p>
+        <p className="text-sm text-[#4a4a4a]">{t("noHabitsCreated")}</p>
+        <p className="text-xs text-[#3a3a3a]">{t("clickNewHabitHint")}</p>
       </div>
     );
   }
@@ -114,7 +116,7 @@ export function HabitosDailyChecklist() {
 
           // Card border / background
           let cardClass =
-            "border-[#2a2a2a] hover:border-[#3a3a3a] hover:bg-[#1d1d1d]";
+            "border-[#2a2a2a] hover:border-[#3a3a3a] hover:bg-[#1f1f1f]";
           if (isDragTarget) cardClass = "border-[#6366f1]/60";
           else if (done) cardClass = "border-[#22c55e]/25 bg-[#22c55e]/5";
           else if (isNegative)
@@ -187,6 +189,7 @@ export function HabitosDailyChecklist() {
                     <button
                       onClick={() => decrementCount(habit.id, todayKey)}
                       disabled={currentCount <= 0}
+                      aria-label="Decrementar contagem"
                       className="w-5 h-5 rounded flex items-center justify-center text-[#6b7280] hover:text-white hover:bg-[#2a2a2a] disabled:opacity-20 transition-colors cursor-pointer"
                     >
                       <Minus size={10} />
@@ -209,6 +212,7 @@ export function HabitosDailyChecklist() {
                         }
                       }}
                       disabled={currentCount >= target}
+                      aria-label="Incrementar contagem"
                       className="w-5 h-5 rounded flex items-center justify-center text-[#6b7280] hover:text-white hover:bg-[#2a2a2a] disabled:opacity-20 transition-colors cursor-pointer"
                     >
                       <Plus size={10} />

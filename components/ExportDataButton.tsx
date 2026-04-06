@@ -69,13 +69,13 @@ export function ExportDataButton() {
       {open && (
         <div className="absolute right-0 top-full mt-1 w-48 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl shadow-xl shadow-black/40 overflow-hidden z-50">
           <button
-            className="w-full text-left px-3 py-2.5 text-xs text-[#9ca3af] hover:text-white hover:bg-[#222] transition-colors cursor-pointer flex items-center gap-2"
+            className="w-full text-left px-3 py-2.5 text-xs text-[#9ca3af] hover:text-white hover:bg-[#1f1f1f] transition-colors cursor-pointer flex items-center gap-2"
             onClick={() => { exportJSON(); success("Backup JSON exportado!"); setOpen(false); }}
           >
             <span>📦</span> Backup completo (JSON)
           </button>
           <button
-            className="w-full text-left px-3 py-2.5 text-xs text-[#9ca3af] hover:text-white hover:bg-[#222] transition-colors cursor-pointer flex items-center gap-2"
+            className="w-full text-left px-3 py-2.5 text-xs text-[#9ca3af] hover:text-white hover:bg-[#1f1f1f] transition-colors cursor-pointer flex items-center gap-2"
             onClick={() => { exportCSV(); success("Transações exportadas!"); setOpen(false); }}
           >
             <span>📊</span> Transações (CSV)

@@ -113,7 +113,7 @@ export function MigrateButton() {
       <button
         onClick={handleMigrate}
         disabled={status === "loading" || status === "done"}
-        className="w-full flex items-center justify-center gap-2 bg-[#6366f1] hover:bg-[#5855e0] disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-medium rounded-lg py-2 transition-colors cursor-pointer"
+        className="w-full flex items-center justify-center gap-2 bg-[#6366f1] hover:bg-[#4f46e5] disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-medium rounded-lg py-2 transition-colors cursor-pointer"
       >
         {status === "loading" ? (
           <>

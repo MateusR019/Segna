@@ -550,7 +550,7 @@ export default function AjudaPage() {
             {/* Section header */}
             <button
               onClick={() => setActiveSection(activeSection === section.id ? null : section.id)}
-              className="w-full flex items-center justify-between px-4 py-3.5 cursor-pointer hover:bg-[#1d1d1d] transition-colors"
+              className="w-full flex items-center justify-between px-4 py-3.5 cursor-pointer hover:bg-[#1f1f1f] transition-colors"
             >
               <div className="flex items-center gap-2.5">
                 <div

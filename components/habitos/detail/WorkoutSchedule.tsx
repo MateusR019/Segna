@@ -76,7 +76,7 @@ export function WorkoutSchedule({ habitId, weekDays, color }: Props) {
                 key={idx}
                 className={`flex items-center gap-3 px-4 py-3 transition-colors ${
                   isToday && !isEditing ? "bg-[#1d1d22]" : "bg-[#1a1a1a]"
-                } ${!isEditing ? "cursor-pointer hover:bg-[#1e1e1e] group" : ""}`}
+                } ${!isEditing ? "cursor-pointer hover:bg-[#1f1f1f] group" : ""}`}
                 onClick={() => !isEditing && startEdit(idx)}
               >
                 {/* Day pill */}

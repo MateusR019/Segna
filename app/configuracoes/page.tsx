@@ -475,7 +475,7 @@ export default function ConfiguracoesPage() {
             <button
               onClick={saveName}
               disabled={!nameVal.trim() || nameVal.trim() === displayName}
-              className="px-3 py-2 bg-[#6366f1] hover:bg-[#5254cc] disabled:opacity-30 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer flex-shrink-0"
+              className="px-3 py-2 bg-[#6366f1] hover:bg-[#4f46e5] disabled:opacity-30 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer flex-shrink-0"
             >
               {t("save")}
             </button>
@@ -493,7 +493,7 @@ export default function ConfiguracoesPage() {
             <button
               onClick={saveBirth}
               disabled={!birthVal || birthVal === birthDate}
-              className="px-3 py-2 bg-[#6366f1] hover:bg-[#5254cc] disabled:opacity-30 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer flex-shrink-0"
+              className="px-3 py-2 bg-[#6366f1] hover:bg-[#4f46e5] disabled:opacity-30 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer flex-shrink-0"
             >
               {t("save")}
             </button>
@@ -611,7 +611,7 @@ export default function ConfiguracoesPage() {
             <button
               onClick={saveHeight}
               disabled={!heightVal || parseFloat(heightVal) === height}
-              className="px-3 py-2 bg-[#6366f1] hover:bg-[#5254cc] disabled:opacity-30 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer flex-shrink-0"
+              className="px-3 py-2 bg-[#6366f1] hover:bg-[#4f46e5] disabled:opacity-30 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer flex-shrink-0"
             >
               {t("save")}
             </button>
@@ -636,7 +636,7 @@ export default function ConfiguracoesPage() {
             <button
               onClick={saveWeight}
               disabled={!weightVal}
-              className="px-3 py-2 bg-[#6366f1] hover:bg-[#5254cc] disabled:opacity-30 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer flex-shrink-0"
+              className="px-3 py-2 bg-[#6366f1] hover:bg-[#4f46e5] disabled:opacity-30 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer flex-shrink-0"
             >
               {t("save")}
             </button>
@@ -694,7 +694,7 @@ export default function ConfiguracoesPage() {
               <button
                 onClick={saveNotifTime}
                 disabled={notifTimeVal === notificationTime}
-                className="px-3 py-2 bg-[#6366f1] hover:bg-[#5254cc] disabled:opacity-30 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer flex-shrink-0"
+                className="px-3 py-2 bg-[#6366f1] hover:bg-[#4f46e5] disabled:opacity-30 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer flex-shrink-0"
               >
                 {t("save")}
               </button>
@@ -720,7 +720,7 @@ export default function ConfiguracoesPage() {
             <button
               onClick={saveWallet}
               disabled={walletVal.trim() === walletAddress}
-              className="px-3 py-2 bg-[#6366f1] hover:bg-[#5254cc] disabled:opacity-30 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer flex-shrink-0"
+              className="px-3 py-2 bg-[#6366f1] hover:bg-[#4f46e5] disabled:opacity-30 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer flex-shrink-0"
             >
               {t("save")}
             </button>
@@ -743,7 +743,7 @@ export default function ConfiguracoesPage() {
             <button
               onClick={saveZerion}
               disabled={zerionVal.trim() === zerionApiKey}
-              className="px-3 py-2 bg-[#6366f1] hover:bg-[#5254cc] disabled:opacity-30 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer flex-shrink-0"
+              className="px-3 py-2 bg-[#6366f1] hover:bg-[#4f46e5] disabled:opacity-30 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer flex-shrink-0"
             >
               {t("save")}
             </button>
@@ -801,7 +801,7 @@ export default function ConfiguracoesPage() {
               <button
                 onClick={doImport}
                 disabled={validCount === 0}
-                className="w-full py-2 bg-[#6366f1] hover:bg-[#5254cc] disabled:opacity-30 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+                className="w-full py-2 bg-[#6366f1] hover:bg-[#4f46e5] disabled:opacity-30 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer"
               >
                 {t("importBtn")} {validCount} lançamentos
               </button>

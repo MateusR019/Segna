@@ -29,6 +29,28 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
+/* ─── Design tokens — cores de referência ─────────────────────────────────────
+   Accent (indigo):
+     primary  #6366f1   → botões principais, bordas ativas, links
+     hover    #4f46e5   → hover de botões primários (indigo-700)
+     light    #a78bfa   → ícones secundários, destaques suaves
+   Accent secundário (violet):
+     primary  #a78bfa   → hábitos, revisão
+     hover    #8b5cf6   → hover do violet
+   Backgrounds (dark):
+     page     #0f0f0f   → fundo da página
+     card     #1a1a1a   → cards, painéis, popovers
+     modal    #111111   → modais/dialogs (mais profundo que card)
+     hover    #1f1f1f   → hover de linhas, itens de lista
+   Borders:
+     default  #2a2a2a   → bordas padrão
+     hover    #3a3a3a   → bordas em hover/focus
+   Text muted:
+     lg       #9ca3af   → secondary text (mais visível)
+     md       #6b7280   → terciário / labels
+     sm       #4a4a4a   → muito sutil / separadores
+─────────────────────────────────────────────────────────────────────────────── */
+
 :root,
 .dark {
   --radius: 0.5rem;
@@ -145,6 +167,7 @@
 
 /* Hover background states */
 .light [class*="hover:bg-[#1a1a1a]"]:hover { background-color: #f3f4f6 !important; }
+.light [class*="hover:bg-[#1f1f1f]"]:hover  { background-color: #f3f4f6 !important; }
 .light [class*="hover:bg-[#2a2a2a]"]:hover { background-color: #e5e7eb !important; }
 .light [class*="hover:bg-[#3a3a3a]"]:hover { background-color: #d1d5db !important; }
 

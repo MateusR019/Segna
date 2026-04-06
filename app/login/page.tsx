@@ -320,7 +320,7 @@ export default function LoginPage() {
               <div className="flex flex-col sm:flex-row items-start gap-3">
                 <button onClick={() => scrollToAuth("signup")}
                   className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
-                  style={{ background: "linear-gradient(135deg, #6366f1, #5855e0)" }}>
+                  style={{ background: "linear-gradient(135deg, #6366f1, #4f46e5)" }}>
                   Começar grátis
                   <ArrowRight size={15} />
                 </button>
@@ -474,7 +474,7 @@ export default function LoginPage() {
                 </div>
                 <button onClick={copyPix}
                   className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
-                  style={{ background: "linear-gradient(135deg, #6366f1, #5855e0)", color: "#fff" }}>
+                  style={{ background: "linear-gradient(135deg, #6366f1, #4f46e5)", color: "#fff" }}>
                   {pixCopied ? <><Check size={14} /> Copiado!</> : <><Copy size={14} /> Copiar chave PIX</>}
                 </button>
               </div>
@@ -540,7 +540,7 @@ export default function LoginPage() {
               </ul>
               <button onClick={() => scrollToAuth("signup")}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
-                style={{ background: "linear-gradient(135deg, #6366f1, #5855e0)" }}>
+                style={{ background: "linear-gradient(135deg, #6366f1, #4f46e5)" }}>
                 Criar conta grátis
                 <ArrowRight size={14} />
               </button>
@@ -659,7 +659,7 @@ export default function LoginPage() {
 
               <button type="submit" disabled={loading}
                 className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 cursor-pointer"
-                style={{ background: "linear-gradient(135deg, #6366f1 0%, #5855e0 100%)" }}>
+                style={{ background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)" }}>
                 {loading
                   ? <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-white border-r-transparent" />
                   : tab === "login"
@@ -705,7 +705,7 @@ export default function LoginPage() {
 
               <button type="submit" disabled={forgotLoading}
                 className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50 hover:opacity-90 cursor-pointer"
-                style={{ background: "linear-gradient(135deg, #6366f1 0%, #5855e0 100%)" }}>
+                style={{ background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)" }}>
                 {forgotLoading
                   ? <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-white border-r-transparent" />
                   : <><Mail size={14} /> Enviar link de recuperação</>
