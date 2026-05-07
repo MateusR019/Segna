@@ -4,12 +4,13 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import {
   TrendingUp, CheckSquare, Coins, StickyNote, LayoutDashboard,
-  HelpCircle, LogOut, ClipboardList, CalendarDays, Scale, Settings, Dumbbell,
+  HelpCircle, LogOut, ClipboardList, CalendarDays, Scale, Settings, Dumbbell, WifiOff,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import { useSettingsStore } from "@/store/settingsStore";
 import { useT } from "@/lib/i18n";
+import { useEffect, useState } from "react";
 
 function ProfileAvatar({ name, color }: { name: string; color: string }) {
   const initials = name.trim()
@@ -32,6 +33,16 @@ export function AppSidebar() {
   const avatarColor = useSettingsStore((s) => s.avatarColor);
   const language    = useSettingsStore((s) => s.language);
   const t           = useT(language);
+  const [offline, setOffline] = useState(false);
+
+  useEffect(() => {
+    setOffline(!navigator.onLine);
+    const on = () => setOffline(false);
+    const off = () => setOffline(true);
+    window.addEventListener("online", on);
+    window.addEventListener("offline", off);
+    return () => { window.removeEventListener("online", on); window.removeEventListener("offline", off); };
+  }, []);
 
   const navItems = [
     { href: "/dashboard",    label: t("dashboard"),    icon: LayoutDashboard },
@@ -152,6 +163,12 @@ export function AppSidebar() {
           <LogOut size={15} className="flex-shrink-0" />
           {t("signOut")}
         </button>
+        {offline && (
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#f59e0b]/10 border border-[#f59e0b]/20">
+            <WifiOff size={11} className="text-[#f59e0b] flex-shrink-0" />
+            <span className="text-[10px] text-[#f59e0b] font-medium">Sem conexão</span>
+          </div>
+        )}
         <p className="text-[10px] text-[#3a3a3a] px-3">v1.0.0 · Segna</p>
       </div>
     </aside>

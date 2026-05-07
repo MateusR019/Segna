@@ -48,7 +48,11 @@ function CustomTooltip({
 }
 
 export function PatrimonioSparkline({ snapshots }: Props) {
-  if (snapshots.length < 2) return null;
+  if (snapshots.length < 2) return (
+    <div className="mt-3 h-12 flex items-center justify-center">
+      <p className="text-[11px] text-[#3a3a3a]">Adicione mais lançamentos para ver a evolução do patrimônio</p>
+    </div>
+  );
 
   const first = snapshots[0].total;
   const last = snapshots[snapshots.length - 1].total;

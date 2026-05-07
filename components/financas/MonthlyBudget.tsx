@@ -18,7 +18,6 @@ export function MonthlyBudget() {
   );
 
   function save() {
-    const val = parseFloat(draft.replace(",", ".").replace(".", "").replace(",", "."));
     const num = parseFloat(draft.replace(/\./g, "").replace(",", "."));
     if (!isNaN(num) && num > 0) setBudget(num);
     setEditing(false);

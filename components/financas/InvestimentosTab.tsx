@@ -137,10 +137,10 @@ function useCryptoInvestimentosPrices() {
       } catch (err) {
         const msg = err instanceof Error ? err.message : "";
         if (msg === "rate_limit") {
-          setFetchError("Rate limit — aguarde 1 min");
+          setFetchError("Muitas requisições — aguarde 1 minuto e tente novamente");
         } else if (!silent) {
-          setFetchError("Falha ao buscar preços");
-          toastError("Não foi possível buscar os preços");
+          setFetchError("Erro ao atualizar preços. Tente novamente em instantes.");
+          toastError("Não foi possível buscar os preços. Verifique sua conexão.");
         }
       } finally {
         if (!silent) setLoading(false);

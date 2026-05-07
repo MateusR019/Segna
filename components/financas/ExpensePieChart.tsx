@@ -73,8 +73,9 @@ export function ExpensePieChart() {
             Despesas por Categoria
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex items-center justify-center h-48 text-[#6b7280] text-sm">
-          Nenhuma despesa registrada
+        <CardContent className="flex flex-col items-center justify-center h-48 gap-1">
+          <p className="text-sm text-[#4a4a4a]">Nenhuma despesa registrada</p>
+          <p className="text-xs text-[#3a3a3a]">Adicione uma transação do tipo despesa para ver a distribuição.</p>
         </CardContent>
       </Card>
     );

@@ -111,8 +111,9 @@ export function MonthlyLineChart() {
       </CardHeader>
 
       {!hasData ? (
-        <CardContent className="flex items-center justify-center h-48 text-[#6b7280] text-sm">
-          Sem dados suficientes
+        <CardContent className="flex flex-col items-center justify-center h-48 gap-1">
+          <p className="text-sm text-[#4a4a4a]">Nenhuma transação no período</p>
+          <p className="text-xs text-[#3a3a3a]">Adicione receitas ou despesas para ver o gráfico.</p>
         </CardContent>
       ) : (
         <CardContent className="pt-0">

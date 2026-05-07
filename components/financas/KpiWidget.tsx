@@ -3,6 +3,7 @@
 import { endOfMonth, differenceInCalendarDays, subMonths, parseISO } from "date-fns";
 import type { Transaction } from "@/types";
 import { calcTotalIncome, calcTotalExpenses } from "@/store/financasStore";
+import { formatBRL } from "@/lib/format";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -68,7 +69,7 @@ export function KpiWidget({ transactions, selectedMonth }: Props) {
     }, {});
   const topCatEntry = Object.entries(catMap).sort(([, a], [, b]) => b - a)[0];
   const topCatName  = topCatEntry ? catLabel(topCatEntry[0]) : "—";
-  const topCatValue = topCatEntry ? `R$\u00a0${topCatEntry[1].toFixed(0)}` : "—";
+  const topCatValue = topCatEntry ? formatBRL(topCatEntry[1]) : "—";
 
   // Dias restantes no mês
   const today    = new Date();
@@ -78,7 +79,7 @@ export function KpiWidget({ transactions, selectedMonth }: Props) {
     {
       label: "Taxa de poupança",
       value: `${savingsRate.toFixed(1)}%`,
-      sub:   income > 0 ? `R$\u00a0${(income - expenses).toFixed(0)} economizados` : "sem receita",
+      sub:   income > 0 ? `${formatBRL(income - expenses)} economizados` : "sem receita",
       color: savingsRate >= 20 ? "#22c55e" : savingsRate >= 0 ? "#f59e0b" : "#ef4444",
     },
     {

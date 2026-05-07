@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Cloud, Sun, CloudRain, CloudSnow, Wind, Loader2 } from "lucide-react";
+import { Cloud, Sun, CloudRain, CloudSnow, Wind, Loader2, CloudOff } from "lucide-react";
 
 type WeatherData = {
   current: {
@@ -41,7 +41,12 @@ export function WeatherWidget() {
       .catch(() => setError(true));
   }, []);
 
-  if (error) return null;
+  if (error) return (
+    <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-3 flex items-center gap-2 text-[#4a4a4a]">
+      <CloudOff size={14} />
+      <span className="text-xs">Clima indisponível</span>
+    </div>
+  );
 
   return (
     <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-3 flex items-center gap-3">
