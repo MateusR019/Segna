@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useTheme } from "next-themes";
 import {
   LineChart,
   Line,
@@ -20,6 +21,14 @@ type Period = "daily" | "weekly" | "monthly";
 export function MonthlyLineChart() {
   const transactions = useFinancasStore((s) => s.transactions);
   const [period, setPeriod] = useState<Period>("monthly");
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === "light";
+  const tooltipStyle = {
+    background: isLight ? "#ffffff" : "#1a1a1a",
+    border: `1px solid ${isLight ? "#d1d5db" : "#2a2a2a"}`,
+    borderRadius: "6px",
+    color: isLight ? "#111111" : "#f5f5f5",
+  };
 
   function getChartData() {
     if (period === "monthly") {
@@ -137,14 +146,9 @@ export function MonthlyLineChart() {
                 }
               />
               <Tooltip
-                contentStyle={{
-                  background: "#1a1a1a",
-                  border: "1px solid #2a2a2a",
-                  borderRadius: "6px",
-                  color: "#f5f5f5",
-                }}
-                itemStyle={{ color: "#f5f5f5" }}
-                labelStyle={{ color: "#9ca3af" }}
+                contentStyle={tooltipStyle}
+                itemStyle={{ color: isLight ? "#111111" : "#f5f5f5" }}
+                labelStyle={{ color: isLight ? "#374151" : "#9ca3af" }}
                 formatter={(value: number | undefined, name: string | undefined) => [
                   new Intl.NumberFormat("pt-BR", {
                     style: "currency",

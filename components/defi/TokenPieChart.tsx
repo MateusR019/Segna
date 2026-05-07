@@ -3,9 +3,18 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDefiStore } from "@/store/defiStore";
 import { formatUSD } from "@/lib/format";
+import { useTheme } from "next-themes";
 
 export function TokenPieChart() {
   const tokens = useDefiStore((s) => s.tokens);
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === "light";
+  const tooltipStyle = {
+    background: isLight ? "#ffffff" : "#1a1a1a",
+    border: `1px solid ${isLight ? "#d1d5db" : "#2a2a2a"}`,
+    borderRadius: "6px",
+    color: isLight ? "#111111" : "#f5f5f5",
+  };
   const exchangeRate = useDefiStore((s) => s.exchangeRate);
 
   const data = tokens.map((t) => {
@@ -58,14 +67,9 @@ export function TokenPieChart() {
               ))}
             </Pie>
             <Tooltip
-              contentStyle={{
-                background: "#1a1a1a",
-                border: "1px solid #2a2a2a",
-                borderRadius: "6px",
-                color: "#f5f5f5",
-              }}
-              itemStyle={{ color: "#f5f5f5" }}
-              labelStyle={{ color: "#9ca3af" }}
+              contentStyle={tooltipStyle}
+              itemStyle={{ color: isLight ? "#111111" : "#f5f5f5" }}
+              labelStyle={{ color: isLight ? "#374151" : "#9ca3af" }}
               formatter={(value: number | undefined, name: string | undefined) => [
                 formatUSD(value ?? 0),
                 name ?? "",

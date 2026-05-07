@@ -1,6 +1,7 @@
 "use client";
 import { useDefiStore } from "@/store/defiStore";
 import { useEffect } from "react";
+import { useTheme } from "next-themes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatBRL } from "@/lib/format";
 import {
@@ -16,6 +17,15 @@ import { ptBR } from "date-fns/locale";
 
 export function PortfolioChart() {
   const { tokens, snapshots, saveSnapshot } = useDefiStore();
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === "light";
+  const tooltipStyle = {
+    background: isLight ? "#ffffff" : "#1a1a1a",
+    border: `1px solid ${isLight ? "#d1d5db" : "#2a2a2a"}`,
+    borderRadius: "6px",
+    fontSize: "12px",
+    color: isLight ? "#111111" : "#f5f5f5",
+  };
 
   // Save a snapshot every time this component mounts (once per session)
   useEffect(() => {
@@ -80,15 +90,9 @@ export function PortfolioChart() {
             />
             <YAxis hide domain={["auto", "auto"]} />
             <Tooltip
-              contentStyle={{
-                background: "#1a1a1a",
-                border: "1px solid #2a2a2a",
-                borderRadius: "6px",
-                fontSize: "12px",
-                color: "#f5f5f5",
-              }}
-              itemStyle={{ color: "#f5f5f5" }}
-              labelStyle={{ color: "#9ca3af" }}
+              contentStyle={tooltipStyle}
+              itemStyle={{ color: isLight ? "#111111" : "#f5f5f5" }}
+              labelStyle={{ color: isLight ? "#374151" : "#9ca3af" }}
               formatter={(value: number | undefined) => [formatBRL(value ?? 0), "Portfolio"]}
             />
             <Area
