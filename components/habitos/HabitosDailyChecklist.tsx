@@ -158,6 +158,18 @@ export function HabitosDailyChecklist() {
               className={`list-item relative bg-[#1a1a1a] border rounded-xl overflow-hidden transition-all cursor-pointer select-none ${cardClass}`}
               style={{ animationDelay: `${Math.min(idx * 35, 280)}ms` }}
             >
+              {/* Counter progress bar at bottom */}
+              {isCounter && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#2a2a2a]">
+                  <div
+                    className="h-full transition-all duration-300"
+                    style={{
+                      width: `${Math.min((currentCount / target) * 100, 100)}%`,
+                      background: done ? "#22c55e" : habit.color,
+                    }}
+                  />
+                </div>
+              )}
               {/* Color accent bar */}
               <div
                 className="absolute left-0 top-0 bottom-0 w-0.5 rounded-l-xl"
@@ -292,7 +304,8 @@ export function HabitosDailyChecklist() {
                 {/* Right: streak + edit + delete */}
                 <div className="flex items-center gap-1 flex-shrink-0">
                   {streak > 0 && confirmDeleteId !== habit.id && (() => {
-                    const streakAtRisk = !done && !isNegative;
+                    const hour = new Date().getHours();
+                  const streakAtRisk = !done && !isNegative && hour >= 18;
                     return (
                       <div className="flex flex-col items-center gap-0.5 mr-1">
                         <div className={`flex items-center gap-0.5 text-xs font-semibold ${

@@ -16,7 +16,20 @@ export function HabitHeatmap() {
   const { habits, completions } = useHabitosStore();
   const days = getLast90Days();
 
-  if (habits.length === 0) return null;
+  if (habits.length === 0) return (
+    <Card className="bg-[#1a1a1a] border-[#2a2a2a]">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm font-medium text-[#9ca3af]">
+          Heatmap — últimos 90 dias
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-xs text-[#4a4a4a] text-center py-4">
+          Nenhum hábito criado ainda. Adicione hábitos para ver o histórico aqui.
+        </p>
+      </CardContent>
+    </Card>
+  );
 
   // Group days into weeks of 7
   const weeks: string[][] = [];

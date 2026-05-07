@@ -18,7 +18,8 @@ import {
 } from "@/components/ui/select";
 import { useHabitosStore } from "@/store/habitosStore";
 import { Habit, HabitTag, WeekDayIndex } from "@/types";
-import { PauseCircle, PlayCircle, Ban, Minus, Plus } from "lucide-react";
+import { PauseCircle, PlayCircle, Ban, Minus, Plus, Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const FREQ_OPTIONS = [2, 3, 4, 5, 6, 7];
 
@@ -273,18 +274,33 @@ export function EditHabitDialog({ habit, open, onClose }: Props) {
 
           {/* Flags: Negativo + Pausar */}
           <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setNegative((n) => !n)}
-              className={`flex items-center gap-1.5 flex-1 px-3 py-2 rounded-lg text-xs font-medium border transition-all cursor-pointer ${
-                negative
-                  ? "bg-[#ef4444]/15 border-[#ef4444]/40 text-[#ef4444]"
-                  : "bg-[#1f1f1f] border-[#2a2a2a] text-[#6b7280] hover:text-white"
-              }`}
-            >
-              <Ban size={13} />
-              {negative ? "Hábito negativo ✓" : "Hábito negativo"}
-            </button>
+            <div className="flex flex-col gap-1 flex-1">
+              <button
+                type="button"
+                onClick={() => setNegative((n) => !n)}
+                className={`flex items-center gap-1.5 w-full px-3 py-2 rounded-lg text-xs font-medium border transition-all cursor-pointer ${
+                  negative
+                    ? "bg-[#ef4444]/15 border-[#ef4444]/40 text-[#ef4444]"
+                    : "bg-[#1f1f1f] border-[#2a2a2a] text-[#6b7280] hover:text-white"
+                }`}
+              >
+                <Ban size={13} />
+                {negative ? "Hábito negativo ✓" : "Hábito negativo"}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info size={11} className="ml-auto opacity-50" onClick={(e) => e.stopPropagation()} />
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-[#1a1a1a] border-[#2a2a2a] text-xs text-[#9ca3af] max-w-[200px]">
+                    Marcar quando você <strong className="text-white">evitou</strong> um comportamento ruim (ex: não fumou, não comeu açúcar).
+                  </TooltipContent>
+                </Tooltip>
+              </button>
+              {paused && (
+                <p className="text-[10px] text-[#f59e0b]/70 px-1">
+                  Hábito pausado não aparece no checklist diário.
+                </p>
+              )}
+            </div>
             <button
               type="button"
               onClick={() => setPaused((p) => !p)}

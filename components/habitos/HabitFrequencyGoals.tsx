@@ -22,7 +22,20 @@ export function HabitFrequencyGoals() {
 
   const weekDays = getThisWeekDays();
 
-  if (habits.length === 0) return null;
+  if (habits.length === 0) return (
+    <Card className="bg-[#1a1a1a] border-[#2a2a2a]">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm font-medium text-[#9ca3af]">
+          {t("weeklyGoals")}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-xs text-[#4a4a4a] text-center py-4">
+          Crie hábitos para definir metas semanais de frequência.
+        </p>
+      </CardContent>
+    </Card>
+  );
 
   return (
     <Card className="bg-[#1a1a1a] border-[#2a2a2a]">

@@ -10,7 +10,14 @@ const WEEK_DAYS_LABELS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 export function HabitAdvancedStats() {
   const { habits, completions } = useHabitosStore();
 
-  if (habits.length === 0) return null;
+  if (habits.length === 0) return (
+    <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6 text-center">
+      <BarChart2 size={24} className="text-[#2a2a2a] mx-auto mb-2" />
+      <p className="text-xs text-[#4a4a4a]">
+        Estatísticas aparecem conforme você cria e registra hábitos.
+      </p>
+    </div>
+  );
 
   // ── Total completions all time ──────────────────────────────
   const totalCompletions = Object.values(completions).reduce(

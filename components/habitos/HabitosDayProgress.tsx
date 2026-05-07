@@ -3,12 +3,22 @@ import { useHabitosStore } from "@/store/habitosStore";
 import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { WeekDayIndex } from "@/types";
 
 export function HabitosDayProgress() {
   const { habits, completions } = useHabitosStore();
   const todayKey = format(new Date(), "yyyy-MM-dd");
-  const completedToday = completions[todayKey]?.length ?? 0;
-  const total = habits.length;
+  const todayWeekDay = new Date().getDay() as WeekDayIndex;
+
+  const activeToday = habits.filter(
+    (h) =>
+      !h.paused &&
+      (!h.weekDays || h.weekDays.length === 0 || h.weekDays.includes(todayWeekDay))
+  );
+  const total = activeToday.length;
+  const completedToday = (completions[todayKey] ?? []).filter((id) =>
+    activeToday.some((h) => h.id === id)
+  ).length;
   const pct = total === 0 ? 0 : Math.round((completedToday / total) * 100);
 
   const todayLabel = format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR });
